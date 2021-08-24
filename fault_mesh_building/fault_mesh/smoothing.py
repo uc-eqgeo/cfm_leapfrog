@@ -1,4 +1,8 @@
 import numpy as np
+from typing import Union
+import geopandas as gpd
+from shapely.geometry import LineString, MultiLineString
+
 
 
 def chaikins_corner_cutting(coords, refinements=5):
@@ -14,3 +18,8 @@ def chaikins_corner_cutting(coords, refinements=5):
         coords = l * 0.75 + R * 0.25
 
     return coords
+
+def smooth_trace(trace: LineString, n_refinements: int = 5):
+    assert isinstance(trace, LineString)
+    coords = np.array(trace.coords)
+    return LineString(chaikins_corner_cutting(coords, refinements=n_refinements))
