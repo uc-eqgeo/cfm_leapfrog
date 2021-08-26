@@ -14,7 +14,10 @@ def cut(line: LineString, distance: float):
                 LineString(coords[i:])]
         if pd > distance:
             cp = line.interpolate(distance)
-            return LineString(coords[:i] + [(cp.x, cp.y)]), LineString([(cp.x, cp.y)] + coords[i:])
+            if line.has_z:
+                return LineString(coords[:i] + [(cp.x, cp.y, cp.z)]), LineString([(cp.x, cp.y, cp.z)] + coords[i:])
+            else:
+                return LineString(coords[:i] + [(cp.x, cp.y)]), LineString([(cp.x, cp.y)] + coords[i:])
 
 
 def cut_line_at_point(line: LineString, point: Point):

@@ -23,3 +23,20 @@ def smooth_trace(trace: LineString, n_refinements: int = 5):
     assert isinstance(trace, LineString)
     coords = np.array(trace.coords)
     return LineString(chaikins_corner_cutting(coords, refinements=n_refinements))
+
+
+def straighten(line: LineString, strike: float, damping: float):
+    strike_vector = np.array([np.sin(np.radians(strike)), np.cos(np.radians(strike)), 0.])
+    across_strike = np.array([np.sin(np.radians(strike + 90.)), np.cos(np.radians(strike + 90.)), 0.])
+    line_array = np.array(line)
+    centroid = np.array(line.centroid)
+
+    along_dists = np.dot(line_array - centroid, strike_vector)
+    across_dists = np.dot(line_array - centroid, across_strike)
+
+    new_locations = centroid + along_dists + damping * across_dists
+
+    return LineString(new_locations)
+
+
+

@@ -6,9 +6,11 @@ from shapely.ops import linemerge
 from fault_mesh.smoothing import smooth_trace
 from fault_mesh.utilities.cutting import cut_line_at_multiple_points
 
+
 class ConnectedFaultSystem:
     def __init__(self, overall_name: str, search_patterns: Union[str, list], cfm_faults,
-                 excluded_names: Union[str, list] = None, tolerance: float = 100., smooth_trace_refinements: int = None):
+                 excluded_names: Union[str, list] = None, tolerance: float = 100.,
+                 smooth_trace_refinements: int = None):
         self.overall_name = overall_name
         segments = []
 
@@ -21,7 +23,7 @@ class ConnectedFaultSystem:
 
         if isinstance(excluded_names, str):
             excluded_list = [excluded_names]
-        elif excluded_names == None:
+        elif excluded_names is None:
             excluded_list = []
         else:
             assert isinstance(excluded_names, list)
@@ -39,12 +41,20 @@ class ConnectedFaultSystem:
             closest_dist = segment.nztm_trace.distance(other_segments)
             if closest_dist > tolerance:
                 raise ValueError(f"Fault traces >{tolerance} m apart: {segment.name}")
+            else:
+                neighbour_list = []
+                for other_seg in segments:
+                    if other_seg != segment:
+                        if segment.nztm_trace.distance(other_seg.nztm_trace) < tolerance:
+                            neighbour_list.append(other_seg)
+
+                segment.neighbouring_segments = neighbour_list
 
         # Order segments
         # Find furthest south or west
 
-        sorted_segments_s_to_n = sorted(segments, key = lambda x: (x.nztm_trace.bounds[0],
-                                                                   x.nztm_trace.bounds[1]))
+        sorted_segments_s_to_n = sorted(segments, key=lambda x: (x.nztm_trace.bounds[0],
+                                                                 x.nztm_trace.bounds[1]))
         sorted_segments_w_to_e = sorted(segments, key=lambda x: (x.nztm_trace.bounds[1],
                                                                  x.nztm_trace.bounds[0]))
 
@@ -73,18 +83,12 @@ class ConnectedFaultSystem:
             self.smoothed_overall_trace = None
             self.smoothed_segments = None
 
+    @property
+    def trace(self):
+        return self.overall_trace
 
-
-
+    @property
+    def smoothed_trace(self):
+        return self.smoothed_overall_trace
 
         # Might need to add interpolation between nearby but not identical segment ends. Do this when we get to it.
-
-
-
-
-
-
-
-
-
-
