@@ -1,23 +1,27 @@
-from fault_mesh.connections import ConnectedFaultSystem
-from fault_mesh.faults import LeapfrogMultiFault
+from itertools import product
+
 import geopandas as gpd
 from matplotlib import pyplot as plt
 
-data_d90_all = LeapfrogMultiFault.from_shp("../gis/cfm_gt_1_5.gpkg")
+from fault_mesh.faults import LeapfrogMultiFault
+from fault_mesh.utilities.graph import connected_nodes
 
-test = ConnectedFaultSystem("test", ["Hope*", "Kelly"], data_d90_all, excluded_names=["*Te Rapa*", "*Hanmer NW", "*Tarama*"],
-                            smooth_trace_refinements=5)
+data = LeapfrogMultiFault.from_shp("../gis/cfm_gt_1_5.gpkg")
 
-smoothed_trace = gpd.GeoSeries(test.smoothed_overall_trace)
-proj_points = gpd.GeoSeries(test.segment_boundaries)
-smoothed_segments = gpd.GeoSeries(test.smoothed_segments[:2])
+dist_tolerance = 200.
 
-# plt.close("all")
-# fig, ax = plt.subplots()
-# smoothed_trace.plot(ax=ax)
-# proj_points.plot(ax=ax)
-# smoothed_segments.plot(ax=ax, color="r")
-#
-# plt.show()
+connections = []
+neighbour_connections = []
+for fault in data.faults:
+    for other_fault in data.faults:
+        if other_fault.name != fault.name:
+            if fault.nztm_trace.distance(other_fault.nztm_trace) <= dist_tolerance:
+                print(f"Connection: {fault.name} and {other_fault.name}")
+                connections.append([fault.name, other_fault.name])
+                conditions = [p1.distance(p2) <= dist_tolerance for p1, p2 in product([fault.end1, fault.end2],
+                                                                                     [other_fault.end1,
+                                                                                      other_fault.end2])]
+                if any(conditions):
+                    neighbour_connections.append([fault.name, other_fault.name])
 
-
+major_faults = connected_nodes(neighbour_connections)

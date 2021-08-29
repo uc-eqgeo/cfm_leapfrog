@@ -1,14 +1,19 @@
 from __future__ import annotations
+import os
+from typing import List, Union
+from itertools import product
+
 import numpy as np
 from eq_fault_geom.geomio.cfm_faults import CfmMultiFault, CfmFault, normalize_bearing, smallest_difference
 import geopandas as gpd
 import pandas as pd
-from typing import List, Union
+
 from shapely.affinity import translate
 from shapely.geometry import LineString, MultiLineString, Point, Polygon
 
 from fault_mesh.smoothing import straighten, smooth_trace
-from fault_mesh.utilities.cutting import cut_line_between_two_points
+from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
+from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
 
 
 class LeapfrogMultiFault(CfmMultiFault):
@@ -24,6 +29,11 @@ class LeapfrogMultiFault(CfmMultiFault):
                                                  exclude_aus=exclude_aus, exclude_zero=exclude_zero, sort_sr=sort_sr)
 
         self._segment_distance_tolerance = segment_distance_tolerance
+        self._cutting_hierarchy = []
+        self._includes_connected = False
+        self._curated_faults = None
+        self._connections = None
+        self._neighbour_connections = None
 
     def add_fault(self, series: pd.Series, depth_type: str = "D90"):
         cfmFault = LeapfrogFault.from_series(series, parent_multifault=self, depth_type=depth_type)
@@ -32,6 +42,78 @@ class LeapfrogMultiFault(CfmMultiFault):
     @property
     def segment_distance_tolerance(self):
         return self._segment_distance_tolerance
+
+    @property
+    def cutting_hierarchy(self):
+        return self._cutting_hierarchy
+
+    @cutting_hierarchy.setter
+    def cutting_hierarchy(self, hierarchy: List[str]):
+        for fault in self.curated_faults:
+            if fault.name not in hierarchy:
+                raise NameError(f"{fault.name} not included in cutting hierarchy")
+        for name in hierarchy:
+            if name not in self.names:
+                print(f"Warning: unrecognised fault({name}) in cutting hierarchy")
+
+        self._cutting_hierarchy = hierarchy
+
+    @property
+    def curated_faults(self):
+        if self._curated_faults is None:
+            return self.faults
+        else:
+            return self._curated_faults
+
+    def read_cutting_hierarchy(self, hierarchy_file: str):
+        assert os.path.exists(hierarchy_file)
+        with open(hierarchy_file, "r") as hfile:
+            names = hfile.readlines()
+            self.cutting_hierarchy = list(names)
+
+    @property
+    def names(self):
+        return [fault.name for fault in self.curated_faults]
+
+    def find_connections(self):
+        connections = []
+        neighbour_connections = []
+        for fault in self.faults:
+            for other_fault in self.faults:
+                if other_fault.name != fault.name:
+                    if fault.nztm_trace.distance(other_fault.nztm_trace) <= self.segment_distance_tolerance:
+                        print(f"Connection: {fault.name} and {other_fault.name}")
+                        connections.append([fault.name, other_fault.name])
+                        conditions = []
+                        for p1, p2 in product([fault.end1, fault.end2], [other_fault.end1, other_fault.end2]):
+                            conditions.append(p1.distance(p2) <= self.segment_distance_tolerance)
+                        if any(conditions):
+                            neighbour_connections.append([fault.name, other_fault.name])
+
+        self._connections = connections
+        self._neighbour_connections = neighbour_connections
+
+    @property
+    def connections(self):
+        if self._connections is None:
+            self.find_connections()
+        return self._connections
+
+    @property
+    def neighbour_connections(self):
+        if self._neighbour_connections is None:
+            self.find_connections()
+        return self._neighbour_connections
+
+    def suggest_fault_systems(self, out_prefix):
+        connected = connected_nodes(self.neighbour_connections)
+        for connected_set in connected:
+            suggested_name = suggest_combined_name(connected_set)
+            out_list = [suggested_name] + list(connected_set)
+            out_str = ",".join(out_list) + "\n"
+
+
+
 
 
 class LeapfrogFault(CfmFault):
@@ -144,10 +226,27 @@ class LeapfrogFault(CfmFault):
                 e2_box = self.end_clipping_box(self.end2, depth, gradient_adjustment=self.trimming_gradient)
                 e2_box_intersection = e2_box.intersection(self.nztm_trace)
 
-                trimmed_
+                trimmed_contour = cut_line_between_two_points(smoothed_contour, [e1_box_intersection,
+                                                                                 e2_box_intersection])
 
+            elif self.end1 in self.neighbour_dict.keys():
+                e1_box = self.end_clipping_box(self.end1, depth, gradient_adjustment=self.trimming_gradient)
+                e1_box_intersection = e1_box.intersection(self.nztm_trace)
+                split_line = cut_line_at_point(smoothed_contour, e1_box_intersection)
 
-        return smoothed_contour
+                trimmed_contour = split_line[1]
+
+            else:  # self.end2 in self.neighbour_dict.keys()
+                e2_box = self.end_clipping_box(self.end2, depth, gradient_adjustment=self.trimming_gradient)
+                e2_box_intersection = e2_box.intersection(self.nztm_trace)
+                split_line = cut_line_at_point(smoothed_contour, e2_box_intersection)
+
+                trimmed_contour = split_line[0]
+
+        else:
+            trimmed_contour = smoothed_contour
+
+        return trimmed_contour
 
     @property
     def nztm_trace(self):
