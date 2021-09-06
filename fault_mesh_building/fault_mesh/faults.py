@@ -14,6 +14,7 @@ from shapely.geometry import LineString, MultiLineString, Point, Polygon
 from fault_mesh.smoothing import straighten, smooth_trace
 from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
 from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
+from fault_mesh.connections import ConnectedFaultSystem
 
 
 class LeapfrogMultiFault(CfmMultiFault):
@@ -30,10 +31,12 @@ class LeapfrogMultiFault(CfmMultiFault):
 
         self._segment_distance_tolerance = segment_distance_tolerance
         self._cutting_hierarchy = []
+        self._hierarchy_dict = None
         self._includes_connected = False
         self._curated_faults = None
         self._connections = None
         self._neighbour_connections = None
+        self.connected_faults = None
 
     def add_fault(self, series: pd.Series, depth_type: str = "D90"):
         cfmFault = LeapfrogFault.from_series(series, parent_multifault=self, depth_type=depth_type)
@@ -59,17 +62,60 @@ class LeapfrogMultiFault(CfmMultiFault):
         self._cutting_hierarchy = hierarchy
 
     @property
+    def hierarchy_dict(self):
+        return self._hierarchy_dict
+
+    @hierarchy_dict.setter
+    def hierarchy_dict(self, dictionary):
+        assert isinstance(dictionary, dict)
+        self._hierarchy_dict = dictionary
+
+    @property
     def curated_faults(self):
         if self._curated_faults is None:
             return self.faults
         else:
             return self._curated_faults
 
+    @curated_faults.setter
+    def curated_faults(self, fault_list: list):
+        assert isinstance(fault_list, list)
+        assert all([isinstance(fault, (ConnectedFaultSystem, LeapfrogFault)) for fault in fault_list])
+        self._curated_faults = fault_list
+
     def read_cutting_hierarchy(self, hierarchy_file: str):
         assert os.path.exists(hierarchy_file)
         with open(hierarchy_file, "r") as hfile:
             names = hfile.readlines()
-            self.cutting_hierarchy = list(names)
+            self.cutting_hierarchy = [name.strip() for name in list(names)]
+        self.hierarchy_dict = {name: i for i, name in enumerate(self.cutting_hierarchy)}
+
+    def suggest_cutting_hierarchy(self, prefix: str):
+        name_ls = []
+        sr_ls = []
+        for fault in self.curated_faults:
+            if isinstance(fault, LeapfrogFault):
+                name_ls.append(fault.name)
+                sr_ls.append(fault.sr_best)
+
+            else:
+                assert isinstance(fault, ConnectedFaultSystem)
+                name_ls.append(fault.overall_name)
+                sr_ls.append(max([seg.sr_best for seg in fault.segments]))
+
+        df = pd.DataFrame({"name": name_ls, "sr": sr_ls})
+        df.sort_values(["sr", "name"], ascending=(False, True), inplace=True)
+
+        out_names = list(df.name)
+        out_file_name = prefix + "_suggested_hierarchy.csv"
+
+        with open(out_file_name, "w") as out_id:
+            for name in out_names:
+                out_id.write(name + "\n")
+
+
+
+
 
     @property
     def names(self):
@@ -105,20 +151,51 @@ class LeapfrogMultiFault(CfmMultiFault):
             self.find_connections()
         return self._neighbour_connections
 
-    def suggest_fault_systems(self, out_prefix):
+    def suggest_fault_systems(self, out_prefix: str):
         connected = connected_nodes(self.neighbour_connections)
-        for connected_set in connected:
-            suggested_name = suggest_combined_name(connected_set)
-            out_list = [suggested_name] + list(connected_set)
-            out_str = ",".join(out_list) + "\n"
+        out_name = out_prefix + "_suggested.csv"
+        with open(out_name, "w") as out_id:
+            for connected_set in connected:
+                suggested_name = suggest_combined_name(connected_set)
+                out_list = [suggested_name] + sorted(list(connected_set))
+                out_str = ",".join(out_list) + "\n"
+                out_id.write(out_str)
 
+    def read_fault_systems(self, fault_system_csv: str):
+        self.connected_faults = []
+        with open(fault_system_csv, "r") as in_id:
+            con_data = in_id.readlines()
+            for line in con_data:
+                elements = line.strip().split(",")
+                name = elements[0].strip()
+                segs = [element.strip() for element in elements[1:]]
+                cfault = ConnectedFaultSystem(overall_name=name, cfm_faults=self, segment_names=segs)
+                self.connected_faults.append(cfault)
+
+    def generate_curated_faults(self):
+        curated_faults = []
+        segments_already_included = []
+        if len(self.connected_faults):
+            curated_faults += self.connected_faults
+            for fault in curated_faults:
+                segments_already_included += [seg.name for seg in fault.segments]
+
+        else:
+            print("Warning: no multi-segment faults: is this what you wanted?")
+
+        for fault in self.faults:
+            if fault.name not in segments_already_included:
+                curated_faults.append(fault)
+                segments_already_included.append(fault.name)
+
+        self.curated_faults = curated_faults
 
 
 
 
 class LeapfrogFault(CfmFault):
-    def __init__(self, parent_multifault: LeapfrogMultiFault = None, smoothing: int = None,
-                 trimming_gradient: float = None, segment_distance_tolerance: float = 100.):
+    def __init__(self, parent_multifault: LeapfrogMultiFault = None, smoothing: int = 3,
+                 trimming_gradient: float = 1.0, segment_distance_tolerance: float = 100.):
         self._end1 = None
         self._end2 = None
         self._neighbouring_segments = None
@@ -134,6 +211,7 @@ class LeapfrogFault(CfmFault):
         self._trimming_gradient = trimming_gradient
         self._segment_distance_tolerance = segment_distance_tolerance
 
+        self.smoothed_trace = None
 
     @property
     def is_segment(self):
@@ -164,11 +242,11 @@ class LeapfrogFault(CfmFault):
 
         for seg in segment_list:
             if seg.nztm_trace.distance(self.end1) <= self.segment_distance_tolerance:
-                self._neighbour_dict[self.end1] = seg
-                self._neighbour_angle_dict[self.end1] = self.neighbour_angle(seg)
+                self._neighbour_dict[self.end1.coords[0]] = seg
+                self._neighbour_angle_dict[self.end1.coords[0]] = self.neighbour_angle(seg)
             elif seg.nztm_trace.distance(self.end2) <= self.segment_distance_tolerance:
-                self._neighbour_dict[self.end2] = seg
-                self._neighbour_angle_dict[self.end2] = self.neighbour_angle(seg)
+                self._neighbour_dict[self.end2.coords[0]] = seg
+                self._neighbour_angle_dict[self.end2.coords[0]] = self.neighbour_angle(seg)
             else:
                 raise ValueError(f"Orphan neighbour segment for {self.name}: {seg.name}")
 
@@ -194,7 +272,8 @@ class LeapfrogFault(CfmFault):
         dip_dir_rad = np.radians(self.dip_dir)
         return np.array([np.sin(dip_dir_rad), np.cos(dip_dir_rad), 0.])
 
-    def depth_contour(self, depth: float, smoothing: int = None, damping: int = None, km= False):
+    def depth_contour(self, depth: float, smoothing: bool = True, damping: int = None, km= False,
+                      distance_tolerance: float = 100.):
         if depth <= 0:
             shift = depth / self.down_dip_vector[-1]
         else:
@@ -203,48 +282,99 @@ class LeapfrogFault(CfmFault):
             shift *= 1000.
 
         xo, yo, zo = shift * self.down_dip_vector
-        contour = translate(self.nztm_trace, xo, yo, zo)
 
-        if damping is not None:
-            damped_contour = straighten(contour, self.dip_dir, damping)
+        # if damping is not None:
+        #     damped_contour = straighten(contour, self.dip_dir, damping)
+        # else:
+        #     damped_contour = contour
+
+        if smoothing:
+            assert self.smoothing is not None
+            if self.is_segment:
+                smoothed_contour = self.smoothed_trace
+
+            else:
+                smoothed_contour = smooth_trace(self.nztm_trace, self.smoothing)
+
+
         else:
-            damped_contour = contour
+            smoothed_contour = self.nztm_trace
 
-        if smoothing is not None:
-            smoothed_contour = smooth_trace(damped_contour, smoothing)
-
-        elif self.smoothing is not None:
-            smoothed_contour = smooth_trace(damped_contour, self.smoothing)
-
-        else:
-            smoothed_contour = damped_contour
+        shifted_contour = translate(smoothed_contour, xo, yo, zo)
 
         if self.is_segment:
+
+            contour_e1 = Point(shifted_contour.coords[0])
+            contour_e2 = Point(shifted_contour.coords[-1])
+
+            flipping_conditions = [all([self.end1.x > self.end2.x, contour_e1.x < contour_e2.x]),
+                                   all([self.end1.x < self.end2.x, contour_e1.x > contour_e2.x]),
+                                   all([self.end1.x == self.end2.x, self.end1.y > self.end2.y,
+                                        contour_e1.y < contour_e2.y]),
+                                   all([self.end1.x == self.end2.x, self.end1.y < self.end2.y,
+                                        contour_e1.y > contour_e2.y])]
+
+            if any(flipping_conditions):
+                contour_e2 = Point(shifted_contour.coords[0])
+                contour_e1 = Point(shifted_contour.coords[-1])
+
             if len(self.neighbouring_segments) > 1:
                 e1_box = self.end_clipping_box(self.end1, depth, gradient_adjustment=self.trimming_gradient)
-                e1_box_intersection = e1_box.intersection(self.nztm_trace)
+                e1_box_intersection = e1_box.boundary.intersection(self.nztm_trace)
                 e2_box = self.end_clipping_box(self.end2, depth, gradient_adjustment=self.trimming_gradient)
-                e2_box_intersection = e2_box.intersection(self.nztm_trace)
+                e2_box_intersection = e2_box.boundary.intersection(self.nztm_trace)
 
-                trimmed_contour = cut_line_between_two_points(smoothed_contour, [e1_box_intersection,
-                                                                                 e2_box_intersection])
+                if not e1_box.intersects(e2_box):
+                    trimmed_contour = cut_line_between_two_points(shifted_contour, [e1_box_intersection,
+                                                                                     e2_box_intersection])
+                else:
+                    trimmed_contour = None
 
-            elif self.end1 in self.neighbour_dict.keys():
+            elif self.end1.coords[0] in self.neighbour_dict.keys():
                 e1_box = self.end_clipping_box(self.end1, depth, gradient_adjustment=self.trimming_gradient)
-                e1_box_intersection = e1_box.intersection(self.nztm_trace)
-                split_line = cut_line_at_point(smoothed_contour, e1_box_intersection)
+                if all([point.within(e1_box) for point in (contour_e1, contour_e2)]):
+                    trimmed_contour = None
+                else:
+                    e1_box_intersection = e1_box.boundary.intersection(self.nztm_trace)
 
-                trimmed_contour = split_line[1]
+                    if isinstance(e1_box_intersection, Point):
+                        split_line = cut_line_at_point(shifted_contour, e1_box_intersection)
+
+                        if split_line[0].distance(contour_e1) == 0.:
+                            trimmed_contour = split_line[1]
+                        elif split_line[1].distance(contour_e1) == 0.:
+                            trimmed_contour = split_line[0]
+                        else:
+                            print("neither intersects")
+                            trimmed_contour = None
+                    else:
+                        trimmed_contour = None
 
             else:  # self.end2 in self.neighbour_dict.keys()
                 e2_box = self.end_clipping_box(self.end2, depth, gradient_adjustment=self.trimming_gradient)
-                e2_box_intersection = e2_box.intersection(self.nztm_trace)
-                split_line = cut_line_at_point(smoothed_contour, e2_box_intersection)
+                if all([point.within(e2_box) for point in (contour_e1, contour_e2)]):
+                    trimmed_contour = None
+                else:
+                    e2_box_intersection = e2_box.boundary.intersection(self.nztm_trace)
+                    if isinstance(e2_box_intersection, Point):
+                        split_line = cut_line_at_point(shifted_contour, e2_box_intersection)
 
-                trimmed_contour = split_line[0]
+                        if split_line[0].distance(contour_e2) == 0.:
+                            trimmed_contour = split_line[1]
+                        elif split_line[1].distance(contour_e2) == 0.:
+                            trimmed_contour = split_line[0]
+                        else:
+                            print("neither intersects")
+                            trimmed_contour = None
+                    else:
+                        trimmed_contour = None
+
+            # if trimmed_contour is not None:
+            #     if abs(trimmed_contour.length - smoothed_contour.length) < distance_tolerance:
+            #         trimmed_contour = None
 
         else:
-            trimmed_contour = smoothed_contour
+            trimmed_contour = shifted_contour
 
         return trimmed_contour
 
@@ -274,7 +404,7 @@ class LeapfrogFault(CfmFault):
     def end2(self):
         return self._end2
 
-    def clipping_box(self, centre_point: Point, along_half_width: float, across_half_width: float = 10000.):
+    def clipping_box(self, centre_point: Point, along_half_width: float, across_half_width: float = 100000.):
         point_array = np.array(centre_point)
         across_shift = across_half_width * self.across_strike_vector
         along_shift = along_half_width * self.along_strike_vector
@@ -287,8 +417,8 @@ class LeapfrogFault(CfmFault):
 
     def end_clipping_box(self, end_i: Point, depth: float, gradient_adjustment: float = 1.,
                          across_half_width: float = 10000.):
-        end_angle = self.neighbour_angle_dict[end_i]
-        end_width = gradient_adjustment * np.tan(np.radians(end_angle)) / (depth / np.sin(np.radians(end_angle)))
+        end_angle = self.neighbour_angle_dict[end_i.coords[0]]
+        end_width = gradient_adjustment * np.tan(np.radians(end_angle)) * (depth / np.sin(np.radians(self.dip_best)))
 
         return self.clipping_box(end_i, end_width, across_half_width=across_half_width)
 
@@ -305,7 +435,9 @@ class LeapfrogFault(CfmFault):
                                  "Are you sure you want to connect?")
         else:
             dip_diff = abs(neighbour.dip_best - self.dip_best)
-        return max([dip_diff, strike_diff]) / 2.
+        return max([2 * dip_diff, strike_diff]) / 2.
+
+
 
 
 

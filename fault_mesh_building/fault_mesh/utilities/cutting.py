@@ -4,7 +4,7 @@ from typing import List
 def cut(line: LineString, distance: float):
     # Cuts a line in two at a distance from its starting point
     if distance <= 0.0 or distance >= line.length:
-        return [LineString(line)]
+        return [LineString(line), LineString(line)]
     coords = list(line.coords)
     for i, p in enumerate(coords):
         pd = line.project(Point(p))
@@ -20,7 +20,9 @@ def cut(line: LineString, distance: float):
                 return LineString(coords[:i] + [(cp.x, cp.y)]), LineString([(cp.x, cp.y)] + coords[i:])
 
 
+
 def cut_line_at_point(line: LineString, point: Point):
+    assert isinstance(point, Point)
     distance = line.project(point)
     l1, l2 = cut(line, distance)
     return l1, l2

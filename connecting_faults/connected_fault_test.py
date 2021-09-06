@@ -3,7 +3,8 @@ from fault_mesh.faults import LeapfrogMultiFault
 import geopandas as gpd
 from matplotlib import pyplot as plt
 
-data_d90_all = LeapfrogMultiFault.from_shp("../gis/cfm_gt_1_5.gpkg")
+# data_d90_all = LeapfrogMultiFault.from_shp("../gis/cfm_gt_1_5.gpkg")
+data_d90_all = LeapfrogMultiFault.from_shp("../gis/central_cfm.gpkg")
 
 test = ConnectedFaultSystem("test", ["Hope*", "Kelly"], data_d90_all, excluded_names=["*Te Rapa*", "*Hanmer NW", "*Tarama*"],
                             smooth_trace_refinements=5)

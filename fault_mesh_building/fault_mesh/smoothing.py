@@ -1,7 +1,8 @@
 import numpy as np
-from typing import Union
+from typing import Union, List
 import geopandas as gpd
-from shapely.geometry import LineString, MultiLineString
+from shapely.geometry import LineString, MultiLineString, Point
+from shapely.ops import linemerge
 
 
 
@@ -37,6 +38,50 @@ def straighten(line: LineString, strike: float, damping: float):
     new_locations = centroid + along_dists + damping * across_dists
 
     return LineString(new_locations)
+
+
+def align_two_nearly_adjacent_segments(segment_list: List[LineString], tolerance: float = 200.):
+    assert len(segment_list) == 2
+    line1, line2 = segment_list
+    assert line1.distance(line2) <= tolerance
+
+    l1e1 = Point(line1.coords[0])
+    l1e2 = Point(line1.coords[-1])
+    p1 = l1e1 if l1e1.distance(line2) <= l1e2.distance(line2) else l1e2
+
+    l2e1 = Point(line2.coords[0])
+    l2e2 = Point(line2.coords[-1])
+
+    p2 = l2e1 if l2e1.distance(line1) <= l2e2.distance(line1) else l2e2
+
+    mid_point = Point(0.5 * (np.array(p1) + np.array(p2)))
+
+    if l1e1 == p1:
+        new_line1 = np.vstack([np.array(mid_point), np.array(line1)[1:]])
+    else:
+        new_line1 = np.vstack([np.array(line1)[:-1], np.array(mid_point)])
+
+    if l2e1 == p2:
+        new_line2 = np.vstack([np.array(mid_point), np.array(line2)[1:]])
+    else:
+        new_line2 = np.vstack([np.array(line2)[:-1], np.array(mid_point)])
+
+    return LineString(new_line1), LineString(new_line2)
+
+def merge_two_nearly_adjacent_segments(segment_list: List[LineString], tolerance: float = 200.):
+    new_line1, new_line2 = align_two_nearly_adjacent_segments(segment_list, tolerance)
+    return linemerge([new_line1, new_line2])
+
+
+def merge_multiple_nearly_adjacent_segments(segment_list: List[LineString], tolerance: float = 200.):
+    assert len(segment_list) >= 2
+    if len(segment_list) == 2:
+        return merge_two_nearly_adjacent_segments(segment_list, tolerance)
+    else:
+        while len(segment_list) > 2:
+            segment_list = [merge_two_nearly_adjacent_segments(segment_list[:2], tolerance)] + segment_list[2:]
+        return merge_two_nearly_adjacent_segments(segment_list, tolerance)
+
 
 
 

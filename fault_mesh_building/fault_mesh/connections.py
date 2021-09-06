@@ -1,25 +1,41 @@
-from typing import Union
+from typing import Union, List
 import fnmatch
-from shapely.geometry import MultiLineString
-from shapely.ops import linemerge
+from operator import attrgetter
 
-from fault_mesh.smoothing import smooth_trace
-from fault_mesh.utilities.cutting import cut_line_at_multiple_points
+import numpy as np
+from shapely.geometry import MultiLineString, LineString, Point, Polygon
+from shapely.ops import linemerge, unary_union
+import geopandas as gpd
+
+from eq_fault_geom.geomio.cfm_faults import smallest_difference
+from fault_mesh.smoothing import smooth_trace, merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
+from fault_mesh.utilities.cutting import cut_line_at_multiple_points, cut_line_at_point
 
 
 class ConnectedFaultSystem:
-    def __init__(self, overall_name: str, search_patterns: Union[str, list], cfm_faults,
+    def __init__(self, overall_name: str, cfm_faults, segment_names: list = None,
+                 search_patterns: Union[str, list] = None,
                  excluded_names: Union[str, list] = None, tolerance: float = 100.,
-                 smooth_trace_refinements: int = None):
-        self.overall_name = overall_name
+                 smooth_trace_refinements: int = 5):
+        self.name = overall_name
+        self._overall_trace = None
+        self._contours = None
         segments = []
 
-        if isinstance(search_patterns, str):
-            search_pattern_list = [search_patterns]
-        else:
-            assert isinstance(search_patterns, list)
-            assert len(search_patterns)
-            search_pattern_list = search_patterns
+        assert any([segment_names is not None, search_patterns is not None])
+
+        if segment_names is not None:
+            assert isinstance(segment_names, list)
+            assert len(segment_names)
+            segment_names_list = segment_names
+
+        if search_patterns is not None:
+            if isinstance(search_patterns, str):
+                search_pattern_list = [search_patterns]
+            else:
+                assert isinstance(search_patterns, list)
+                assert len(search_patterns)
+                search_pattern_list = search_patterns
 
         if isinstance(excluded_names, str):
             excluded_list = [excluded_names]
@@ -30,10 +46,18 @@ class ConnectedFaultSystem:
             assert len(excluded_names)
             excluded_list = excluded_names
 
+        if len(excluded_list):
+            assert not any([x in segment_names_list for x in excluded_list])
+
         for fault in cfm_faults.faults:
             name = fault.name
-            if any([fnmatch.fnmatch(name, pattern) for pattern in search_pattern_list]):
-                if not any([fnmatch.fnmatch(name, pattern) for pattern in excluded_list]):
+            if search_patterns is not None:
+                if any([fnmatch.fnmatch(name, pattern) for pattern in search_pattern_list]):
+                    if not any([fnmatch.fnmatch(name, pattern) for pattern in excluded_list]):
+                        segments.append(fault)
+
+            if segment_names is not None:
+                if any([fnmatch.fnmatch(name, pattern) for pattern in segment_names_list]):
                     segments.append(fault)
 
         for segment in segments:
@@ -70,15 +94,31 @@ class ConnectedFaultSystem:
                     if segment.nztm_trace.distance(ordered_segments[-1].nztm_trace) <= tolerance:
                         ordered_segments.append(segment)
         self.segments = ordered_segments
-
-        self.segment_boundaries = [l1.nztm_trace.intersection(l2.nztm_trace) for l1, l2 in zip(self.segments,
-                                                                                               self.segments[1:])]
-
         self.overall_trace = linemerge([seg.nztm_trace for seg in self.segments])
+
+        # boundaries = [l1.nztm_trace.intersection(l2.nztm_trace) for l1, l2 in zip(self.segments, self.segments[1:])]
+        boundaries = []
+        for l1, l2 in zip(self.segments, self.segments[1:]):
+            if l1.nztm_trace.distance(l2.nztm_trace) == 0.:
+                boundaries.append(l1.nztm_trace.intersection(l2.nztm_trace))
+            else:
+                new_l1, new_l2 = align_two_nearly_adjacent_segments([l1.nztm_trace, l2.nztm_trace])
+                boundaries.append(new_l1.intersection(new_l2))
+
+
+
+        self.segment_boundaries = [bound for bound in boundaries if not bound.is_empty]
+
 
         if smooth_trace_refinements is not None:
             self.smoothed_overall_trace = smooth_trace(self.overall_trace, n_refinements=smooth_trace_refinements)
-            self.smoothed_segments = cut_line_at_multiple_points(self.smoothed_overall_trace, self.segment_boundaries)
+            if len(self.segment_boundaries) >= 2:
+                self.smoothed_segments = cut_line_at_multiple_points(self.smoothed_overall_trace, self.segment_boundaries)
+            else:
+                self.smoothed_segments = cut_line_at_point(self.smoothed_overall_trace, self.segment_boundaries[0])
+            for smoothed_segment in self.smoothed_segments:
+                closest_segment = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(smoothed_segment.centroid))
+                closest_segment.smoothed_trace = smoothed_segment
         else:
             self.smoothed_overall_trace = None
             self.smoothed_segments = None
@@ -91,4 +131,95 @@ class ConnectedFaultSystem:
     def smoothed_trace(self):
         return self.smoothed_overall_trace
 
+    def depth_contour(self, depth: float, smoothing: bool = True, damping: int = None, km: bool = False):
+        contours = [segment.depth_contour(depth, smoothing, damping, km) for segment in self.segments]
+        valid_contours = [contour for contour in contours if contour is not None]
+        return MultiLineString(valid_contours)
+
+    def generate_depth_contours(self, depths: Union[np.ndarray, List[float]], smoothing: bool = True, damping: int = None,
+                       km: bool = False):
+        contours = [self.depth_contour(depth, smoothing, damping, km) for depth in depths]
+
+        if max(depths) > 0:
+            depths *= -1
+
+        self.contours =  gpd.GeoDataFrame({"depth": depths}, geometry=contours)
+
+    @property
+    def contours(self):
+        return self._contours
+
+    @contours.setter
+    def contours(self, contours: gpd.GeoDataFrame):
+        self._contours = contours
+
+
+
         # Might need to add interpolation between nearby but not identical segment ends. Do this when we get to it.
+
+    @property
+    def overall_trace(self):
+        return self._overall_trace
+
+    @overall_trace.setter
+    def overall_trace(self, trace: Union[LineString, MultiLineString]):
+        if isinstance(trace, LineString):
+            self._overall_trace = trace
+        else:
+            assert isinstance(trace, MultiLineString)
+            self._overall_trace = merge_multiple_nearly_adjacent_segments(list(trace))
+
+    def trace_and_contours(self, smoothed: bool = True):
+        assert self.contours is not None
+        if smoothed:
+            return unary_union([self.smoothed_trace] + list(self.contours.geometry))
+        else:
+            return unary_union([self.overall_trace] + list(self.contours.geometry))
+
+    def end_polygon(self, smoothed: bool = False, distance: float= 1.e5):
+        if smoothed:
+            end1 = Point(self.smoothed_overall_trace.coords[0])
+            end2 = Point(self.smoothed_overall_trace.coords[-1])
+        else:
+            end1 = Point(self.trace.coords[0])
+            end2 = Point(self.trace.coords[-1])
+
+        seg1 = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end1))
+        seg2 = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end2))
+
+        if smoothed:
+            assert end1.distance(seg1.smoothed_trace) < 500.
+            assert end2.distance(seg2.smoothed_trace) < 500.
+        else:
+            assert end1.distance(seg1.nztm_trace) < 500.
+            assert end2.distance(seg2.nztm_trace) < 500.
+
+        line1 = LineString([np.array(end1) + distance * seg1.across_strike_vector,
+                            np.array(end1) - distance * seg1.across_strike_vector])
+
+        if smallest_difference(seg1.dip_dir, seg2.dip_dir) > 90:
+            line2 = LineString([np.array(end2) + distance * seg2.across_strike_vector,
+                                np.array(end2) - distance * seg2.across_strike_vector])
+        else:
+            line2 = LineString([np.array(end2) - distance * seg2.across_strike_vector,
+                                np.array(end2) + distance * seg2.across_strike_vector])
+
+        if line1.intersects(line2):
+            intersection = line1.intersection(line2)
+            p1 = max([p for p in line1.coords], key=lambda x: Point(x).distance(intersection))
+            p2 = max([p for p in line2.coords], key=lambda x: Point(x).distance(intersection))
+            edge_poly = Polygon([p1, intersection, p2])
+
+        else:
+            edge_poly = Polygon(np.vstack([np.array(line1), np.array(line2)]))
+
+        return edge_poly
+
+    def footprint(self, smoothed: bool = True):
+        return self.trace_and_contours(smoothed).minimum_rotated_rectangle.buffer(5000, cap_style=2).intersection(self.end_polygon(smoothed=smoothed))
+
+
+
+
+
+
