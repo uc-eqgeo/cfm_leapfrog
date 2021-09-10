@@ -21,7 +21,9 @@ class LeapfrogMultiFault(CfmMultiFault):
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, exclude_region_polygons: list = None,
                  exclude_region_min_sr: float = 1.8, include_names: list = None, depth_type: str = "D90",
                  exclude_aus: bool = True, exclude_zero: bool = True, sort_sr: bool = False,
-                 segment_distance_tolerance: float = 100.):
+                 segment_distance_tolerance: float = 100., smoothing_n_refinements: int = 5):
+
+        self._smoothing_n = smoothing_n_refinements
         super(LeapfrogMultiFault, self).__init__(fault_geodataframe=fault_geodataframe, 
                                                  exclude_region_polygons=exclude_region_polygons,
                                                  exclude_region_min_sr=exclude_region_min_sr,
@@ -37,10 +39,18 @@ class LeapfrogMultiFault(CfmMultiFault):
         self._connections = None
         self._neighbour_connections = None
         self.connected_faults = None
+        self._segment_dict = None
+        self._multi_segment_dict = None
+        self._inter_fault_connections = None
 
     def add_fault(self, series: pd.Series, depth_type: str = "D90"):
         cfmFault = LeapfrogFault.from_series(series, parent_multifault=self, depth_type=depth_type)
+        cfmFault.smoothed_trace = smooth_trace(cfmFault.nztm_trace, n_refinements=self.smoothing_n)
         self.faults.append(cfmFault)
+
+    @property
+    def smoothing_n(self):
+        return self._smoothing_n
 
     @property
     def segment_distance_tolerance(self):
@@ -190,11 +200,74 @@ class LeapfrogMultiFault(CfmMultiFault):
 
         self.curated_faults = curated_faults
 
+    @classmethod
+    def from_shp(cls, filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
+                 exclude_region_min_sr: float = 1.8, sort_sr: bool = False, smoothing_n_refinements: int = 5):
+        assert os.path.exists(filename)
+        fault_geodataframe = gpd.GeoDataFrame.from_file(filename)
+        multi_fault = cls(fault_geodataframe, exclude_region_polygons=exclude_region_polygons,
+                          exclude_region_min_sr=exclude_region_min_sr, depth_type=depth_type, sort_sr=sort_sr,
+                          smoothing_n_refinements=smoothing_n_refinements)
+        return multi_fault
 
+    @property
+    def segment_dict(self):
+        if self._segment_dict is None:
+            self.generate_segment_dicts()
+        return self._segment_dict
+
+    @property
+    def multi_segment_dict(self):
+        if self._multi_segment_dict is None:
+            self.generate_segment_dicts()
+        return self._multi_segment_dict
+
+    def generate_segment_dicts(self):
+        segment_dict = {}
+        multi_segment_dict = {}
+        for fault in self.faults:
+            segment_dict[fault.name] = fault
+        self._segment_dict = segment_dict
+
+        for fault in self.connected_faults:
+            for seg in fault.segments:
+                multi_segment_dict[seg.name] = fault
+        self._multi_segment_dict = multi_segment_dict
+
+    def find_inter_fault_connections(self):
+        connection_set = set()
+        for con in self.connections:
+            f1 = self.segment_dict[con[0]]
+            f2 = self.segment_dict[con[1]]
+
+            f1_name = f1.name if not f1.is_segment else self.multi_segment_dict[f1.name].name
+            f2_name = f2.name if not f2.is_segment else self.multi_segment_dict[f2.name].name
+            if f1_name != f2_name:
+                connection_set.add(tuple(sorted([f1_name, f2_name], key=lambda x: x.lower())))
+
+        self._inter_fault_connections = connection_set
+
+    @property
+    def inter_fault_connections(self):
+        if self._inter_fault_connections is None:
+            self.find_inter_fault_connections()
+        return self._inter_fault_connections
+
+    def find_terminations(self, fault_name: str):
+        fault_index = self.cutting_hierarchy.index(fault_name)
+        terminations = []
+        cons = [con for con in self.inter_fault_connections if fault_name in con]
+        for con in cons:
+            other_fault = [a for a in list(con) if a != fault_name][0]
+            other_index = self.cutting_hierarchy.index(other_fault)
+            if fault_index > other_index:
+                terminations.append(con)
+
+        return terminations
 
 
 class LeapfrogFault(CfmFault):
-    def __init__(self, parent_multifault: LeapfrogMultiFault = None, smoothing: int = 3,
+    def __init__(self, parent_multifault: LeapfrogMultiFault = None, smoothing: int = 5,
                  trimming_gradient: float = 1.0, segment_distance_tolerance: float = 100.):
         self._end1 = None
         self._end2 = None
@@ -210,8 +283,9 @@ class LeapfrogFault(CfmFault):
         self._smoothing = smoothing
         self._trimming_gradient = trimming_gradient
         self._segment_distance_tolerance = segment_distance_tolerance
-
-        self.smoothed_trace = None
+        self._contours = None
+        self._smoothed_trace = None
+        self._footprint = None
 
     @property
     def is_segment(self):
@@ -272,6 +346,15 @@ class LeapfrogFault(CfmFault):
         dip_dir_rad = np.radians(self.dip_dir)
         return np.array([np.sin(dip_dir_rad), np.cos(dip_dir_rad), 0.])
 
+    @property
+    def smoothed_trace(self):
+        return self._smoothed_trace
+
+    @smoothed_trace.setter
+    def smoothed_trace(self, trace: LineString):
+        assert isinstance(trace, LineString)
+        self._smoothed_trace = trace
+
     def depth_contour(self, depth: float, smoothing: bool = True, damping: int = None, km= False,
                       distance_tolerance: float = 100.):
         if depth <= 0:
@@ -294,7 +377,8 @@ class LeapfrogFault(CfmFault):
                 smoothed_contour = self.smoothed_trace
 
             else:
-                smoothed_contour = smooth_trace(self.nztm_trace, self.smoothing)
+                self.smoothed_trace = smooth_trace(self.nztm_trace, self.smoothing)
+                smoothed_contour = self.smoothed_trace
 
 
         else:
@@ -378,6 +462,15 @@ class LeapfrogFault(CfmFault):
 
         return trimmed_contour
 
+    def generate_depth_contours(self, depths: Union[np.ndarray, List[float]], smoothing: bool = True, damping: int = None,
+                       km: bool = False):
+        contours = [self.depth_contour(depth, smoothing, damping, km) for depth in depths]
+
+        if max(depths) > 0:
+            depths *= -1
+
+        self.contours =  gpd.GeoDataFrame({"depth": depths}, geometry=contours)
+
     @property
     def nztm_trace(self):
         return self._nztm_trace
@@ -422,9 +515,6 @@ class LeapfrogFault(CfmFault):
 
         return self.clipping_box(end_i, end_width, across_half_width=across_half_width)
 
-
-
-
     def neighbour_angle(self, neighbour: LeapfrogFault):
         strike_diff = smallest_difference(self.dip_dir, neighbour.dip_dir)
         if strike_diff > 90.:
@@ -437,15 +527,37 @@ class LeapfrogFault(CfmFault):
             dip_diff = abs(neighbour.dip_best - self.dip_best)
         return max([2 * dip_diff, strike_diff]) / 2.
 
-
-
-
-
-
-
     @property
     def segment_distance_tolerance(self):
         return self._segment_distance_tolerance
+
+    @property
+    def footprint(self):
+        if self._footprint is None:
+            self.calculate_footprint()
+        return self._footprint
+
+    def calculate_footprint(self, smoothed: bool = True, buffer: float = 5000.):
+        if smoothed:
+            trace = self.smoothed_trace
+        else:
+            trace = self.nztm_trace
+
+        buffer_top_offset = self.across_strike_vector * -1 * buffer
+        shifted_top = translate(trace, *buffer_top_offset)
+
+        bottom_trace = list(self.contours.geometry)[-1]
+        buffer_bottom_offset = self.across_strike_vector * buffer
+        shifted_bottom = translate(bottom_trace, *buffer_bottom_offset)
+
+        buffer_combined = MultiLineString([shifted_top, shifted_bottom])
+        self._footprint = buffer_combined.minimum_rotated_rectangle
+
+    def find_terminations(self):
+        return self.parent.find_terminations(self.name)
+
+
+
 
 
 

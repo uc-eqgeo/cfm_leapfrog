@@ -20,6 +20,7 @@ class ConnectedFaultSystem:
         self.name = overall_name
         self._overall_trace = None
         self._contours = None
+        self._footprint = None
         segments = []
 
         assert any([segment_names is not None, search_patterns is not None])
@@ -123,6 +124,12 @@ class ConnectedFaultSystem:
             self.smoothed_overall_trace = None
             self.smoothed_segments = None
 
+        self.parent_multifault = self.segments[0].parent_multifault
+
+    @property
+    def segment_names(self):
+        return [segment.name for segment in self.segments]
+
     @property
     def trace(self):
         return self.overall_trace
@@ -143,7 +150,7 @@ class ConnectedFaultSystem:
         if max(depths) > 0:
             depths *= -1
 
-        self.contours =  gpd.GeoDataFrame({"depth": depths}, geometry=contours)
+        self.contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours)
 
     @property
     def contours(self):
@@ -172,9 +179,9 @@ class ConnectedFaultSystem:
     def trace_and_contours(self, smoothed: bool = True):
         assert self.contours is not None
         if smoothed:
-            return unary_union([self.smoothed_trace] + list(self.contours.geometry))
+            return unary_union([self.smoothed_trace] + list(self.contours.geometry) + list(self.end_lines(smoothed=smoothed)))
         else:
-            return unary_union([self.overall_trace] + list(self.contours.geometry))
+            return unary_union([self.overall_trace] + list(self.contours.geometry) + list(self.end_lines(smoothed=smoothed)))
 
     def end_polygon(self, smoothed: bool = False, distance: float= 1.e5):
         if smoothed:
@@ -215,9 +222,38 @@ class ConnectedFaultSystem:
 
         return edge_poly
 
-    def footprint(self, smoothed: bool = True):
-        return self.trace_and_contours(smoothed).minimum_rotated_rectangle.buffer(5000, cap_style=2).intersection(self.end_polygon(smoothed=smoothed))
+    def footprint(self, smoothed: bool = True, buffer: float = 5000.):
+        return self.trace_and_contours(smoothed).minimum_rotated_rectangle.buffer(buffer, cap_style=2).intersection(self.end_polygon(smoothed=smoothed))
 
+    def end_lines(self, smoothed: bool = False, depth: float = 20.e3, spacing: float = 2000.):
+        if smoothed:
+            end1 = Point(self.smoothed_overall_trace.coords[0])
+            end2 = Point(self.smoothed_overall_trace.coords[-1])
+        else:
+            end1 = Point(self.trace.coords[0])
+            end2 = Point(self.trace.coords[-1])
+
+        seg1 = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end1))
+        seg2 = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end2))
+
+        end_line_list = []
+        for end, seg in zip([end1, end2], [seg1, seg2]):
+            vertex_list = [np.array(end)]
+            distance = depth / np.sin(np.radians(seg.dip_best))
+            for dist in np.arange(spacing, distance, spacing):
+                vertex_list.append(np.array(end) + dist * seg.down_dip_vector)
+
+            vertex_list.append(np.array(end) + distance * seg.down_dip_vector)
+            end_line_list.append(LineString(vertex_list))
+
+        combined = unary_union(end_line_list)
+        if isinstance(combined, LineString):
+            return MultiLineString([combined])
+        else:
+            return combined
+
+    def find_terminations(self):
+        return self.parent_multifault.find_terminations(self.name)
 
 
 
