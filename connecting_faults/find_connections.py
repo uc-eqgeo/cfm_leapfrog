@@ -17,25 +17,12 @@ data = LeapfrogMultiFault.from_shp("../gis/cfm_gt_1_5.gpkg")
 
 dist_tolerance = 200.
 
-connections = []
-neighbour_connections = []
-for fault in data.faults:
-    for other_fault in data.faults:
-        if other_fault.name != fault.name:
-            if fault.nztm_trace.distance(other_fault.nztm_trace) <= dist_tolerance:
-                print(f"Connection: {fault.name} and {other_fault.name}")
-                connections.append([fault.name, other_fault.name])
-                conditions = [p1.distance(p2) <= dist_tolerance for p1, p2 in product([fault.end1, fault.end2],
-                                                                                     [other_fault.end1,
-                                                                                      other_fault.end2])]
-                if any(conditions):
-                    neighbour_connections.append([fault.name, other_fault.name])
+data.find_connections()
 
-major_faults = connected_nodes(neighbour_connections)
+major_faults = connected_nodes(data.neighbour_connections)
 data.read_fault_systems("test_central_1_5_composite.csv")
 data.generate_curated_faults()
 data.read_cutting_hierarchy("test_central_1_5_hierarchy.csv")
-
 
 
 plt.close("all")
@@ -51,8 +38,12 @@ for fault in data.curated_faults:
     if isinstance(fault, ConnectedFaultSystem):
         gpd.GeoSeries(fault.end_lines(smoothed=True)).to_file(f"end_lines/{fault.name}_end_lines.shp")
 
+footprints = [fault.footprint for fault in data.curated_faults]
+for fault in data.curated_faults:
+    fault.adjust_footprint()
+
 edges = gpd.GeoDataFrame({"fault_name": [fault.name for fault in data.curated_faults]},
-                         geometry=[fault.footprint(smoothed=True) for fault in data.curated_faults])
+                         geometry=[fault.footprint for fault in data.curated_faults])
 edges.to_file("edges.gpkg", driver="GPKG")
 
 make_journal_file_multi("edges.gpkg", "footprint_volumes")

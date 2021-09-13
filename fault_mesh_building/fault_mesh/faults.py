@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from typing import List, Union
-from itertools import product
+from itertools import product, chain
 
 import numpy as np
 from eq_fault_geom.geomio.cfm_faults import CfmMultiFault, CfmFault, normalize_bearing, smallest_difference
@@ -9,6 +9,7 @@ import geopandas as gpd
 import pandas as pd
 
 from shapely.affinity import translate
+from shapely.ops import unary_union, split
 from shapely.geometry import LineString, MultiLineString, Point, Polygon
 
 from fault_mesh.smoothing import straighten, smooth_trace
@@ -92,6 +93,10 @@ class LeapfrogMultiFault(CfmMultiFault):
         assert isinstance(fault_list, list)
         assert all([isinstance(fault, (ConnectedFaultSystem, LeapfrogFault)) for fault in fault_list])
         self._curated_faults = fault_list
+
+    @property
+    def curated_fault_dict(self):
+        return {fault.name: fault for fault in self.curated_faults}
 
     def read_cutting_hierarchy(self, hierarchy_file: str):
         assert os.path.exists(hierarchy_file)
@@ -355,6 +360,10 @@ class LeapfrogFault(CfmFault):
         assert isinstance(trace, LineString)
         self._smoothed_trace = trace
 
+    @property
+    def parent(self):
+        return self._parent
+
     def depth_contour(self, depth: float, smoothing: bool = True, damping: int = None, km= False,
                       distance_tolerance: float = 100.):
         if depth <= 0:
@@ -555,6 +564,32 @@ class LeapfrogFault(CfmFault):
 
     def find_terminations(self):
         return self.parent.find_terminations(self.name)
+
+    def adjust_footprint(self, line_length: float = 1.5e5):
+        terms = list(set(chain(*self.find_terminations())))
+        if terms:
+            cutting_faults = [self.parent.curated_fault_dict[name] for name in terms if name is not self.name]
+            fp_to_merge = [self.footprint] + [fault.footprint for fault in cutting_faults]
+            merged_footprints = unary_union(fp_to_merge)
+            cutting_lines = []
+            for end_i, other_end in zip([self.end1, self.end2], [self.end2, self.end1]):
+                if not any([end_i.distance(fault.nztm_trace) < self.segment_distance_tolerance for fault in cutting_faults]):
+                    cutting_lines.append((LineString([np.array(end_i) + self.across_strike_vector * line_length,
+                                                      np.array(end_i) - self.across_strike_vector * line_length]),
+                                          other_end))
+            if len(cutting_lines):
+                if len(cutting_lines) > 1:
+                    print(f"{self.name}: more than one cutting line, choosing first...")
+                splitter, other_end = cutting_lines[0]
+                split_footprint = split(merged_footprints, splitter)
+                kept_polys = [poly for poly in list(split_footprint) if other_end.within(poly)]
+                if len(kept_polys) > 1:
+                    print(f"{self.name}: more than one cut polygon, choosing first...")
+                self._footprint = kept_polys[0]
+
+            else:
+                self._footprint = merged_footprints
+
 
 
 

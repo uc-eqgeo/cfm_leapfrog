@@ -1,10 +1,11 @@
 from typing import Union, List
 import fnmatch
 from operator import attrgetter
+from itertools import chain
 
 import numpy as np
 from shapely.geometry import MultiLineString, LineString, Point, Polygon
-from shapely.ops import linemerge, unary_union
+from shapely.ops import linemerge, unary_union, split
 import geopandas as gpd
 
 from eq_fault_geom.geomio.cfm_faults import smallest_difference
@@ -124,7 +125,7 @@ class ConnectedFaultSystem:
             self.smoothed_overall_trace = None
             self.smoothed_segments = None
 
-        self.parent_multifault = self.segments[0].parent_multifault
+        self.parent = self.segments[0].parent
 
     @property
     def segment_names(self):
@@ -132,6 +133,10 @@ class ConnectedFaultSystem:
 
     @property
     def trace(self):
+        return self.overall_trace
+
+    @property
+    def nztm_trace(self):
         return self.overall_trace
 
     @property
@@ -222,8 +227,15 @@ class ConnectedFaultSystem:
 
         return edge_poly
 
-    def footprint(self, smoothed: bool = True, buffer: float = 5000.):
-        return self.trace_and_contours(smoothed).minimum_rotated_rectangle.buffer(buffer, cap_style=2).intersection(self.end_polygon(smoothed=smoothed))
+    @property
+    def footprint(self):
+        if self._footprint is None:
+            self.calculate_footprint()
+        return self._footprint
+
+    def calculate_footprint(self, smoothed: bool = True, buffer: float = 5000.):
+        footprint = self.trace_and_contours(smoothed).minimum_rotated_rectangle.buffer(buffer, cap_style=2).intersection(self.end_polygon(smoothed=smoothed))
+        self._footprint = footprint
 
     def end_lines(self, smoothed: bool = False, depth: float = 20.e3, spacing: float = 2000.):
         if smoothed:
@@ -253,7 +265,41 @@ class ConnectedFaultSystem:
             return combined
 
     def find_terminations(self):
-        return self.parent_multifault.find_terminations(self.name)
+        return self.parent.find_terminations(self.name)
+
+    def adjust_footprint(self, line_length: float = 1.5e5, smoothed: bool = True):
+        terms = list(set(chain(*self.find_terminations())))
+        if terms:
+            cutting_faults = [self.parent.curated_fault_dict[name] for name in terms if name is not self.name]
+            fp_to_merge = [self.footprint] + [fault.footprint for fault in cutting_faults]
+            merged_footprints = unary_union(fp_to_merge)
+            cutting_lines = []
+
+            if smoothed:
+                end1 = Point(self.smoothed_overall_trace.coords[0])
+                end2 = Point(self.smoothed_overall_trace.coords[-1])
+            else:
+                end1 = Point(self.trace.coords[0])
+                end2 = Point(self.trace.coords[-1])
+
+            for end_i, other_end in zip([end1, end2], [end2, end1]):
+                nearest_seg = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end_i))
+                if not any([end_i.distance(fault.nztm_trace) < self.parent.segment_distance_tolerance for fault in cutting_faults]):
+                    cutting_lines.append((LineString([np.array(end_i) + nearest_seg.across_strike_vector * line_length,
+                                                      np.array(end_i) - nearest_seg.across_strike_vector * line_length]),
+                                          other_end))
+            if len(cutting_lines):
+                if len(cutting_lines) > 1:
+                    print(f"{self.name}: more than one cutting line, choosing first...")
+                splitter, other_end = cutting_lines[0]
+                split_footprint = split(merged_footprints, splitter)
+                kept_polys = [poly for poly in list(split_footprint) if other_end.within(poly)]
+                if len(kept_polys) > 1:
+                    print(f"{self.name}: more than one cut polygon, choosing first...")
+                self._footprint = kept_polys[0]
+
+            else:
+                self._footprint = merged_footprints
 
 
 
