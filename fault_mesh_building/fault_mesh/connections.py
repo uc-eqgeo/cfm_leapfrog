@@ -233,7 +233,7 @@ class ConnectedFaultSystem:
             self.calculate_footprint()
         return self._footprint
 
-    def calculate_footprint(self, smoothed: bool = True, buffer: float = 5000.):
+    def calculate_footprint(self, smoothed: bool = True, buffer: float = 15000.):
         footprint = self.trace_and_contours(smoothed).minimum_rotated_rectangle.buffer(buffer, cap_style=2).intersection(self.end_polygon(smoothed=smoothed))
         self._footprint = footprint
 

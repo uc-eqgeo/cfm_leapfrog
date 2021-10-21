@@ -2,7 +2,7 @@
 bounds=-R572000/2443000/4223000/6202000
 #gmt grd2xyz hikurangi_interface.tif -s > hikurangi_interface.xyz
 #gmt surface hikurangi_interface.xyz -Ghikurangi_expanded.grd -M2000 -I2000 $bounds
-#gmt grdsample hikurangi_interface.tif -Ghikurangi_expanded.grd $bounds -I500
+
 gmt grdclip hikurangi_expanded.grd -SrNaN/0 -Ghikurangi_expanded_no_nans.grd
 
 gmt grdmask depth_polygons.gmt -Gdepth_polygons.grd -NZ -Rhikurangi_expanded.grd

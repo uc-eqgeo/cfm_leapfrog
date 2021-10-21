@@ -3,7 +3,6 @@ from itertools import product
 import geopandas as gpd
 from matplotlib import pyplot as plt
 import numpy as np
-import ezdxf
 
 from fault_mesh.faults import LeapfrogMultiFault
 from fault_mesh.connections import ConnectedFaultSystem
@@ -39,8 +38,9 @@ for fault in data.curated_faults:
         gpd.GeoSeries(fault.end_lines(smoothed=True)).to_file(f"end_lines/{fault.name}_end_lines.shp")
 
 footprints = [fault.footprint for fault in data.curated_faults]
-for fault in data.curated_faults:
+for fault in reversed(data.curated_faults):
     fault.adjust_footprint()
+    gpd.GeoSeries(fault.footprint).to_file(f"footprints/{fault.name}_footprint.shp")
 
 edges = gpd.GeoDataFrame({"fault_name": [fault.name for fault in data.curated_faults]},
                          geometry=[fault.footprint for fault in data.curated_faults])

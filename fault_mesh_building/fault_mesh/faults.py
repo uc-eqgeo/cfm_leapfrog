@@ -546,7 +546,7 @@ class LeapfrogFault(CfmFault):
             self.calculate_footprint()
         return self._footprint
 
-    def calculate_footprint(self, smoothed: bool = True, buffer: float = 5000.):
+    def calculate_footprint(self, smoothed: bool = True, buffer: float = 15000.):
         if smoothed:
             trace = self.smoothed_trace
         else:
@@ -589,6 +589,16 @@ class LeapfrogFault(CfmFault):
 
             else:
                 self._footprint = merged_footprints
+
+    def extend_footprint(self, end_i: Point, other_end: Point, distance: float = 40.e3):
+        diff_vector = np.array(other_end) - np.array(end_i)
+        if np.dot(diff_vector, self.along_strike_vector) > 0:
+            strike_direction = -1 * self.along_strike_vector
+        else:
+            strike_direction = self.along_strike_vector
+
+        bottom_trace = list(self.contours.geometry)[-1]
+
 
 
 
