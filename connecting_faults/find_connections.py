@@ -45,8 +45,8 @@ for fault in reversed(data.curated_faults):
 edges = gpd.GeoDataFrame({"fault_name": [fault.name for fault in data.curated_faults]},
                          geometry=[fault.footprint for fault in data.curated_faults])
 edges.to_file("edges.gpkg", driver="GPKG")
-
-make_journal_file_multi("edges.gpkg", "footprint_volumes")
+#
+# make_journal_file_multi("edges.gpkg", "footprint_volumes")
 edges.plot(ax=ax, alpha=0.5)
 ax.set_aspect("equal")
 plt.show()

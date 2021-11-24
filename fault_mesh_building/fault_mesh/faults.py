@@ -9,10 +9,10 @@ import geopandas as gpd
 import pandas as pd
 
 from shapely.affinity import translate
-from shapely.ops import unary_union, split
-from shapely.geometry import LineString, MultiLineString, Point, Polygon
+from shapely.ops import unary_union
+from shapely.geometry import LineString, MultiLineString, Point, Polygon, MultiPoint
 
-from fault_mesh.smoothing import straighten, smooth_trace
+from fault_mesh.smoothing import smooth_trace
 from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
 from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
 from fault_mesh.connections import ConnectedFaultSystem
@@ -273,7 +273,8 @@ class LeapfrogMultiFault(CfmMultiFault):
 
 class LeapfrogFault(CfmFault):
     def __init__(self, parent_multifault: LeapfrogMultiFault = None, smoothing: int = 5,
-                 trimming_gradient: float = 1.0, segment_distance_tolerance: float = 100.):
+                 trimming_gradient: float = 1.0, segment_distance_tolerance: float = 100.,
+                 parent_connected=None):
         self._end1 = None
         self._end2 = None
         self._neighbouring_segments = None
@@ -285,6 +286,7 @@ class LeapfrogFault(CfmFault):
 
         self.connections = []
         self._is_segment = False
+        self.parent_connected_fault = None
         self._smoothing = smoothing
         self._trimming_gradient = trimming_gradient
         self._segment_distance_tolerance = segment_distance_tolerance
@@ -546,7 +548,7 @@ class LeapfrogFault(CfmFault):
             self.calculate_footprint()
         return self._footprint
 
-    def calculate_footprint(self, smoothed: bool = True, buffer: float = 15000.):
+    def calculate_footprint(self, smoothed: bool = True, buffer: float = 5000.):
         if smoothed:
             trace = self.smoothed_trace
         else:
@@ -565,50 +567,123 @@ class LeapfrogFault(CfmFault):
     def find_terminations(self):
         return self.parent.find_terminations(self.name)
 
-    def adjust_footprint(self, line_length: float = 1.5e5):
+    def adjust_footprint(self):
         terms = list(set(chain(*self.find_terminations())))
         if terms:
             cutting_faults = [self.parent.curated_fault_dict[name] for name in terms if name is not self.name]
-            fp_to_merge = [self.footprint] + [fault.footprint for fault in cutting_faults]
-            merged_footprints = unary_union(fp_to_merge)
-            cutting_lines = []
-            for end_i, other_end in zip([self.end1, self.end2], [self.end2, self.end1]):
-                if not any([end_i.distance(fault.nztm_trace) < self.segment_distance_tolerance for fault in cutting_faults]):
-                    cutting_lines.append((LineString([np.array(end_i) + self.across_strike_vector * line_length,
-                                                      np.array(end_i) - self.across_strike_vector * line_length]),
-                                          other_end))
-            if len(cutting_lines):
-                if len(cutting_lines) > 1:
-                    print(f"{self.name}: more than one cutting line, choosing first...")
-                splitter, other_end = cutting_lines[0]
-                split_footprint = split(merged_footprints, splitter)
-                kept_polys = [poly for poly in list(split_footprint) if other_end.within(poly)]
-                if len(kept_polys) > 1:
-                    print(f"{self.name}: more than one cut polygon, choosing first...")
-                self._footprint = kept_polys[0]
+            for fault in cutting_faults:
+                for nearest_end, other_end in zip([self.end1, self.end2], [self.end2, self.end1]):
+                    if nearest_end.distance(fault.nztm_trace) < 1.e3:
+                        if isinstance(fault, ConnectedFaultSystem):
+                            closest_seg = min(fault.segments, key=lambda x: x.nztm_trace.distance(nearest_end))
+                        else:
+                            closest_seg = fault
 
-            else:
-                self._footprint = merged_footprints
+                        self.extend_footprint(nearest_end, other_end, closest_seg)
 
-    def extend_footprint(self, end_i: Point, other_end: Point, distance: float = 40.e3):
+            # fp_to_merge = [self.footprint] + [fault.footprint for fault in cutting_faults]
+            # merged_footprints = unary_union(fp_to_merge)
+            # cutting_lines = []
+            # for end_i, other_end in zip([self.end1, self.end2], [self.end2, self.end1]):
+            #     if not any([end_i.distance(fault.nztm_trace) < self.segment_distance_tolerance for fault in cutting_faults]):
+            #         cutting_lines.append((LineString([np.array(end_i) + self.across_strike_vector * line_length,
+            #                                           np.array(end_i) - self.across_strike_vector * line_length]),
+            #                               other_end))
+            # if len(cutting_lines):
+            #     if len(cutting_lines) > 1:
+            #         print(f"{self.name}: more than one cutting line, choosing first...")
+            #     splitter, other_end = cutting_lines[0]
+            #     split_footprint = split(merged_footprints, splitter)
+            #     kept_polys = [poly for poly in list(split_footprint) if other_end.within(poly)]
+            #     if len(kept_polys) > 1:
+            #         print(f"{self.name}: more than one cut polygon, choosing first...")
+            #     self._footprint = kept_polys[0]
+            #
+            # else:
+            #     self._footprint = merged_footprints
+
+    def extend_footprint(self, end_i: Point, other_end: Point, other_segment: LeapfrogFault,
+                         deepest_contour_depth: float = 30.e3, search_line_length: float = 1.5e5,
+                         buffer_size: float = 5.e3, fall_back_distance: float = 40.3):
+        """
+
+        :param end_i: End to extend
+        :param other_end: Other end of segment
+        :param other_segment: Other
+        :param deepest_contour_depth:
+        :param search_line_length:
+        :param buffer_size:
+        :param fall_back_distance:
+        :return:
+        """
+        # Find strike direction
         diff_vector = np.array(other_end) - np.array(end_i)
         if np.dot(diff_vector, self.along_strike_vector) > 0:
             strike_direction = -1 * self.along_strike_vector
         else:
             strike_direction = self.along_strike_vector
 
-        bottom_trace = list(self.contours.geometry)[-1]
+
+        if self.is_segment:
+            bottom_trace = None
+            contour_depth = deepest_contour_depth
+            while bottom_trace is None:
+                bottom_trace = self.depth_contour(contour_depth)
+                contour_depth -= 2000.
+        else:
+            bottom_trace = list(self.contours.geometry)[-1]
+        bot1 = np.array(bottom_trace)[0]
+        bot2 = np.array(bottom_trace)[-1]
+
+        def distance_along_strike(point: np.array, reference: np.array, strike_vector: np.array):
+            diff = point - np.array(reference)
+            return np.dot(diff, strike_vector)
+
+        bot_i = bot1 if (distance_along_strike(bot1, end_i, strike_direction) >
+                         distance_along_strike(bot2, end_i, strike_direction)) else bot2
+
+        search_line = LineString([bot_i,
+                                  bot_i + search_line_length * strike_direction])
+
+        if other_segment.is_segment:
+            other_fault = other_segment.parent_connected_fault
+        else:
+            other_fault = other_segment
+
+        other_contour = other_fault.depth_contour(deepest_contour_depth)
+        if other_contour.intersects(bottom_trace):
+            return
+
+        else:
+            trace_intersection = search_line.intersection(other_fault.nztm_trace)
+            if isinstance(trace_intersection, MultiPoint):
+                trace_intersection = min(list(trace_intersection), key=lambda x: x.distance(Point(bot_i)))
+            contour_intersection = search_line.intersection(other_contour)
+            if isinstance(contour_intersection, MultiPoint):
+                contour_intersection = min(list(contour_intersection), key=lambda x: x.distance(Point(bot_i)))
+
+            if any([a.is_empty for a in [trace_intersection, contour_intersection]]):
+                if all([a.is_empty for a in [trace_intersection, contour_intersection]]):
+                    corner_point = Point(bot_i + fall_back_distance * strike_direction)
+                elif not trace_intersection.is_empty:
+                    corner_point = trace_intersection
+                else:
+                    corner_point = contour_intersection
+            else:
+                corner_point = max([contour_intersection, trace_intersection], key=lambda x: x.distance(Point(bot_i)))
+
+            triangle = Polygon([bot_i, np.array(corner_point), np.array(end_i)]).buffer(buffer_size,
+                                                                                        cap_style=2)
 
 
+            if self.is_segment:
+                new_boundary = unary_union([self.parent_connected_fault.footprint, triangle])
+                self.parent_connected_fault._footprint = new_boundary
+            else:
+                new_boundary = unary_union([self.footprint, triangle])
+                self._footprint = new_boundary
 
-
-
-
-
-
-
-
-
+            return
 
 
 
@@ -622,21 +697,11 @@ class LeapfrogConnectedFault:
 
 
 
-
-    def join_combine_surface_traces(self, smoothing: int = 0, simplification: int = 0):
-        pass
-
-    def depth_contours(self, smoothing: int = 0, simplification: int = 0, angle_gap: Union[float, int] = None):
-        pass
-
-
 class LeapfrogFaultSegment(LeapfrogFault):
     def __init__(self, parent_fault: LeapfrogConnectedFault, parent_multifault: LeapfrogMultiFault = None, ):
         super(LeapfrogFault, self).__init__(parent_multifault)
         self._fault = parent_fault
         self.neighbouring_segments = []
-
-
 
 
 class LeapfrogFaultModel:

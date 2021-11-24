@@ -75,6 +75,7 @@ class ConnectedFaultSystem:
                             neighbour_list.append(other_seg)
 
                 segment.neighbouring_segments = neighbour_list
+            segment.parent_connected_fault = self
 
         # Order segments
         # Find furthest south or west
@@ -119,7 +120,7 @@ class ConnectedFaultSystem:
             else:
                 self.smoothed_segments = cut_line_at_point(self.smoothed_overall_trace, self.segment_boundaries[0])
             for smoothed_segment in self.smoothed_segments:
-                closest_segment = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(smoothed_segment.centroid))
+                closest_segment = min(self.segments, key=lambda x: x.nztm_trace.centroid.distance(smoothed_segment.centroid))
                 closest_segment.smoothed_trace = smoothed_segment
         else:
             self.smoothed_overall_trace = None
@@ -196,8 +197,8 @@ class ConnectedFaultSystem:
             end1 = Point(self.trace.coords[0])
             end2 = Point(self.trace.coords[-1])
 
-        seg1 = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end1))
-        seg2 = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end2))
+        seg1 = min(self.segments, key=lambda x: x.nztm_trace.centroid.distance(end1))
+        seg2 = min(self.segments, key=lambda x: x.nztm_trace.centroid.distance(end2))
 
         if smoothed:
             assert end1.distance(seg1.smoothed_trace) < 500.
@@ -245,8 +246,8 @@ class ConnectedFaultSystem:
             end1 = Point(self.trace.coords[0])
             end2 = Point(self.trace.coords[-1])
 
-        seg1 = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end1))
-        seg2 = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end2))
+        seg1 = min(self.segments, key=lambda x: x.nztm_trace.centroid.distance(end1))
+        seg2 = min(self.segments, key=lambda x: x.nztm_trace.centroid.distance(end2))
 
         end_line_list = []
         for end, seg in zip([end1, end2], [seg1, seg2]):
@@ -267,39 +268,60 @@ class ConnectedFaultSystem:
     def find_terminations(self):
         return self.parent.find_terminations(self.name)
 
-    def adjust_footprint(self, line_length: float = 1.5e5, smoothed: bool = True):
+
+    def adjust_footprint(self, smoothed: bool = True):
+        if smoothed:
+            end1 = Point(self.smoothed_overall_trace.coords[0])
+            end2 = Point(self.smoothed_overall_trace.coords[-1])
+        else:
+            end1 = Point(self.trace.coords[0])
+            end2 = Point(self.trace.coords[-1])
         terms = list(set(chain(*self.find_terminations())))
         if terms:
             cutting_faults = [self.parent.curated_fault_dict[name] for name in terms if name is not self.name]
-            fp_to_merge = [self.footprint] + [fault.footprint for fault in cutting_faults]
-            merged_footprints = unary_union(fp_to_merge)
-            cutting_lines = []
+            for fault in cutting_faults:
+                for nearest_end, other_end in zip([end1, end2], [end2, end1]):
+                    nearest_seg_this_fault = min(self.segments, key=lambda x: x.nztm_trace.distance(nearest_end))
+                    if nearest_end.distance(fault.nztm_trace) < 1.e3:
+                        if isinstance(fault, ConnectedFaultSystem):
+                            closest_seg = min(fault.segments, key=lambda x: x.nztm_trace.distance(nearest_end))
+                        else:
+                            closest_seg = fault
 
-            if smoothed:
-                end1 = Point(self.smoothed_overall_trace.coords[0])
-                end2 = Point(self.smoothed_overall_trace.coords[-1])
-            else:
-                end1 = Point(self.trace.coords[0])
-                end2 = Point(self.trace.coords[-1])
-
-            for end_i, other_end in zip([end1, end2], [end2, end1]):
-                nearest_seg = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end_i))
-                if not any([end_i.distance(fault.nztm_trace) < self.parent.segment_distance_tolerance for fault in cutting_faults]):
-                    cutting_lines.append((LineString([np.array(end_i) + nearest_seg.across_strike_vector * line_length,
-                                                      np.array(end_i) - nearest_seg.across_strike_vector * line_length]),
-                                          other_end))
-            if len(cutting_lines):
-                if len(cutting_lines) > 1:
-                    print(f"{self.name}: more than one cutting line, choosing first...")
-                splitter, other_end = cutting_lines[0]
-                split_footprint = split(merged_footprints, splitter)
-                kept_polys = [poly for poly in list(split_footprint) if other_end.within(poly)]
-                if len(kept_polys) > 1:
-                    print(f"{self.name}: more than one cut polygon, choosing first...")
-                self._footprint = kept_polys[0]
-
-            else:
-                self._footprint = merged_footprints
+                        nearest_seg_this_fault.extend_footprint(nearest_end, other_end, closest_seg)
+    # def adjust_footprint(self, line_length: float = 1.5e5, smoothed: bool = True):
+    #     terms = list(set(chain(*self.find_terminations())))
+    #     if terms:
+    #         cutting_faults = [self.parent.curated_fault_dict[name] for name in terms if name is not self.name]
+    #         fp_to_merge = [self.footprint] + [fault.footprint for fault in cutting_faults]
+    #         merged_footprints = unary_union(fp_to_merge)
+    #         cutting_lines = []
+    #
+    #         if smoothed:
+    #             end1 = Point(self.smoothed_overall_trace.coords[0])
+    #             end2 = Point(self.smoothed_overall_trace.coords[-1])
+    #         else:
+    #             end1 = Point(self.trace.coords[0])
+    #             end2 = Point(self.trace.coords[-1])
+    #
+    #         for end_i, other_end in zip([end1, end2], [end2, end1]):
+    #             nearest_seg = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end_i))
+    #             if not any([end_i.distance(fault.nztm_trace) < self.parent.segment_distance_tolerance for fault in cutting_faults]):
+    #                 cutting_lines.append((LineString([np.array(end_i) + nearest_seg.across_strike_vector * line_length,
+    #                                                   np.array(end_i) - nearest_seg.across_strike_vector * line_length]),
+    #                                       other_end))
+    #         if len(cutting_lines):
+    #             if len(cutting_lines) > 1:
+    #                 print(f"{self.name}: more than one cutting line, choosing first...")
+    #             splitter, other_end = cutting_lines[0]
+    #             split_footprint = split(merged_footprints, splitter)
+    #             kept_polys = [poly for poly in list(split_footprint) if other_end.within(poly)]
+    #             if len(kept_polys) > 1:
+    #                 print(f"{self.name}: more than one cut polygon, choosing first...")
+    #             self._footprint = kept_polys[0]
+    #
+    #         else:
+    #             self._footprint = merged_footprints
 
 
 

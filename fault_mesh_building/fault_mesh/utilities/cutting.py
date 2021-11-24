@@ -51,9 +51,6 @@ def cut_line_between_two_points(line: LineString, points: List[Point]):
     return segments[1]
 
 
-def extend_rectangle():
-    pass
-
 
 
 
