@@ -18,6 +18,7 @@ dist_tolerance = 200.
 
 data.find_connections()
 
+
 major_faults = connected_nodes(data.neighbour_connections)
 data.read_fault_systems("test_central_1_5_composite.csv")
 data.generate_curated_faults()
