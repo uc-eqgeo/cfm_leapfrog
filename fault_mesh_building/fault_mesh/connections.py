@@ -1,6 +1,5 @@
 from typing import Union, List
 import fnmatch
-from operator import attrgetter
 from itertools import chain
 
 import numpy as np

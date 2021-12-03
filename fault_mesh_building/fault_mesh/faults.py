@@ -22,7 +22,8 @@ class LeapfrogMultiFault(CfmMultiFault):
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, exclude_region_polygons: list = None,
                  exclude_region_min_sr: float = 1.8, include_names: list = None, depth_type: str = "D90",
                  exclude_aus: bool = True, exclude_zero: bool = True, sort_sr: bool = False,
-                 segment_distance_tolerance: float = 100., smoothing_n_refinements: int = 5):
+                 segment_distance_tolerance: float = 100., smoothing_n_refinements: int = 5,
+                 remove_colons: bool = True):
 
         self._smoothing_n = smoothing_n_refinements
         super(LeapfrogMultiFault, self).__init__(fault_geodataframe=fault_geodataframe, 
@@ -30,7 +31,8 @@ class LeapfrogMultiFault(CfmMultiFault):
                                                  exclude_region_min_sr=exclude_region_min_sr,
                                                  include_names=include_names,
                                                  depth_type=depth_type,
-                                                 exclude_aus=exclude_aus, exclude_zero=exclude_zero, sort_sr=sort_sr)
+                                                 exclude_aus=exclude_aus, exclude_zero=exclude_zero, sort_sr=sort_sr,
+                                                 remove_colons=remove_colons)
 
         self._segment_distance_tolerance = segment_distance_tolerance
         self._cutting_hierarchy = []
@@ -44,8 +46,9 @@ class LeapfrogMultiFault(CfmMultiFault):
         self._multi_segment_dict = None
         self._inter_fault_connections = None
 
-    def add_fault(self, series: pd.Series, depth_type: str = "D90"):
-        cfmFault = LeapfrogFault.from_series(series, parent_multifault=self, depth_type=depth_type)
+    def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False):
+        cfmFault = LeapfrogFault.from_series(series, parent_multifault=self, depth_type=depth_type,
+                                             remove_colons=remove_colons)
         cfmFault.smoothed_trace = smooth_trace(cfmFault.nztm_trace, n_refinements=self.smoothing_n)
         self.faults.append(cfmFault)
 
@@ -183,6 +186,7 @@ class LeapfrogMultiFault(CfmMultiFault):
             for line in con_data:
                 elements = line.strip().split(",")
                 name = elements[0].strip()
+                name = name.replace(":", "")
                 segs = [element.strip() for element in elements[1:]]
                 cfault = ConnectedFaultSystem(overall_name=name, cfm_faults=self, segment_names=segs)
                 self.connected_faults.append(cfault)
@@ -207,12 +211,13 @@ class LeapfrogMultiFault(CfmMultiFault):
 
     @classmethod
     def from_shp(cls, filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
-                 exclude_region_min_sr: float = 1.8, sort_sr: bool = False, smoothing_n_refinements: int = 5):
+                 exclude_region_min_sr: float = 1.8, sort_sr: bool = False, smoothing_n_refinements: int = 5,
+                 remove_colons: bool = True):
         assert os.path.exists(filename)
         fault_geodataframe = gpd.GeoDataFrame.from_file(filename)
         multi_fault = cls(fault_geodataframe, exclude_region_polygons=exclude_region_polygons,
                           exclude_region_min_sr=exclude_region_min_sr, depth_type=depth_type, sort_sr=sort_sr,
-                          smoothing_n_refinements=smoothing_n_refinements)
+                          smoothing_n_refinements=smoothing_n_refinements, remove_colons=remove_colons)
         return multi_fault
 
     @property
