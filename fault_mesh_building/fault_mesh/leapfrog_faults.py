@@ -4,7 +4,6 @@ from typing import List, Union
 from itertools import product, chain
 
 import numpy as np
-from eq_fault_geom.geomio.cfm_faults import CfmMultiFault, CfmFault, normalize_bearing, smallest_difference
 import geopandas as gpd
 import pandas as pd
 
@@ -12,13 +11,14 @@ from shapely.affinity import translate
 from shapely.ops import unary_union
 from shapely.geometry import LineString, MultiLineString, Point, Polygon, MultiPoint
 
+from fault_mesh.generic_faults import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference
 from fault_mesh.smoothing import smooth_trace
 from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
 from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
 from fault_mesh.connections import ConnectedFaultSystem
 
 
-class LeapfrogMultiFault(CfmMultiFault):
+class LeapfrogMultiFault(GenericMultiFault):
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, exclude_region_polygons: list = None,
                  exclude_region_min_sr: float = 1.8, include_names: list = None, depth_type: str = "D90",
                  exclude_aus: bool = True, exclude_zero: bool = True, sort_sr: bool = False,
@@ -276,7 +276,7 @@ class LeapfrogMultiFault(CfmMultiFault):
         return terminations
 
 
-class LeapfrogFault(CfmFault):
+class LeapfrogFault(GenericFault):
     def __init__(self, parent_multifault: LeapfrogMultiFault = None, smoothing: int = 5,
                  trimming_gradient: float = 1.0, segment_distance_tolerance: float = 100.,
                  parent_connected=None):

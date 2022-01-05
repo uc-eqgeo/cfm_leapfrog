@@ -7,12 +7,11 @@ import numpy as np
 from fault_mesh.faults import LeapfrogMultiFault
 from fault_mesh.connections import ConnectedFaultSystem
 from fault_mesh.utilities.graph import connected_nodes
-from fault_mesh.utilities.cubit import make_journal_file_multi
 
-data = LeapfrogMultiFault.from_shp("../gis/cfm_gt_1_5.gpkg")
+# data = LeapfrogMultiFault.from_shp("../gis/cfm_gt_1_5.gpkg")
 
 # data = LeapfrogMultiFault.from_shp("../gis/central_cfm.gpkg")
-# data = LeapfrogMultiFault.from_shp("../gis/NZ_CFM_v0_9_110821.shp")
+data = LeapfrogMultiFault.from_shp("../gis/cfm_0_9.gpkg")
 
 dist_tolerance = 200.
 
