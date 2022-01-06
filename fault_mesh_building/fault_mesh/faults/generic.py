@@ -1,14 +1,13 @@
 from typing import Union, List
 import os
+import logging
 
 import geopandas as gpd
+from pyproj import Transformer
 import pandas as pd
 import numpy as np
 from shapely.geometry import LineString, Polygon, MultiLineString
 from shapely.ops import unary_union
-from pyproj import Transformer
-
-import logging
 
 transformer = Transformer.from_crs(2193, 4326, always_xy=True)
 transform_wgs2nztm = Transformer.from_crs(4326, 2193, always_xy=True)
@@ -17,37 +16,15 @@ dip_direction_ranges = {"E": (45, 135), "NE": (0, 90), "N": (315, 45), "NW": (27
                         "S": (135, 225), "SE": (90, 180), "W": (225, 315)}
 valid_dip_directions = list(dip_direction_ranges.keys()) + [None, "SUBVERTICAL AND VARIABLE"]
 
-dominant_rake_ranges = {"reverse": (45, 135), "dextral": (135, 225), "sinistral": (315, 45), "normal": (225, 315)}
-secondary_rake_ranges = {"reverse": (0, 180), "dextral": (90, 270), "sinistral": (270, 90), "normal": (180, 360)}
-possible_rake_dirs = ['dextral', 'normal', 'reverse', 'sinistral', 'dextral and reverse', 'normal and dextral']
-
-# List of subduction zones to exclude if desired
-subduction_names = ("hikurangi", "puysegur")
-
 valid_dip_range = [0, 90]
 valid_depth_range = [0, 50]
-valid_rake_range = [0, 360]
-valid_sr_range = [0, 60]
+valid_sr_range = [0, 80]
 
 # These fields aren't crucial but are in some versions of the relevant files
-expected_fields = ['D90', 'Depth_max', 'Depth_min', 'Dip_pref',
-                   'Dip_dir', 'Dip_max', 'Dip_min', 'Name',
-                   'geometry']
+expected_fields = ['Depth_pref', 'Depth_max', 'Depth_min', 'Dip_max', 'Dip_min', 'Name', 'SR_pref']
 
 # There will be a mess if these fields don't exist
-required_fields = ['Name', 'Fault_ID', 'geometry']
-
-
-def decimal_deg_to_minutes(decdeg: float):
-    """
-    For use with hybrid model, which uses degrees and minutes.
-    """
-    if decdeg < 0.:
-        decdeg *= -1
-    deg = np.int(np.floor(decdeg))
-    mins = 60. * (decdeg - deg)
-
-    return deg, mins
+required_fields = ['Name', 'Fault_ID', 'Dip_dir', 'Dip_pref', 'geometry']
 
 
 def smallest_difference(value1, value2):
@@ -184,13 +161,16 @@ def calculate_dip_direction(line: LineString):
         bearing = 180 - np.degrees(np.arctan2(1/gradient_y, 1))
     bearing_vector = np.array([np.sin(np.radians(bearing)), np.cos(np.radians(bearing))])
 
+    strike = normalize_bearing(bearing - 90.)
+    strike_vector = np.array([np.sin(np.radians(strike)), np.cos(np.radians(strike))])
+
     # Determine whether line object fits strike convention
     relative_x = x - x[0]
     relative_y = y - y[0]
 
-    distances = np.matmul(np.vstack((relative_x, relative_y)).T, bearing_vector)
-    num_pos = np.count_nonzero(distances >= 0)
-    num_neg = np.count_nonzero(distances < 0)
+    distances = np.matmul(np.vstack((relative_x, relative_y)).T, strike_vector)
+    num_pos = np.count_nonzero(distances > 0)
+    num_neg = np.count_nonzero(distances <= 0)
 
     if num_neg > num_pos:
         bearing += 180.
@@ -223,15 +203,66 @@ class GenericMultiFault:
     Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)
     """
 
-    def __init__(self, fault_geodataframe: gpd.GeoDataFrame, exclude_region_polygons: list = None,
-                 exclude_region_min_sr: float = 1.8, include_names: list = None, depth_type: str = "D90",
-                 exclude_aus: bool = True, exclude_zero: bool = True, sort_sr: bool = False,
+    def __init__(self, fault_geodataframe: gpd.GeoDataFrame, sort_sr: bool = False,
                  remove_colons: bool = False):
-        self.logger = logging.getLogger('cmf_logger')
+        self.logger = logging.getLogger("fault_model_logger")
         self.check_input1(fault_geodataframe)
         self.check_input2(fault_geodataframe)
 
         self._faults = []
+
+        if sort_sr:
+            sorted_df = fault_geodataframe.sort_values("SR_pref", ascending=False)
+        else:
+            # Sort alphabetically by name
+            sorted_df = fault_geodataframe.sort_values("Name")
+        # Reset index to line up with alphabetical sorting
+        sorted_df = sorted_df.reset_index(drop=True)
+        for i, row in sorted_df.iterrows():
+            self.add_fault(row, remove_colons=remove_colons)
+
+        self.df = sorted_df
+
+    @staticmethod
+    def check_input1(fault_geodataframe):
+        for field in required_fields:
+            if field not in fault_geodataframe.columns:
+                raise ValueError("Missing required field: {}".format(field))
+
+    def check_input2(self, fault_geodataframe):
+        for field in expected_fields:
+            if field not in fault_geodataframe.columns:
+                print("Warning: missing expected field: ({})".format(field))
+                self.logger.warning("missing expected field")
+
+
+    @property
+    def faults(self):
+        return self._faults
+
+    def add_fault(self, series: pd.Series, remove_colons: bool = False):
+        fault = GenericFault.from_series(series, parent_multifault=self,
+                                         remove_colons=remove_colons)
+        self.faults.append(fault)
+
+
+
+    @property
+    def fault_numbers(self):
+        if self.faults is not None:
+            return [fault.number for fault in self.faults]
+        else:
+            return []
+
+    @staticmethod
+    def gdf_from_nz_cfm_shp(filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
+                            exclude_region_min_sr: float = 1.8,
+                            include_names: list = None, exclude_aus: bool = True, exclude_zero: bool = True):
+        """
+        Read CFM shapefile
+        """
+        assert os.path.exists(filename)
+        fault_geodataframe = gpd.GeoDataFrame.from_file(filename)
 
         # If appropriate, clip out data that fall within exclude_regions
         if exclude_region_polygons is not None:
@@ -249,7 +280,6 @@ class GenericMultiFault:
                 else:
                     # Assume NZTM, do nothing
                     exclude_regions_nztm.append(poly)
-
 
             # Make list of faults outside region
             trimmed_fault_ls = []
@@ -281,60 +311,27 @@ class GenericMultiFault:
         if exclude_aus:
             trimmed_fault_gdf = trimmed_fault_gdf[trimmed_fault_gdf.Fault_stat != "A-US"]
 
-
-        if sort_sr:
-            sorted_df = trimmed_fault_gdf.sort_values("SR_pref", ascending=False)
+        if depth_type == "D90":
+            trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
+            trimmed_fault_gdf["Depth_std"] = trimmed_fault_gdf["D90_stdev"]
         else:
-            # Sort alphabetically by name
-            sorted_df = trimmed_fault_gdf.sort_values("Name")
-        # Reset index to line up with alphabetical sorting
-        sorted_df = sorted_df.reset_index(drop=True)
-        for i, row in sorted_df.iterrows():
-            self.add_fault(row, depth_type=depth_type, remove_colons=remove_colons)
+            trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Dfcomb"]
+            trimmed_fault_gdf["Depth_std"] = trimmed_fault_gdf["Dfcomb_std"]
 
-        self.df = sorted_df
-
-
-
-    def check_input1(self, fault_geodataframe):
-        for field in required_fields:
-            if field not in fault_geodataframe.columns:
-                raise ValueError("Missing required field: {}".format(field))
-
-    def check_input2(self, fault_geodataframe):
-        for field in expected_fields:
-            if field not in fault_geodataframe.columns:
-                print("Warning: missing expected field: ({})".format(field))
-                self.logger.warning("missing expected field")
-
-
-    @property
-    def faults(self):
-        return self._faults
-
-    def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False):
-        cfmFault = GenericFault.from_series(series, parent_multifault=self, depth_type=depth_type,
-                                            remove_colons=remove_colons)
-        self.faults.append(cfmFault)
-
-    @property
-    def fault_numbers(self):
-        if self.faults is not None:
-            return [fault.number for fault in self.faults]
-        else:
-            return []
+        return trimmed_fault_gdf
 
     @classmethod
-    def from_shp(cls, filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
-                 exclude_region_min_sr: float = 1.8, sort_sr: bool = False):
-        """
-        Read CFM shapefile
-        """
-        assert os.path.exists(filename)
-        fault_geodataframe = gpd.GeoDataFrame.from_file(filename)
-        multi_fault = cls(fault_geodataframe, exclude_region_polygons=exclude_region_polygons,
-                          exclude_region_min_sr=exclude_region_min_sr, depth_type=depth_type, sort_sr=sort_sr,
-                          )
+    def from_nz_cfm_shp(cls, filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
+                        exclude_region_min_sr: float = 1.8, include_names: list = None, exclude_aus: bool = True,
+                        exclude_zero: bool = True, sort_sr: bool = False, remove_colons: bool = False):
+
+        trimmed_fault_gdf = cls.gdf_from_nz_cfm_shp(filename=filename, exclude_region_polygons=exclude_region_polygons,
+                                                    depth_type=depth_type, exclude_region_min_sr=exclude_region_min_sr,
+                                                    include_names=include_names, exclude_aus=exclude_aus,
+                                                    exclude_zero=exclude_zero)
+        multi_fault = cls(trimmed_fault_gdf, sort_sr=sort_sr,
+                          remove_colons=remove_colons)
+
         return multi_fault
 
 
@@ -344,8 +341,9 @@ class GenericFault:
 
         :param parent_multifault:
         """
+        self.logger = logging.getLogger("fault_model_logger")
+
         # Attributes usually provided in CFM trace shapefile
-        self.logger = logging.getLogger('cmf_logger')
         self._parent = parent_multifault
         self._depth_best, self._depth_min, self._depth_max, self._depth_stdev = (None,) * 4
         self._dip_best, self._dip_min, self._dip_max, self._dip_dir, self._dip_dir_str = (None,) * 5
@@ -380,15 +378,10 @@ class GenericFault:
         depth_v = self.validate_depth(depth)
         if self.depth_min is not None:
             if depth_v < self.depth_min:
-                # print("{}: depth_best ({:.2f}) lower than depth_min ({:.2f})".format(self.name, depth_v,
-                #                                                                       self.depth_min))
                 self.logger.warning("depth_best lower than depth_min")
 
         if self.depth_max is not None:
             if depth_v > self.depth_max:
-                # print("{}: depth_best ({:.2f}) greater than depth_max ({:.2f})".format(self.name, depth_v,
-                #                                                                        self.depth_max))
-
                 self.logger.warning("depth_best greater than depth_max ")
         self._depth_best = depth_v
 
@@ -397,7 +390,6 @@ class GenericFault:
         depth_v = self.validate_depth(depth)
         for depth_value in (self.depth_min, self.depth_best):
             if depth_value is not None and depth_v < depth_value:
-                print("Warning: depth_max lower than either depth_min or depth_best ({})".format(self.name))
                 self.logger.warning("depth_max lower than either depth_min or depth_best")
 
         self._depth_max = depth_v
@@ -639,7 +631,7 @@ class GenericFault:
             self._nztm_trace = trace
         else:
             assert isinstance(trace, MultiLineString)
-            self._nztm_trace = list(trace)[0]
+            self._nztm_trace = list(trace.geoms)[0]
 
     @property
     def wgs_trace(self):
@@ -672,106 +664,6 @@ class GenericFault:
     def sense_sec(self):
         return self._sense_sec
 
-    @rake_best.setter
-    def rake_best(self, rake: Union[float, int]):
-        rake_v = self.validate_rake(rake)
-        if self.rake_min is not None:
-            if rake_v < self.rake_min:
-                #print("{}: rake_best ({.2f}) lower than rake_min ({.2f})".format(self.name, rake_v, self.rake_min))
-                print("{}: rake_best ({}) lower than rake_min ({})".format(self.name, rake_v, self.rake_min))
-                self.logger.warning("rake_best is lower than rake_min")
-        if self.rake_max is not None:
-            if rake_v > self.rake_max:
-                #print("{}: rake_best ({.2f}) greater than rake_max ({.2f})".format(self.name, rake_v, self.rake_max))
-                print("{}: rake_best ({}) greater than rake_max ({})".format(self.name, rake_v, self.rake_max))
-                self.logger.warning("rake_best is greater than rake_max")
-        self._rake_best = rake_v
-
-        if self.sense_dom is not None:
-            self.validate_rake_sense()
-
-
-    @staticmethod
-    def rake_to_opensha(rake: Union[float, int]):
-        """
-        To give opensha convention
-        """
-        new_rake = reverse_bearing(rake)
-        while new_rake > 180:
-            new_rake -= 360.
-        while new_rake <= -180.:
-            new_rake += 360.
-        return new_rake
-
-    @rake_max.setter
-    def rake_max(self, rake: Union[float, int]):
-        rake_v = self.validate_rake(rake)
-        for key, rake_value in zip(["rake_min", "rake_best"], [self.rake_min, self.rake_best]):
-            if rake_value is not None and bearing_leq(rake_v, rake_value):
-                print("{}: rake_max ({}) is lower than {} ({})".format(self.name, rake_v, key, rake_value))
-                self.logger.warning("rake_max is lower than rake min or rake best")
-        self._rake_max = rake_v
-
-    @rake_min.setter
-    def rake_min(self, rake: Union[float, int]):
-        rake_v = self.validate_rake(rake)
-        for key, rake_value in zip(["rake_max", "rake_best"], [self.rake_max, self.rake_best]):
-            if rake_value is not None and bearing_geq(rake_v, rake_value):
-                #print("{}: rake_min ({:.2f}) is higher than {} ({:.2f})".format(self.name, rake_v, key, rake_value))
-                print("{}: rake_min ({}) is higher than {} ({})".format(self.name, rake_v, key, rake_value))
-                self.logger.warning("rake_min is higher than rake max or rake best")
-        self._rake_min = rake_v
-
-    @staticmethod
-    def validate_rake(rake: Union[float, int]):
-        assert isinstance(rake, (float, int))
-        if -180. <= rake < 0.:
-            rake += 360
-        while rake >= 360.:
-            rake -= 360.
-        assert valid_rake_range[0] <= rake <= valid_rake_range[1]
-        return rake
-
-    @sense_dom.setter
-    def sense_dom(self, sense: str):
-        assert any([isinstance(sense, str), sense is None])
-        if sense is None:
-            print("{}: Unexpected sense_dom: {}".format(self.name, sense))
-        elif sense.lower() not in possible_rake_dirs:
-            print("{}: Unexpected sense_dom: {}".format(self.name, sense.lower()))
-        self._sense_dom = sense
-
-    @sense_sec.setter
-    def sense_sec(self, sense: str):
-        assert any([sense is None, isinstance(sense, str)])
-        if sense is not None:
-            if sense.lower() not in possible_rake_dirs:
-                print("{}: Unexpected sense_sec: {}".format(self.name, sense.lower()))
-            if self.rake_best is not None:
-                self.validate_rake_sense()
-        self._sense_sec = sense
-
-    def validate_rake_sense(self):
-        if any([a is None for a in (self.rake_best, self.sense_dom)]):
-            print("{}: Insufficient data to compare rake and slip sense".format(self.name))
-            self.logger.warning("Insufficient data to compare rake and slip sense")
-            return
-        else:
-            dominant_range = dominant_rake_ranges[self.sense_dom]
-            if not all([bearing_geq(self.rake_best, dominant_range[0]),
-                        bearing_leq(self.rake_best, dominant_range[1])]):
-                print("{}: Supplied rake ({:.2f} deg) differs from dominant slip sense ({})".format(self.name,
-                                                                                                    self.rake_best,
-                                                                                                    self.sense_dom))
-                self.logger.warning("Supplied rake differs from dominant slip sense")
-            if self.sense_sec is not None:
-                sec_range = secondary_rake_ranges[self.sense_sec]
-                if not all([bearing_geq(self.rake_best, sec_range[0]),
-                            bearing_leq(self.rake_best, sec_range[1])]):
-                    print("{}: Supplied rake ({:.2f} deg) inconsistent with sec slip sense ({})".format(self.name,
-                                                                                                        self.rake_best,
-                                                                                                        self.sense_sec))
-                    self.logger.warning("Supplied rake inconsistent with sec slip sense")
 
     @property
     def sr_best(self):
@@ -857,25 +749,32 @@ class GenericFault:
         return self._parent
 
     @classmethod
-    def from_nz_cfm_series(cls, series: pd.Series, parent_multifault: GenericMultiFault = None, depth_type: str = "D90",
-                    remove_colons: bool = False):
+    def from_series(cls, series: pd.Series, parent_multifault: GenericMultiFault = None, remove_colons: bool = False):
         assert isinstance(series, pd.Series)
-        assert depth_type in ["D90", "Dfcomb"]
         fault = cls(parent_multifault=parent_multifault)
         fault.name = series["Name"]
         if remove_colons:
             fault.name = series["Name"].replace(":", "")
         fault.number = int(series["Fault_ID"])
-        fault.dip_best, fault.dip_min, fault.dip_max = series["Dip_pref"], series["Dip_min"], series["Dip_max"]
+        fault.dip_best = series["Dip_pref"]
+
+        if all([a in series.index for a in ["Dip_min", "Dip_max"]]):
+            fault.dip_min, fault.dip_max = series["Dip_min"], series["Dip_max"]
+
         fault.nztm_trace = series["geometry"]
         fault.dip_dir_str = series["Dip_dir"]
-        fault.rake_best, fault.rake_min, fault.rake_max = series["Rake_pref"], series["Rake_minus"], series["Rake_plus"]
-        fault.sense_dom, fault.sense_sec = series["Dom_sense"], series["Sub_sense"]
-        fault.sr_best, fault.sr_min, fault.sr_max = series["SR_pref"], series["SR_min"], series["SR_max"]
-        if depth_type == "D90":
-            fault.depth_best, fault.depth_stdev = series["D90"], series["D90_stdev"]
-        else:
-            fault.depth_best, fault.depth_stdev = series["Dfcomb"], series["Dfcomb_std"]
+
+        if "SR_pref" in series.index:
+            fault.sr_best = series["SR_pref"]
+
+            if all([a in series.index for a in ["SR_min", "SR_max"]]):
+                fault.sr_min, fault.sr_max = series["SR_min"], series["SR_max"]
+
+        if "Depth_pref" in series.index:
+            fault.depth_best = series["Depth_pref"]
+
+        if "Depth_std" in series.index:
+            fault.depth_stdev = series["Depth_std"]
 
         return fault
 

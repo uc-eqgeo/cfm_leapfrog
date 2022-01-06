@@ -1,5 +1,5 @@
-from typing import List, Set
 from collections import Counter
+from typing import List
 
 import networkx
 from networkx.algorithms.components.connected import connected_components
@@ -26,7 +26,6 @@ def connected_nodes(node_list: List[List[str]]):
 
 
 def suggest_combined_name(connected_node_set: list):
-
     connected_node_list = list(connected_node_set)
     split_list = [set(name.split()) for name in connected_node_list]
     intersections = split_list[0].intersection(*split_list)
@@ -83,7 +82,3 @@ def suggest_combined_name(connected_node_set: list):
     #     out_name = connected_node_list[0] + " combined"
     #
     return out_name
-
-
-
-

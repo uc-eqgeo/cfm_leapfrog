@@ -11,27 +11,21 @@ from shapely.affinity import translate
 from shapely.ops import unary_union
 from shapely.geometry import LineString, MultiLineString, Point, Polygon, MultiPoint
 
-from fault_mesh.generic_faults import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference
+from faults.generic import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference
 from fault_mesh.smoothing import smooth_trace
 from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
 from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
-from fault_mesh.connections import ConnectedFaultSystem
+from faults.connected import ConnectedFaultSystem
 
 
 class LeapfrogMultiFault(GenericMultiFault):
-    def __init__(self, fault_geodataframe: gpd.GeoDataFrame, exclude_region_polygons: list = None,
-                 exclude_region_min_sr: float = 1.8, include_names: list = None, depth_type: str = "D90",
-                 exclude_aus: bool = True, exclude_zero: bool = True, sort_sr: bool = False,
+    def __init__(self, fault_geodataframe: gpd.GeoDataFrame, sort_sr: bool = False,
                  segment_distance_tolerance: float = 100., smoothing_n_refinements: int = 5,
                  remove_colons: bool = True):
 
         self._smoothing_n = smoothing_n_refinements
         super(LeapfrogMultiFault, self).__init__(fault_geodataframe=fault_geodataframe, 
-                                                 exclude_region_polygons=exclude_region_polygons,
-                                                 exclude_region_min_sr=exclude_region_min_sr,
-                                                 include_names=include_names,
-                                                 depth_type=depth_type,
-                                                 exclude_aus=exclude_aus, exclude_zero=exclude_zero, sort_sr=sort_sr,
+                                                 sort_sr=sort_sr,
                                                  remove_colons=remove_colons)
 
         self._segment_distance_tolerance = segment_distance_tolerance
@@ -47,7 +41,7 @@ class LeapfrogMultiFault(GenericMultiFault):
         self._inter_fault_connections = None
 
     def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False):
-        cfmFault = LeapfrogFault.from_series(series, parent_multifault=self, depth_type=depth_type,
+        cfmFault = LeapfrogFault.from_series(series, parent_multifault=self,
                                              remove_colons=remove_colons)
         cfmFault.smoothed_trace = smooth_trace(cfmFault.nztm_trace, n_refinements=self.smoothing_n)
         self.faults.append(cfmFault)
@@ -118,7 +112,7 @@ class LeapfrogMultiFault(GenericMultiFault):
 
             else:
                 assert isinstance(fault, ConnectedFaultSystem)
-                name_ls.append(fault.overall_name)
+                name_ls.append(fault.name)
                 sr_ls.append(max([seg.sr_best for seg in fault.segments]))
 
         df = pd.DataFrame({"name": name_ls, "sr": sr_ls})
@@ -210,14 +204,18 @@ class LeapfrogMultiFault(GenericMultiFault):
         self.curated_faults = curated_faults
 
     @classmethod
-    def from_shp(cls, filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
-                 exclude_region_min_sr: float = 1.8, sort_sr: bool = False, smoothing_n_refinements: int = 5,
-                 remove_colons: bool = True):
-        assert os.path.exists(filename)
-        fault_geodataframe = gpd.GeoDataFrame.from_file(filename)
-        multi_fault = cls(fault_geodataframe, exclude_region_polygons=exclude_region_polygons,
-                          exclude_region_min_sr=exclude_region_min_sr, depth_type=depth_type, sort_sr=sort_sr,
-                          smoothing_n_refinements=smoothing_n_refinements, remove_colons=remove_colons)
+    def from_nz_cfm_shp(cls, filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
+                        exclude_region_min_sr: float = 1.8, include_names: list = None, exclude_aus: bool = True,
+                        exclude_zero: bool = True, sort_sr: bool = False, remove_colons: bool = False,
+                        smoothing_n_refinements: int = 5):
+
+        trimmed_fault_gdf = cls.gdf_from_nz_cfm_shp(filename=filename, exclude_region_polygons=exclude_region_polygons,
+                                                    depth_type=depth_type, exclude_region_min_sr=exclude_region_min_sr,
+                                                    include_names=include_names, exclude_aus=exclude_aus,
+                                                    exclude_zero=exclude_zero)
+        multi_fault = cls(trimmed_fault_gdf, sort_sr=sort_sr,
+                          remove_colons=remove_colons, smoothing_n_refinements=smoothing_n_refinements)
+
         return multi_fault
 
     @property
@@ -495,12 +493,12 @@ class LeapfrogFault(GenericFault):
     def nztm_trace(self, trace: LineString):
         assert isinstance(trace, (LineString, MultiLineString))
         if isinstance(trace, MultiLineString):
-            trace = list(trace)[0]
+            trace = list(trace.geoms)[0]
 
         new_trace = LineString([(xi, yi, 0.) for xi, yi in trace.coords])
 
         self._nztm_trace = new_trace
-        new_coord_array = np.array(new_trace)
+        new_coord_array = np.array(new_trace.coords)
         self._end1 = Point(new_coord_array[0])
         self._end2 = Point(new_coord_array[-1])
 
@@ -514,7 +512,7 @@ class LeapfrogFault(GenericFault):
         return self._end2
 
     def clipping_box(self, centre_point: Point, along_half_width: float, across_half_width: float = 100000.):
-        point_array = np.array(centre_point)
+        point_array = np.array(centre_point.coords)
         across_shift = across_half_width * self.across_strike_vector
         along_shift = along_half_width * self.along_strike_vector
         out_array = point_array + np.array([across_shift + along_shift,
@@ -622,7 +620,7 @@ class LeapfrogFault(GenericFault):
         :return:
         """
         # Find strike direction
-        diff_vector = np.array(other_end) - np.array(end_i)
+        diff_vector = np.array(other_end.coords) - np.array(end_i.coords)
         if np.dot(diff_vector, self.along_strike_vector) > 0:
             strike_direction = -1 * self.along_strike_vector
         else:
@@ -637,15 +635,15 @@ class LeapfrogFault(GenericFault):
                 contour_depth -= 2000.
         else:
             bottom_trace = list(self.contours.geometry)[-1]
-        bot1 = np.array(bottom_trace)[0]
-        bot2 = np.array(bottom_trace)[-1]
+        bot1 = np.array(bottom_trace.coords)[0]
+        bot2 = np.array(bottom_trace.coords)[-1]
 
         def distance_along_strike(point: np.array, reference: np.array, strike_vector: np.array):
             diff = point - np.array(reference)
             return np.dot(diff, strike_vector)
 
-        bot_i = bot1 if (distance_along_strike(bot1, end_i, strike_direction) >
-                         distance_along_strike(bot2, end_i, strike_direction)) else bot2
+        bot_i = bot1 if (distance_along_strike(bot1, np.array(end_i.coords), strike_direction) >
+                         distance_along_strike(bot2, np.array(end_i.coords), strike_direction)) else bot2
 
         search_line = LineString([bot_i,
                                   bot_i + search_line_length * strike_direction])
@@ -677,7 +675,7 @@ class LeapfrogFault(GenericFault):
             else:
                 corner_point = max([contour_intersection, trace_intersection], key=lambda x: x.distance(Point(bot_i)))
 
-            triangle = Polygon([bot_i, np.array(corner_point), np.array(end_i)]).buffer(buffer_size,
+            triangle = Polygon(np.vstack([bot_i, np.array(corner_point.coords), np.array(end_i.coords)])).buffer(buffer_size,
                                                                                         cap_style=2)
 
 

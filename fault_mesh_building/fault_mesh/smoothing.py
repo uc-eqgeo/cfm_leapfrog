@@ -1,7 +1,6 @@
 import numpy as np
-from typing import Union, List
-import geopandas as gpd
-from shapely.geometry import LineString, MultiLineString, Point
+from typing import List
+from shapely.geometry import LineString, Point
 from shapely.ops import linemerge
 
 
@@ -29,7 +28,7 @@ def smooth_trace(trace: LineString, n_refinements: int = 5):
 def straighten(line: LineString, strike: float, damping: float):
     strike_vector = np.array([np.sin(np.radians(strike)), np.cos(np.radians(strike)), 0.])
     across_strike = np.array([np.sin(np.radians(strike + 90.)), np.cos(np.radians(strike + 90.)), 0.])
-    line_array = np.array(line)
+    line_array = np.array(line.coords)
     centroid = np.array(line.centroid)
 
     along_dists = np.dot(line_array - centroid, strike_vector)
@@ -54,17 +53,17 @@ def align_two_nearly_adjacent_segments(segment_list: List[LineString], tolerance
 
     p2 = l2e1 if l2e1.distance(line1) <= l2e2.distance(line1) else l2e2
 
-    mid_point = Point(0.5 * (np.array(p1) + np.array(p2)))
+    mid_point = Point(0.5 * (np.array(p1.coords) + np.array(p2.coords)).flatten())
 
     if l1e1 == p1:
-        new_line1 = np.vstack([np.array(mid_point), np.array(line1)[1:]])
+        new_line1 = np.vstack([np.array(mid_point.coords), np.array(line1.coords)[1:]])
     else:
-        new_line1 = np.vstack([np.array(line1)[:-1], np.array(mid_point)])
+        new_line1 = np.vstack([np.array(line1.coords)[:-1], np.array(mid_point.coords)])
 
     if l2e1 == p2:
-        new_line2 = np.vstack([np.array(mid_point), np.array(line2)[1:]])
+        new_line2 = np.vstack([np.array(mid_point.coords), np.array(line2.coords)[1:]])
     else:
-        new_line2 = np.vstack([np.array(line2)[:-1], np.array(mid_point)])
+        new_line2 = np.vstack([np.array(line2.coords)[:-1], np.array(mid_point.coords)])
 
     return LineString(new_line1), LineString(new_line2)
 

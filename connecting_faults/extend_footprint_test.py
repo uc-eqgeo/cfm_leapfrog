@@ -1,13 +1,7 @@
-from itertools import product
-
-import geopandas as gpd
-from matplotlib import pyplot as plt
 import numpy as np
 
 from fault_mesh.faults import LeapfrogMultiFault
-from fault_mesh.connections import ConnectedFaultSystem
 from fault_mesh.utilities.graph import connected_nodes
-from fault_mesh.utilities.cubit import make_journal_file_multi
 
 data = LeapfrogMultiFault.from_shp("../gis/cfm_gt_1_5.gpkg")
 

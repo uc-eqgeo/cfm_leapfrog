@@ -1,5 +1,7 @@
-from shapely.geometry import LineString, Point
 from typing import List
+
+from shapely.geometry import LineString, Point
+
 
 def cut(line: LineString, distance: float):
     # Cuts a line in two at a distance from its starting point
@@ -10,7 +12,7 @@ def cut(line: LineString, distance: float):
         pd = line.project(Point(p))
         if pd == distance:
             return [
-                LineString(coords[:i+1]),
+                LineString(coords[:i + 1]),
                 LineString(coords[i:])]
         if pd > distance:
             cp = line.interpolate(distance)
@@ -18,7 +20,6 @@ def cut(line: LineString, distance: float):
                 return LineString(coords[:i] + [(cp.x, cp.y, cp.z)]), LineString([(cp.x, cp.y, cp.z)] + coords[i:])
             else:
                 return LineString(coords[:i] + [(cp.x, cp.y)]), LineString([(cp.x, cp.y)] + coords[i:])
-
 
 
 def cut_line_at_point(line: LineString, point: Point):
@@ -49,9 +50,3 @@ def cut_line_between_two_points(line: LineString, points: List[Point]):
     assert len(points) == 2
     segments = cut_line_at_multiple_points(line, points)
     return segments[1]
-
-
-
-
-
-

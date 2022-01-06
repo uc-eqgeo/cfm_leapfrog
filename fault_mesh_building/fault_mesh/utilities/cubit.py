@@ -1,6 +1,7 @@
-from shapely.geometry import LineString, Polygon
-import geopandas as gpd
 import os
+
+import geopandas as gpd
+from shapely.geometry import LineString, Polygon
 
 
 def make_journal_file_commands(line: LineString, outfile, outmesh: str, top_z=0., depth=2.e4):
@@ -9,8 +10,8 @@ def make_journal_file_commands(line: LineString, outfile, outmesh: str, top_z=0.
         x, y = coord[:2]
         out_str += f"create vertex location {x:.4f} {y:.4f} {top_z:.2f}\n"
 
-    vertex_numbers = ",".join([str(i+1) for i in range(len(list(line.coords)) - 1)])
-    surface_numbers = ",".join([str(i+1) for i in range(len(list(line.coords)) + 1)])
+    vertex_numbers = ",".join([str(i + 1) for i in range(len(list(line.coords)) - 1)])
+    surface_numbers = ",".join([str(i + 1) for i in range(len(list(line.coords)) + 1)])
     out_str += f"create surface vertex {vertex_numbers}\n"
     out_str += f"sweep surface 1 vector 0 0 -1 distance {depth:.2f}\n"
     out_str += f"surface {surface_numbers} scheme trimesh geometry approximation angle 15\n"

@@ -4,7 +4,7 @@ from itertools import chain
 
 import numpy as np
 from shapely.geometry import MultiLineString, LineString, Point, Polygon
-from shapely.ops import linemerge, unary_union, split
+from shapely.ops import linemerge, unary_union
 import geopandas as gpd
 
 from eq_fault_geom.geomio.cfm_faults import smallest_difference
@@ -29,6 +29,8 @@ class ConnectedFaultSystem:
             assert isinstance(segment_names, list)
             assert len(segment_names)
             segment_names_list = segment_names
+        else:
+            segment_names_list = []
 
         if search_patterns is not None:
             if isinstance(search_patterns, str):
@@ -179,14 +181,14 @@ class ConnectedFaultSystem:
             self._overall_trace = trace
         else:
             assert isinstance(trace, MultiLineString)
-            self._overall_trace = merge_multiple_nearly_adjacent_segments(list(trace))
+            self._overall_trace = merge_multiple_nearly_adjacent_segments(list(trace.geoms))
 
     def trace_and_contours(self, smoothed: bool = True):
         assert self.contours is not None
         if smoothed:
-            return unary_union([self.smoothed_trace] + list(self.contours.geometry) + list(self.end_lines(smoothed=smoothed)))
+            return unary_union([self.smoothed_trace] + list(self.contours.geometry) + list(self.end_lines(smoothed=smoothed).geoms))
         else:
-            return unary_union([self.overall_trace] + list(self.contours.geometry) + list(self.end_lines(smoothed=smoothed)))
+            return unary_union([self.overall_trace] + list(self.contours.geometry) + list(self.end_lines(smoothed=smoothed).geoms))
 
     def end_polygon(self, smoothed: bool = False, distance: float= 1.e5):
         if smoothed:
@@ -206,15 +208,15 @@ class ConnectedFaultSystem:
             assert end1.distance(seg1.nztm_trace) < 500.
             assert end2.distance(seg2.nztm_trace) < 500.
 
-        line1 = LineString([np.array(end1) + distance * seg1.across_strike_vector,
-                            np.array(end1) - distance * seg1.across_strike_vector])
+        line1 = LineString(np.vstack([np.array(end1.coords) + distance * seg1.across_strike_vector,
+                                      np.array(end1.coords) - distance * seg1.across_strike_vector]))
 
         if smallest_difference(seg1.dip_dir, seg2.dip_dir) > 90:
-            line2 = LineString([np.array(end2) + distance * seg2.across_strike_vector,
-                                np.array(end2) - distance * seg2.across_strike_vector])
+            line2 = LineString(np.vstack([np.array(end2.coords) + distance * seg2.across_strike_vector,
+                                          np.array(end2.coords) - distance * seg2.across_strike_vector]))
         else:
-            line2 = LineString([np.array(end2) - distance * seg2.across_strike_vector,
-                                np.array(end2) + distance * seg2.across_strike_vector])
+            line2 = LineString(np.vstack([np.array(end2.coords) - distance * seg2.across_strike_vector,
+                                          np.array(end2.coords) + distance * seg2.across_strike_vector]))
 
         if line1.intersects(line2):
             intersection = line1.intersection(line2)
@@ -223,7 +225,7 @@ class ConnectedFaultSystem:
             edge_poly = Polygon([p1, intersection, p2])
 
         else:
-            edge_poly = Polygon(np.vstack([np.array(line1), np.array(line2)]))
+            edge_poly = Polygon(np.vstack([np.array(line1.coords), np.array(line2.coords)]))
 
         return edge_poly
 
@@ -239,24 +241,24 @@ class ConnectedFaultSystem:
 
     def end_lines(self, smoothed: bool = False, depth: float = 20.e3, spacing: float = 2000.):
         if smoothed:
-            end1 = Point(self.smoothed_overall_trace.coords[0])
-            end2 = Point(self.smoothed_overall_trace.coords[-1])
+            end1 = Point(np.array(self.smoothed_overall_trace.coords[0]))
+            end2 = Point(np.array(self.smoothed_overall_trace.coords[-1]))
         else:
-            end1 = Point(self.trace.coords[0])
-            end2 = Point(self.trace.coords[-1])
+            end1 = Point(np.array(self.trace.coords[0]))
+            end2 = Point(np.array(self.trace.coords[-1]))
 
         seg1 = min(self.segments, key=lambda x: x.nztm_trace.centroid.distance(end1))
         seg2 = min(self.segments, key=lambda x: x.nztm_trace.centroid.distance(end2))
 
         end_line_list = []
         for end, seg in zip([end1, end2], [seg1, seg2]):
-            vertex_list = [np.array(end)]
+            vertex_list = [np.array(end.coords)]
             distance = depth / np.sin(np.radians(seg.dip_best))
             for dist in np.arange(spacing, distance, spacing):
-                vertex_list.append(np.array(end) + dist * seg.down_dip_vector)
+                vertex_list.append(np.array(end.coords) + dist * seg.down_dip_vector)
 
-            vertex_list.append(np.array(end) + distance * seg.down_dip_vector)
-            end_line_list.append(LineString(vertex_list))
+            vertex_list.append(np.array(end.coords) + distance * seg.down_dip_vector)
+            end_line_list.append(LineString(np.vstack(vertex_list)))
 
         combined = unary_union(end_line_list)
         if isinstance(combined, LineString):
