@@ -275,6 +275,9 @@ class LeapfrogMultiFault(GenericMultiFault):
 
 
 class LeapfrogFault(GenericFault):
+    """
+    Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly
+    """
     def __init__(self, parent_multifault: LeapfrogMultiFault = None, smoothing: int = 5,
                  trimming_gradient: float = 1.0, segment_distance_tolerance: float = 100.,
                  parent_connected=None):
@@ -299,14 +302,28 @@ class LeapfrogFault(GenericFault):
 
     @property
     def is_segment(self):
+        """
+        Records whether instance is a segment of a larger multi-segment fault like the Alpine Fault.
+        :return:
+        """
         return self._is_segment
 
     @property
     def smoothing(self):
+        """
+        n value to use in Chaikin's corner-cutting algorithm.
+        :return:
+        """
         return self._smoothing
 
     @property
     def trimming_gradient(self):
+        """
+        Factor that controls how much the ends of segment contours of a multi-segment fault are
+        shortened to allow
+        :return:
+        """
+
         return self._trimming_gradient
 
     @property
@@ -367,10 +384,20 @@ class LeapfrogFault(GenericFault):
 
     @property
     def parent(self):
+        """
+        Return LeapfrogMultiFault instance that this fault is part of.
+        :return:
+        """
         return self._parent
 
-    def depth_contour(self, depth: float, smoothing: bool = True, damping: int = None, km= False,
-                      distance_tolerance: float = 100.):
+    def depth_contour(self, depth: float, smoothing: bool = True, km=False):
+        """
+        Generate contour of fault surface at depth below surface
+        :param depth: In metres, upwards is positive
+        :param smoothing: N for use with Chaikin's corner cutting
+        :param km: If True, divide depth by 1000
+        :return: LineString or MultiLineString representing contour
+        """
         if depth <= 0:
             shift = depth / self.down_dip_vector[-1]
         else:
@@ -379,11 +406,6 @@ class LeapfrogFault(GenericFault):
             shift *= 1000.
 
         xo, yo, zo = shift * self.down_dip_vector
-
-        # if damping is not None:
-        #     damped_contour = straighten(contour, self.dip_dir, damping)
-        # else:
-        #     damped_contour = contour
 
         if smoothing:
             assert self.smoothing is not None

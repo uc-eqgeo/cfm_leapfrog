@@ -255,7 +255,7 @@ class test_generic_fault(TestCase):
         with self.assertRaises(Exception):
             self.cmf_fault.validate_dip(dip)
 
-        dip = -20.6 #should be between 0 - 90 otherwise assert error
+        dip = -20.6  # should be between 0 - 90 otherwise assert error
         with self.assertRaises(Exception):
             self.cmf_fault.validate_dip(dip)
 
@@ -274,76 +274,6 @@ class test_generic_fault(TestCase):
         response = reponseX.tolist()
         actual = [172.81975618060406, 172.78381840673984, 172.7622924223485]
         self.assertAlmostEqual(response, actual)
-
-
-
-    def test_rake_max(self):
-        self.cmf_fault.rake_max = 40.5
-        self.assertAlmostEqual(self.cmf_fault.rake_max, 40.5)
-
-        self.cmf_fault._rake_max = 20.1
-        self.assertNotEqual(self.cmf_fault.rake_max, 40.5)
-        # #
-        with self.assertRaises(Exception):
-            self.cmf_fault.rake_max = "rake"
-
-        rake = 5.21
-        self.cmf_fault.rake_min = 19.00
-        self.cmf_fault.rake_best = 40.10
-
-
-        with self.assertLogs(logger=self.logger, level='WARNING') as cm:
-            self.cmf_fault.rake_max = rake
-            self.assertIn(
-                "WARNING:cmf_logger:rake_max is lower than rake min or rake best", cm.output
-            )
-    def test_rake_min(self):
-        self.cmf_fault.rake_min = 10.5
-        self.assertAlmostEqual(self.cmf_fault.rake_min, 10.5)
-
-        self.cmf_fault._rake_min = 8.6
-        self.assertNotEqual(self.cmf_fault.rake_min, 10.5)
-        #
-        with self.assertRaises(Exception):
-            self.cmf_fault.rake_min = "Hello"
-
-        self.cmf_fault.rake_max = 45.3
-        self.cmf_fault.rake_best = 40
-        rake = 50
-
-        with self.assertLogs(logger=self.logger, level='WARNING') as cm:
-            self.cmf_fault.rake_min = rake
-            self.assertIn(
-                "WARNING:cmf_logger:rake_min is higher than rake max or rake best", cm.output
-            )
-
-#
-    def test_rake_best(self):
-        self.cmf_fault.rake_min = 30.4
-        rake = 20
-
-        with self.assertLogs(logger=self.logger, level='WARNING') as cm:
-            self.cmf_fault.rake_best = rake
-            self.assertIn(
-                "WARNING:cmf_logger:rake_best is lower than rake_min", cm.output
-            )
-
-        self.cmf_fault.rake_max = 15.7
-
-        with self.assertLogs(logger=self.logger, level='WARNING') as cm1:
-            self.cmf_fault.rake_best = rake
-            self.assertIn(
-                "WARNING:cmf_logger:rake_best is greater than rake_max", cm1.output
-            )
-
-        self.cmf_fault.sense_dom = 'dextral'
-        self.cmf_fault.sense_sec = 'sinistral'
-
-        with self.assertLogs(logger=self.logger, level='WARNING') as cm2:
-            self.cmf_fault.rake_best = rake
-            self.assertIn(
-                "WARNING:cmf_logger:Supplied rake differs from dominant slip sense", cm2.output
-            )
 
 
 
