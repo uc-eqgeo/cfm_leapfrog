@@ -3,8 +3,8 @@ import geopandas as gpd
 from matplotlib import pyplot as plt
 import numpy as np
 
-from faults.leapfrog import LeapfrogMultiFault
-from faults.connected import ConnectedFaultSystem
+from fault_mesh.faults.leapfrog import LeapfrogMultiFault
+from fault_mesh.faults.connected import ConnectedFaultSystem
 from fault_mesh.utilities.graph import connected_nodes
 
 data = LeapfrogMultiFault.from_nz_cfm_shp("../gis/cfm_gt_1_5.gpkg", remove_colons=True)

@@ -146,13 +146,13 @@ class ConnectedFaultSystem:
         return self.smoothed_overall_trace
 
     def depth_contour(self, depth: float, smoothing: bool = True, damping: int = None, km: bool = False):
-        contours = [segment.depth_contour(depth, smoothing, damping, km) for segment in self.segments]
+        contours = [segment.depth_contour(depth, smoothing) for segment in self.segments]
         valid_contours = [contour for contour in contours if contour is not None]
         return MultiLineString(valid_contours)
 
     def generate_depth_contours(self, depths: Union[np.ndarray, List[float]], smoothing: bool = True, damping: int = None,
                        km: bool = False):
-        contours = [self.depth_contour(depth, smoothing, damping, km) for depth in depths]
+        contours = [self.depth_contour(depth, smoothing) for depth in depths]
 
         if max(depths) > 0:
             depths *= -1

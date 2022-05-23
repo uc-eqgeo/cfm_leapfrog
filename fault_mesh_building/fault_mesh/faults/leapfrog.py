@@ -11,11 +11,11 @@ from shapely.affinity import translate
 from shapely.ops import unary_union
 from shapely.geometry import LineString, MultiLineString, Point, Polygon, MultiPoint
 
-from faults.generic import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference
+from fault_mesh.faults.generic import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference
 from fault_mesh.smoothing import smooth_trace
 from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
 from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
-from faults.connected import ConnectedFaultSystem
+from fault_mesh.faults.connected import ConnectedFaultSystem
 
 
 class LeapfrogMultiFault(GenericMultiFault):
@@ -500,7 +500,7 @@ class LeapfrogFault(GenericFault):
 
     def generate_depth_contours(self, depths: Union[np.ndarray, List[float]], smoothing: bool = True, damping: int = None,
                        km: bool = False):
-        contours = [self.depth_contour(depth, smoothing, damping, km) for depth in depths]
+        contours = [self.depth_contour(depth, smoothing, km) for depth in depths]
 
         if max(depths) > 0:
             depths *= -1
