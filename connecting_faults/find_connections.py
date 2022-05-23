@@ -1,3 +1,4 @@
+import os.path
 
 import geopandas as gpd
 from matplotlib import pyplot as plt
@@ -22,6 +23,9 @@ data.read_fault_systems("test_central_1_5_composite.csv")
 data.generate_curated_faults()
 data.read_cutting_hierarchy("test_central_1_5_hierarchy.csv")
 
+for dir_name in ["shps", "traces", "end_lines", "footprints"]:
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
 
 plt.close("all")
 fig, ax = plt.subplots()
