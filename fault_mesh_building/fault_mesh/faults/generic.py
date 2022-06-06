@@ -312,11 +312,23 @@ class GenericMultiFault:
             trimmed_fault_gdf = trimmed_fault_gdf[trimmed_fault_gdf.Fault_stat != "A-US"]
 
         if depth_type == "D90":
-            trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
-            trimmed_fault_gdf["Depth_std"] = trimmed_fault_gdf["D90_stdev"]
+            if "D90" in trimmed_fault_gdf.columns:
+                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
+                trimmed_fault_gdf["Depth_std"] = trimmed_fault_gdf["D90_stdev"]
+            elif "Depth_D90" in trimmed_fault_gdf.columns:
+                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_D90"]
+                trimmed_fault_gdf["Depth_std"] = 0.
+            else:
+                print('Depth D90 not available, please specify another depth type or check CFM field names.\n')
         else:
-            trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Dfcomb"]
-            trimmed_fault_gdf["Depth_std"] = trimmed_fault_gdf["Dfcomb_std"]
+            if "Dfcomb" in trimmed_fault_gdf.columns:
+                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Dfcomb"]
+                trimmed_fault_gdf["Depth_std"] = trimmed_fault_gdf["Dfcomb_std"]
+            elif "Depth_Dfc" in trimmed_fault_gdf.columns:
+                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_Dfc"]
+                trimmed_fault_gdf["Depth_std"] = 0.
+            else:
+                print('Depth Dfc not available, please specify D90 or check CFM field names.\n')
 
         return trimmed_fault_gdf
 

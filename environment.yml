@@ -13,5 +13,5 @@ dependencies:
   - pip
   - git >= 2.21.1
   - pip:
-    - ./fault_mesh_building
-    - git+https://github.com/GNS-Science/eq-fault-geom
+    - -e ./fault_mesh_building
+    - meshio

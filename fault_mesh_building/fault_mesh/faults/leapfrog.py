@@ -165,7 +165,7 @@ class LeapfrogMultiFault(GenericMultiFault):
 
     def suggest_fault_systems(self, out_prefix: str):
         connected = connected_nodes(self.neighbour_connections)
-        out_name = out_prefix + "_suggested.csv"
+        out_name = out_prefix + "_suggested_faults.csv"
         with open(out_name, "w") as out_id:
             for connected_set in connected:
                 suggested_name = suggest_combined_name(connected_set)
@@ -173,7 +173,7 @@ class LeapfrogMultiFault(GenericMultiFault):
                 out_str = ",".join(out_list) + "\n"
                 out_id.write(out_str)
 
-    def read_fault_systems(self, fault_system_csv: str):
+    def read_fault_systems(self, fault_system_csv: str, tol: float = 100.):
         self.connected_faults = []
         with open(fault_system_csv, "r") as in_id:
             con_data = in_id.readlines()
@@ -182,7 +182,7 @@ class LeapfrogMultiFault(GenericMultiFault):
                 name = elements[0].strip()
                 name = name.replace(":", "")
                 segs = [element.strip() for element in elements[1:]]
-                cfault = ConnectedFaultSystem(overall_name=name, cfm_faults=self, segment_names=segs)
+                cfault = ConnectedFaultSystem(overall_name=name, cfm_faults=self, segment_names=segs,tolerance=tol)
                 self.connected_faults.append(cfault)
 
     def generate_curated_faults(self):
@@ -333,7 +333,7 @@ class LeapfrogFault(GenericFault):
     @neighbouring_segments.setter
     def neighbouring_segments(self, segment_list: list):
         assert isinstance(segment_list, list)
-        assert len(segment_list) <= 2
+        assert len(segment_list) <= 2, "Segment should have at most two neighbours"
         if len(segment_list) == 0:
             self._is_segment = False
         else:

@@ -262,6 +262,8 @@ class ConnectedFaultSystem:
 
         combined = unary_union(end_line_list)
         if isinstance(combined, LineString):
+            if combined.is_empty:
+                print(combined,self.name)
             return MultiLineString([combined])
         else:
             return combined

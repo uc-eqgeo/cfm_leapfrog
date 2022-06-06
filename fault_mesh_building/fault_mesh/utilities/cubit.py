@@ -43,3 +43,22 @@ def make_journal_file_multi(gis_file: str, out_directory: str, top_z=0., depth=2
         out_name = f"{out_directory}/{row.fault_name}.jou"
         out_mesh_name = f"{row.fault_name}_volume.stl"
         make_journal_file_polygon(row.geometry, out_name, out_mesh_name, top_z, depth)
+
+
+def make_journal_file_surface(inmesh: str, outmesh: str, journalname, mesh_size: int = 2000, min_mesh_size: int = 1500):
+    assert os.path.exists(inmesh)
+    assert isinstance(mesh_size, int)
+    assert isinstance(min_mesh_size, int)
+    with open(journalname, "w") as out_id:
+        if inmesh.split('.')[-1] == 'stl':
+            out_id.write(f'import stl "{inmesh}" feature_angle 135 no_merge\n')
+        else:
+            out_id.write(f'import asset "{inmesh}" make geometry on\n')
+        out_id.write(f'delete mesh surface 1 propagate\n')
+        out_id.write(f'surface 1 scheme trimesh minimum size {min_mesh_size}\n')
+        out_id.write(f'set trimesher geometry sizing off\n')
+        out_id.write(f'surface 1 size {mesh_size}\n')
+        out_id.write(f'mesh surface 1\n')
+        out_id.write(f'export stl ascii "{outmesh}" surface 1 mesh overwrite\n')
+        out_id.write(f'exit\n')
+
