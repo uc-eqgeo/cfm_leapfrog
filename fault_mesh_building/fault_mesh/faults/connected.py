@@ -254,16 +254,20 @@ class ConnectedFaultSystem:
         for end, seg in zip([end1, end2], [seg1, seg2]):
             vertex_list = [np.array(end.coords)]
             distance = depth / np.sin(np.radians(seg.dip_best))
+
             for dist in np.arange(spacing, distance, spacing):
                 vertex_list.append(np.array(end.coords) + dist * seg.down_dip_vector)
-
-            vertex_list.append(np.array(end.coords) + distance * seg.down_dip_vector)
+            if seg.dip_best == 90.:
+                # issues with having no end lines if have vertical dip on both end segments
+                # address by putting in ~10cm variation to create extra point
+                print(f'End segment of {self.name} is vertical, making small end line.')
+                vertex_list.append(np.array(end.coords) + 1.e-6 * seg.across_strike_vector)
+            else:
+                vertex_list.append(np.array(end.coords) + distance * seg.down_dip_vector)
             end_line_list.append(LineString(np.vstack(vertex_list)))
 
         combined = unary_union(end_line_list)
         if isinstance(combined, LineString):
-            if combined.is_empty:
-                print(combined,self.name)
             return MultiLineString([combined])
         else:
             return combined

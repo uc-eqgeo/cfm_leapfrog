@@ -34,6 +34,7 @@ for dir_name in ["shps", "traces", "end_lines", "footprints"]:
 plt.close("all")
 fig, ax = plt.subplots()
 for fault in data.curated_faults:
+    print(fault.name)
     fault.generate_depth_contours(np.arange(2000, 32000., 2000.))
     fault.contours.to_file(f"shps/{fault.name}_contours.shp")
     trace = gpd.GeoSeries(fault.smoothed_trace)
@@ -42,6 +43,7 @@ for fault in data.curated_faults:
 
     gpd.GeoSeries(fault.smoothed_trace).to_file(f"traces/{fault.name}_trace.shp")
     if isinstance(fault, ConnectedFaultSystem):
+        print("connected")
         gpd.GeoSeries(fault.end_lines(smoothed=True)).to_file(f"end_lines/{fault.name}_end_lines.shp")
 
 footprints = [fault.footprint for fault in data.curated_faults]
