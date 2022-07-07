@@ -9,8 +9,8 @@ outdir=indir
 
 #make .jou files
 
-for file in glob.iglob(f'{indir}/*.obj'):
-#for file in glob.iglob(f'{indir}/6. BooBoo.obj'):
+#for file in glob.iglob(f'{indir}/*.obj'):
+for file in glob.iglob(f'{indir}/1. Alpine combined.obj'):
     fault = file.split('.')[1].replace(" ", "")
     print(fault)
 

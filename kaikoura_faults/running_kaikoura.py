@@ -25,6 +25,7 @@ data.read_fault_systems(fault_system_csv=os.path.join(script_dir,"kaikoura_sugge
 data.generate_curated_faults()
 
 data.suggest_cutting_hierarchy(os.path.join(script_dir,"kaikoura"))
+
 data.read_cutting_hierarchy(os.path.join(script_dir,"kaikoura_suggested_hierarchy_edited_cfm.csv"))
 
 for dir_name in ["shps", "traces", "end_lines", "footprints"]:
