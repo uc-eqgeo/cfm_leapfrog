@@ -3,6 +3,9 @@ import geopandas as gpd
 import logging
 
 from fault_mesh.faults.generic import GenericFault, GenericMultiFault, required_fields, expected_fields
+import os
+
+file_path = os.path.dirname(os.path.realpath(__file__))
 
 
 
@@ -11,7 +14,7 @@ class test_generic_faults(TestCase):
 
     def setUp(self):
 
-        self.filename = "data/kaikoura_faults.gpkg"
+        self.filename = os.path.join(file_path, "./data/selected_faults.shp")
         self.fault_geodataframe = gpd.read_file(self.filename)
         self.fault_model = GenericMultiFault(self.fault_geodataframe)
         self.logger = logging.getLogger('fault_model_logger')
@@ -71,7 +74,7 @@ class test_generic_fault(TestCase):
         self.cmf_fault = GenericFault()
         self.logger = logging.getLogger('cmf_logger')
 
-        self.filename = "../../../data/cfm_linework/NZ_CFM_v0_6_160221.shp"
+        self.filename = os.path.join(file_path, "./data/selected_faults.shp")
         self.fault_geodataframe = gpd.GeoDataFrame.from_file(self.filename)
         self.fault_model = GenericMultiFault(self.fault_geodataframe)
         # Sort alphabetically by name
