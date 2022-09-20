@@ -1,5 +1,5 @@
-from faults.generic import (smallest_difference, normalize_bearing, bearing_leq,
-                            bearing_geq, reverse_bearing, reverse_line, calculate_dip_direction)
+from fault_mesh.faults.generic import (smallest_difference, normalize_bearing, bearing_leq,
+                                       bearing_geq, reverse_bearing, reverse_line, calculate_dip_direction)
 
 from unittest import TestCase
 from shapely.geometry import LineString

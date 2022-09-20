@@ -2,7 +2,7 @@ from unittest import TestCase
 import geopandas as gpd
 import logging
 
-from faults.generic import GenericFault, GenericMultiFault, required_fields, expected_fields
+from fault_mesh.faults.generic import GenericFault, GenericMultiFault, required_fields, expected_fields
 
 
 
