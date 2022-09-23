@@ -1,0 +1,8 @@
+:orphan:
+
+:py:mod:`faults.connected`
+==========================
+
+.. py:module:: faults.connected
+
+

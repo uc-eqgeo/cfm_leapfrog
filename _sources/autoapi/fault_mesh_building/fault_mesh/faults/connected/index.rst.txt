@@ -1,8 +1,0 @@
-:orphan:
-
-:py:mod:`fault_mesh_building.fault_mesh.faults.connected`
-=========================================================
-
-.. py:module:: fault_mesh_building.fault_mesh.faults.connected
-
-
