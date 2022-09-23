@@ -16,7 +16,7 @@ jobs:
     - name: Build and Commit
       uses: sphinx-notes/pages@master
       with:
-        documentation_path: fault_mesh_building/sphinx
+        documentation_path: docs
 
     - name: Push changes
       uses: ad-m/github-push-action@master
