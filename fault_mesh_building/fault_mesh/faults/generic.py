@@ -312,11 +312,11 @@ class GenericMultiFault:
             trimmed_fault_gdf = trimmed_fault_gdf[trimmed_fault_gdf.Fault_stat != "A-US"]
 
         if depth_type == "D90":
-            trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
-            trimmed_fault_gdf["Depth_std"] = trimmed_fault_gdf["D90_stdev"]
+            trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_D90"]
+            trimmed_fault_gdf["Depth_std"] = 0.
         else:
-            trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Dfcomb"]
-            trimmed_fault_gdf["Depth_std"] = trimmed_fault_gdf["Dfcomb_std"]
+            trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_Dfc"]
+            trimmed_fault_gdf["Depth_std"] = 0.
 
         return trimmed_fault_gdf
 
