@@ -1,0 +1,32 @@
+:py:mod:`fault_mesh_building.fault_mesh.smoothing`
+==================================================
+
+.. py:module:: fault_mesh_building.fault_mesh.smoothing
+
+.. autoapi-nested-parse::
+
+   A convenience script for running many combinations of chunk_sizes and numbers_of_cores
+   for a small sub-set of a catchment to help with the selection of an appropiate
+   chink_size and number_of_cores before processing an entire catchment.
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   fault_mesh_building.fault_mesh.smoothing.chaikins_corner_cutting
+
+
+
+.. py:function:: chaikins_corner_cutting(coords, refinements=5)
+
+   Chaikin's corner cutting algorithm for smoothing a line.
+
+
+

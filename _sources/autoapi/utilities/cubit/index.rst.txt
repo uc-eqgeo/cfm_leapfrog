@@ -1,8 +1,0 @@
-:orphan:
-
-:py:mod:`utilities.cubit`
-=========================
-
-.. py:module:: utilities.cubit
-
-
