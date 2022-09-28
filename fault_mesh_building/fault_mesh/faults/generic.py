@@ -21,7 +21,7 @@ valid_depth_range = [0, 50]
 valid_sr_range = [0, 80]
 
 # These fields aren't crucial but are in some versions of the relevant files
-expected_fields = ['Depth_pref', 'Depth_max', 'Depth_min', 'Dip_max', 'Dip_min', 'Name', 'SR_pref']
+expected_fields = ['Depth_D90', 'Dip_max', 'Dip_min', 'Name', 'SR_pref']
 
 # There will be a mess if these fields don't exist
 required_fields = ['Name', 'Fault_ID', 'Dip_dir', 'Dip_pref', 'geometry']
