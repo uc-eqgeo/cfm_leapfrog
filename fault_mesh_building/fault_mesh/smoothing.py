@@ -1,3 +1,8 @@
+"""
+A convenience script for running many combinations of chunk_sizes and numbers_of_cores
+for a small sub-set of a catchment to help with the selection of an appropiate
+chink_size and number_of_cores before processing an entire catchment.
+"""
 import numpy as np
 from typing import List
 from shapely.geometry import LineString, Point
@@ -6,6 +11,10 @@ from shapely.ops import linemerge
 
 
 def chaikins_corner_cutting(coords, refinements=5):
+    """
+    Chaikin's corner cutting algorithm for smoothing a line.
+
+    """
     coords = np.array(coords)
 
     for _ in range(refinements):

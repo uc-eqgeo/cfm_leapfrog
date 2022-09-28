@@ -13,7 +13,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../fault_mesh_building/fault_mesh"))
+sys.path.insert(0, os.path.abspath("../fault_mesh_building/fault_mesh/"))
 
 
 # -- Project information -----------------------------------------------------
