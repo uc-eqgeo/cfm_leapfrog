@@ -1,0 +1,31 @@
+:py:mod:`fault_mesh.utilities.graph`
+====================================
+
+.. py:module:: fault_mesh.utilities.graph
+
+.. autoapi-nested-parse::
+
+   Submodule that uses networkx to find connections between segments in a fault map
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   fault_mesh.utilities.graph.to_graph
+
+
+
+.. py:function:: to_graph(node_list)
+
+   Answer from https://stackoverflow.com/a/4843408
+   :param node_list:
+   :return:
+
+

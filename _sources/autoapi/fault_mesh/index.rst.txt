@@ -1,0 +1,25 @@
+:py:mod:`fault_mesh`
+====================
+
+.. py:module:: fault_mesh
+
+.. autoapi-nested-parse::
+
+   Module for the creation of depth contours and associated products to help create fault meshes.
+
+   Modules:
+       * faults - Main scripts for projecting surface traces to depth
+       * utilities - Functions for reading and writing files and
+
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   faults/index.rst
+   utilities/index.rst
+
+

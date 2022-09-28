@@ -1,0 +1,11 @@
+:py:mod:`fault_mesh.utilities.cubit`
+====================================
+
+.. py:module:: fault_mesh.utilities.cubit
+
+.. autoapi-nested-parse::
+
+   Functions to make journal files for remeshing using cubit.
+
+
+

@@ -1,0 +1,29 @@
+:py:mod:`fault_mesh.faults.connected`
+=====================================
+
+.. py:module:: fault_mesh.faults.connected
+
+.. autoapi-nested-parse::
+
+   Module for connecting segments into a connected fault system
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   fault_mesh.faults.connected.ConnectedFaultSystem
+
+
+
+
+.. py:class:: ConnectedFaultSystem(overall_name, cfm_faults, segment_names = None, search_patterns = None, excluded_names = None, tolerance = 100.0, smooth_trace_refinements = 5)
+
+   Class for a connected fault system
+
+

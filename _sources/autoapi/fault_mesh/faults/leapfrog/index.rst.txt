@@ -1,0 +1,78 @@
+:orphan:
+
+:py:mod:`fault_mesh.faults.leapfrog`
+====================================
+
+.. py:module:: fault_mesh.faults.leapfrog
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   fault_mesh.faults.leapfrog.LeapfrogFault
+   fault_mesh.faults.leapfrog.LeapfrogFaultSegment
+
+
+
+
+.. py:class:: LeapfrogFault(parent_multifault = None, smoothing = 5, trimming_gradient = 1.0, segment_distance_tolerance = 100.0, parent_connected=None)
+
+   Bases: :py:obj:`fault_mesh.faults.generic.GenericFault`
+
+   Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly
+
+   .. py:property:: is_segment
+
+      Records whether instance is a segment of a larger multi-segment fault like the Alpine Fault.
+      :return:
+
+   .. py:property:: smoothing
+
+      n value to use in Chaikin's corner-cutting algorithm.
+      :return:
+
+   .. py:property:: trimming_gradient
+
+      Factor that controls how much the ends of segment contours of a multi-segment fault are
+      shortened to allow
+      :return:
+
+   .. py:property:: parent
+
+      Return LeapfrogMultiFault instance that this fault is part of.
+      :return:
+
+   .. py:method:: depth_contour(depth, smoothing = True, km=False)
+
+      Generate contour of fault surface at depth below surface
+      :param depth: In metres, upwards is positive
+      :param smoothing: N for use with Chaikin's corner cutting
+      :param km: If True, divide depth by 1000
+      :return: LineString or MultiLineString representing contour
+
+
+   .. py:method:: extend_footprint(end_i, other_end, other_segment, deepest_contour_depth = 30000.0, search_line_length = 150000.0, buffer_size = 5000.0, fall_back_distance = 40.3)
+
+      :param end_i: End to extend
+      :param other_end: Other end of segment
+      :param other_segment: Other
+      :param deepest_contour_depth:
+      :param search_line_length:
+      :param buffer_size:
+      :param fall_back_distance:
+      :return:
+
+
+
+.. py:class:: LeapfrogFaultSegment(parent_fault, parent_multifault = None)
+
+   Bases: :py:obj:`LeapfrogFault`
+
+   Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly
+
+

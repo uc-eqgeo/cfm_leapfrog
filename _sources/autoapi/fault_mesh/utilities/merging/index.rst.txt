@@ -1,0 +1,11 @@
+:py:mod:`fault_mesh.utilities.merging`
+======================================
+
+.. py:module:: fault_mesh.utilities.merging
+
+.. autoapi-nested-parse::
+
+   Functions for merging segments that are nearly adjacent.
+
+
+
