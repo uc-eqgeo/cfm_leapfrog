@@ -1,3 +1,6 @@
+"""
+Module for connecting segments into a connected fault system
+"""
 from typing import Union, List
 import fnmatch
 from itertools import chain
