@@ -13,7 +13,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../fault_mesh_building/fault_mesh/"))
+sys.path.insert(0, os.path.abspath("../fault_mesh_building/fault_mesh/faults/"))
 
 
 # -- Project information -----------------------------------------------------
@@ -37,6 +37,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
     "autoapi.extension",
+    "myst_parser",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -61,7 +62,7 @@ html_static_path = ["_static"]
 
 
 # -- Extension configuration -------------------------------------------------
-autoapi_dirs = ["../fault_mesh_building/fault_mesh"]
+autoapi_dirs = ["../fault_mesh_building/fault_mesh/faults/"]
 autoapi_options = [
     "members",
     "show-inheritance",

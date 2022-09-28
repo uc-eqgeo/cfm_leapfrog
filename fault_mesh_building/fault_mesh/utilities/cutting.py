@@ -1,5 +1,4 @@
 from typing import List
-
 from shapely.geometry import LineString, Point
 
 

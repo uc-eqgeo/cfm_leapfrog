@@ -11,7 +11,7 @@ from shapely.ops import linemerge, unary_union
 import geopandas as gpd
 
 from eq_fault_geom.geomio.cfm_faults import smallest_difference
-from fault_mesh.smoothing import smooth_trace, merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
+from fault_mesh.utilities.smoothing import smooth_trace, merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
 from fault_mesh.utilities.cutting import cut_line_at_multiple_points, cut_line_at_point
 
 

@@ -12,7 +12,7 @@ from shapely.ops import unary_union
 from shapely.geometry import LineString, MultiLineString, Point, Polygon, MultiPoint
 
 from fault_mesh.faults.generic import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference
-from fault_mesh.smoothing import smooth_trace
+from fault_mesh.utilities.smoothing import smooth_trace
 from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
 from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
 from fault_mesh.faults.connected import ConnectedFaultSystem

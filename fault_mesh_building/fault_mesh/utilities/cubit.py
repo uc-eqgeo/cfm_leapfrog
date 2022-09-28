@@ -1,5 +1,7 @@
+"""
+Functions to make journal files for remeshing using cubit.
+"""
 import os
-
 import geopandas as gpd
 from shapely.geometry import LineString, Polygon
 
