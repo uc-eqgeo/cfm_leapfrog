@@ -1,3 +1,6 @@
+"""
+Classes to act as a general/multifault. Leapfrog classes inherit from these.
+"""
 from typing import Union, List
 import os
 import logging

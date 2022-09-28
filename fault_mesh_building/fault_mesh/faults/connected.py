@@ -11,11 +11,15 @@ from shapely.ops import linemerge, unary_union
 import geopandas as gpd
 
 from eq_fault_geom.geomio.cfm_faults import smallest_difference
-from fault_mesh.utilities.smoothing import smooth_trace, merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
+from fault_mesh.utilities.smoothing import smooth_trace
+from fault_mesh.utilities.merging import merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
 from fault_mesh.utilities.cutting import cut_line_at_multiple_points, cut_line_at_point
 
 
 class ConnectedFaultSystem:
+    """
+    Class for a connected fault system
+    """
     def __init__(self, overall_name: str, cfm_faults, segment_names: list = None,
                  search_patterns: Union[str, list] = None,
                  excluded_names: Union[str, list] = None, tolerance: float = 100.,

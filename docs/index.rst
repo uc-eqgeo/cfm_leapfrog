@@ -20,7 +20,7 @@ Welcome to cfm-leapfrog's documentation!
    help/define_connected.md
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: API Reference:
 
 

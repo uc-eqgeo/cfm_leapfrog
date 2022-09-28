@@ -13,7 +13,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../fault_mesh_building/fault_mesh/faults/"))
+sys.path.insert(0, os.path.abspath("../fault_mesh_building/fault_mesh/"))
 
 
 # -- Project information -----------------------------------------------------
@@ -62,7 +62,7 @@ html_static_path = ["_static"]
 
 
 # -- Extension configuration -------------------------------------------------
-autoapi_dirs = ["../fault_mesh_building/fault_mesh/faults/"]
+autoapi_dirs = ["../fault_mesh_building/fault_mesh"]
 autoapi_options = [
     "members",
     "show-inheritance",
