@@ -25,6 +25,7 @@ Leapfrog software should be used for mesh cutting operations.
    :caption: Examples:
 
    help/define_connected.md
+   source/define_connected.ipynb
 
 .. toctree::
    :maxdepth: 4

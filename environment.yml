@@ -14,8 +14,8 @@ dependencies:
   - git >= 2.21.1
   - sphinx
   - sphinx-autoapi
+  - -myst-nb
   - pip:
     - ./fault_mesh_building
     - meshio
     - sphinx-rtd-theme
-    - myst-parser
