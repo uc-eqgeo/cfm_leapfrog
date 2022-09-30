@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath("../fault_mesh_building/fault_mesh/"))
 # -- Project information -----------------------------------------------------
 
 project = 'cfm-leapfrog'
-copyright = '2022, Andy Howell'
-author = 'Andy Howell'
+copyright = '2022, Andy Howell and Camilla Penney'
+author = 'Andy Howell and Camilla Penney'
 
 # The full version, including alpha/beta/rc tags
 release = "0.0.1"
