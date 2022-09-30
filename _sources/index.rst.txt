@@ -5,6 +5,12 @@
 
 Welcome to cfm-leapfrog's documentation!
 ========================================
+This module is designed to help create 3D models of complex fault systems, and works by projecting surface traces to depth.
+Leapfrog software should be used for mesh cutting operations.
+
+.. image:: help/images/fault_model.png
+   :width: 400
+   :alt: 3D fault model of central Aotearoa New Zealand
 
 .. toctree::
    :maxdepth: 2
@@ -12,6 +18,7 @@ Welcome to cfm-leapfrog's documentation!
 
    help/intro.md
    help/install.md
+   help/running_examples.md
 
 .. toctree::
    :maxdepth: 2

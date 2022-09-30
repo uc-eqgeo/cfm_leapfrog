@@ -21,7 +21,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Defining connected fault systems" href="define_connected.html" />
+    <link rel="next" title="Running examples using Jupyter" href="running_examples.html" />
     <link rel="prev" title="Introduction" href="intro.html" /> 
 </head>
 
@@ -48,6 +48,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="running_examples.html">Running examples using Jupyter</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples:</span></p>
 <ul>
@@ -86,22 +87,23 @@
 <h1>Installation instructions<a class="headerlink" href="#installation-instructions" title="Permalink to this heading"></a></h1>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
-<p>Installation instructions for Anaconda can be found here: <a class="reference external" href="https://www.anaconda.com/products/individual#Downloads">https://www.anaconda.com/products/individual#Downloads</a></p>
-<p>Alternatively (and better in most ways), install miniforge: https://conda-forge.org/miniforge/</p>
+<p>You’ll need some form of conda, for example Anaconda3 or miniforge.</p>
+<p>Installation instructions for Anaconda can be found <a class="reference external" href="https://www.anaconda.com/products/individual#Downloads">here</a>.</p>
+<p>Alternatively (and better in most ways), install <a class="reference external" href="https://conda-forge.org/miniforge/">miniforge</a>.</p>
 <p>You will also need to download the code from the GitHub repository (https://github.com/uc-eqgeo/cfm_leapfrog).
 If you are new to git,
-this is probably best to do using the download zip interface on GitHub.</p>
+this is probably best to do using the download zip interface on GitHub. Make sure you unzip it if you do that.</p>
 <p><img alt="How to download" src="../_images/download_code.png" /></p>
 </section>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p>Open Anaconda or Miniforge Prompt</p></li>
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">{PATH_TO_REPO}</span></code>, where <code class="docutils literal notranslate"><span class="pre">{PATH_TO_REPO}</span></code> is the location</p></li>
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">env</span> <span class="pre">create</span></code></p></li>
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">leapfrog-fault-models</span></code></p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">{PATH_TO_REPO}</span></code> and hit <code class="docutils literal notranslate"><span class="pre">Enter</span></code>, where <code class="docutils literal notranslate"><span class="pre">{PATH_TO_REPO}</span></code> is the location where you have downloaded the code to, for example <code class="docutils literal notranslate"><span class="pre">C:\Users\{USER}\Documents\projects\cfm_leapfrog</span></code>. In this case, <code class="docutils literal notranslate"><span class="pre">{USER}</span></code> is your username.
+Note that if you have downloaded to a drive that is different from your <code class="docutils literal notranslate"><span class="pre">C:</span></code> drive, you will need to change drives first; for example, type <code class="docutils literal notranslate"><span class="pre">D:</span></code> followed by <code class="docutils literal notranslate"><span class="pre">Enter</span></code>.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">env</span> <span class="pre">create</span></code> and hit <code class="docutils literal notranslate"><span class="pre">Enter</span></code>.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">leapfrog-fault-models</span></code> and hit <code class="docutils literal notranslate"><span class="pre">Enter</span></code></p></li>
 </ol>
-<p>Note that if you have downloaded</p>
 </section>
 </section>
 
@@ -110,13 +112,13 @@ this is probably best to do using the download zip interface on GitHub.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="intro.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="define_connected.html" class="btn btn-neutral float-right" title="Defining connected fault systems" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="running_examples.html" class="btn btn-neutral float-right" title="Running examples using Jupyter" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, Andy Howell.</p>
+    <p>&#169; Copyright 2022, Andy Howell and Camilla Penney.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
