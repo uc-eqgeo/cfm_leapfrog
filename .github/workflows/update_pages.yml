@@ -48,7 +48,7 @@ jobs:
         conda config --show
 
     - name: Build and Commit
-      uses: andy22b/pages@master
+      uses: andy22b/pages@v2
       with:
         documentation_path: docs
 
