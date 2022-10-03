@@ -6,12 +6,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.10" ]
+
     steps:
 
-    - name: Checkout
+    - name: Checkout github repo including lfs files
       uses: actions/checkout@v2
       with:
-        fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+        lfs: true
 
     - name: Cache conda
       uses: actions/cache@v2
