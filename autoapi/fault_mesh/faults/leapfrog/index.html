@@ -8,6 +8,7 @@
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -42,11 +43,11 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../help/intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../help/install.html">Installation instructions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../help/running_examples.html">Running examples using Jupyter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../help/running_examples.html">Running tutorial examples using Jupyter</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../help/define_connected.html">Defining connected fault systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/define_connected.html">Defining connected fault systems</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
@@ -79,6 +80,7 @@
              
   <section id="module-fault_mesh.faults.leapfrog">
 <span id="fault-mesh-faults-leapfrog"></span><h1><a class="reference internal" href="#module-fault_mesh.faults.leapfrog" title="fault_mesh.faults.leapfrog"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.faults.leapfrog</span></code></a><a class="headerlink" href="#module-fault_mesh.faults.leapfrog" title="Permalink to this heading"></a></h1>
+<p>Classes that implement the Leapfrog fault model. Inherit from GenericFault and GenericMultiFault.</p>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
 <section id="classes">
@@ -90,9 +92,6 @@
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.leapfrog.LeapfrogFault" title="fault_mesh.faults.leapfrog.LeapfrogFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeapfrogFault</span></code></a></p></td>
-<td><p>Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.faults.leapfrog.LeapfrogFaultSegment" title="fault_mesh.faults.leapfrog.LeapfrogFaultSegment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeapfrogFaultSegment</span></code></a></p></td>
 <td><p>Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly</p></td>
 </tr>
 </tbody>
@@ -180,21 +179,6 @@ shortened to allow
 </dl>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFaultSegment">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">LeapfrogFaultSegment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_fault</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_multifault</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFaultSegment" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#fault_mesh.faults.leapfrog.LeapfrogFault" title="fault_mesh.faults.leapfrog.LeapfrogFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeapfrogFault</span></code></a></p>
-<p>Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>parent_fault</strong> (<em>LeapfrogConnectedFault</em>) – </p></li>
-<li><p><strong>parent_multifault</strong> (<em>LeapfrogMultiFault</em>) – </p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 </section>

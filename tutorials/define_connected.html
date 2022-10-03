@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Defining connected fault systems &mdash; cfm-leapfrog 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Running tutorial examples using Jupyter" href="../help/running_examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> cfm-leapfrog
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../help/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/install.html">Installation instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/running_examples.html">Running tutorial examples using Jupyter</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Defining connected fault systems</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#reading-in-faults">Reading in faults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#finding-connections-between-segments">Finding connections between segments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#making-and-incorporating-manual-edits">Making and incorporating manual edits</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cfm-leapfrog</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Defining connected fault systems</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/define_connected.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="defining-connected-fault-systems">
+<h1>Defining connected fault systems<a class="headerlink" href="#defining-connected-fault-systems" title="Permalink to this heading"></a></h1>
+<p>This notebook demonstrates how to identify which fault segments in a shapefile should be connected up into large fault systems.</p>
+<section id="reading-in-faults">
+<h2>Reading in faults<a class="headerlink" href="#reading-in-faults" title="Permalink to this heading"></a></h2>
+<p>First, you need to read in your GIS representation of faults. In this example, we use a subset of faults from the New Zealand Community Fault Model (Seebeck et al., 2022).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import modules </span>
+<span class="kn">from</span> <span class="nn">fault_mesh.faults.leapfrog</span> <span class="kn">import</span> <span class="n">LeapfrogMultiFault</span>
+<span class="kn">from</span> <span class="nn">fault_mesh.faults.connected</span> <span class="kn">import</span> <span class="n">ConnectedFaultSystem</span>
+<span class="kn">from</span> <span class="nn">fault_mesh.utilities.graph</span> <span class="kn">import</span> <span class="n">connected_nodes</span>
+
+<span class="c1"># Read in fault data from shapefile</span>
+<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/cfm_gt_1_5.gpkg&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">ModuleNotFoundError</span><span class="g g-Whitespace">                       </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="c1"># Import modules </span>
+<span class="ne">----&gt; </span><span class="mi">2</span> <span class="kn">from</span> <span class="nn">fault_mesh.faults.leapfrog</span> <span class="kn">import</span> <span class="n">LeapfrogMultiFault</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="kn">from</span> <span class="nn">fault_mesh.faults.connected</span> <span class="kn">import</span> <span class="n">ConnectedFaultSystem</span>
+<span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="kn">from</span> <span class="nn">fault_mesh.utilities.graph</span> <span class="kn">import</span> <span class="n">connected_nodes</span>
+
+<span class="ne">ModuleNotFoundError</span>: No module named &#39;fault_mesh&#39;
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="finding-connections-between-segments">
+<h2>Finding connections between segments<a class="headerlink" href="#finding-connections-between-segments" title="Permalink to this heading"></a></h2>
+<p>Now your data are read in, you need to set the distance tolerance. This tolerance is the minimum horizontal distance between two fault traces that is allowed to count as a connection.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dist_tolerance</span> <span class="o">=</span> <span class="mf">200.</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The next cell uses python module networkx to find segment traces that are within the specified distance tolerance of each other.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">find_connections</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found 156 connections
+Found 142 connections between segment ends
+</pre></div>
+</div>
+</div>
+</div>
+<p>It is now necessary to write out these connections for manual editing and review. The file will be written out into the same directory as this Jupyter notebook. It will have a prefix supplied by you and the suffix “_suggested.csv”.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_fault_systems</span><span class="p">(</span><span class="s2">&quot;central_gt1_5_connected_&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>This will create a CSV file that looks like this:
+<img alt="connected_unedited.png" src="tutorials/tutorial_images/connected_unedited.png" /></p>
+</section>
+<section id="making-and-incorporating-manual-edits">
+<h2>Making and incorporating manual edits<a class="headerlink" href="#making-and-incorporating-manual-edits" title="Permalink to this heading"></a></h2>
+<p>The automatically-generated fault system suggestions will (by design) include hyper-connected fault systems that need to be broken up.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../help/running_examples.html" class="btn btn-neutral float-left" title="Running tutorial examples using Jupyter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Andy Howell and Camilla Penney.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,9 +1,12 @@
-:orphan:
-
 :py:mod:`fault_mesh.faults.leapfrog`
 ====================================
 
 .. py:module:: fault_mesh.faults.leapfrog
+
+.. autoapi-nested-parse::
+
+   Classes that implement the Leapfrog fault model. Inherit from GenericFault and GenericMultiFault.
+
 
 
 Module Contents
@@ -15,7 +18,6 @@ Classes
 .. autoapisummary::
 
    fault_mesh.faults.leapfrog.LeapfrogFault
-   fault_mesh.faults.leapfrog.LeapfrogFaultSegment
 
 
 
@@ -67,12 +69,5 @@ Classes
       :param fall_back_distance:
       :return:
 
-
-
-.. py:class:: LeapfrogFaultSegment(parent_fault, parent_multifault = None)
-
-   Bases: :py:obj:`LeapfrogFault`
-
-   Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly
 
 
