@@ -1,4 +1,4 @@
-# Running examples using Jupyter
+# Running tutorial examples using Jupyter
 
 ## Open Jupyter notebooks
 1. Open Anaconda or Miniforge Prompt
@@ -7,7 +7,11 @@ Note that if you have downloaded to a drive that is different from your `C:` dri
 3. Type `jupyter notebook` and hit `Enter`.
 
 These actions should open a new tab in your web browser that looks something like this.
-4. Click on `examples` to enter the directory where the example notebooks are stored.
-
 
 ![Jupyter home](images/jupyter_home.png)
+4. Click through `docs` followed by `tutorials` to enter the directory where the example notebooks are stored.
+5. Click on a tutorial to open it in a new tab:
+
+![Define connections tutorial](images/jupyter_open_ipynb.png)
+
+
