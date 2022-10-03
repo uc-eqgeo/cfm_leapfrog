@@ -63,70 +63,73 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ff9e2d53",
-   "metadata": {},
    "source": [
     "The next cell uses python module networkx to find segment traces that are within the specified distance tolerance of each other."
-   ]
+   ],
+   "metadata": {
+    "collapsed": false
+   }
   },
   {
    "cell_type": "code",
-   "execution_count": 3,
-   "id": "5bea1937",
-   "metadata": {},
+   "execution_count": 5,
    "outputs": [
     {
      "name": "stdout",
      "output_type": "stream",
      "text": [
       "Found 156 connections\n",
-      "Found 142 connections between segment ends\n"
+      "Found 142 neighbour connections\n"
      ]
     }
    ],
    "source": [
     "fault_data.find_connections(verbose=False)"
-   ]
+   ],
+   "metadata": {
+    "collapsed": false
+   }
   },
   {
    "cell_type": "markdown",
-   "id": "df96b9ee",
-   "metadata": {},
    "source": [
     "It is now necessary to write out these connections for manual editing and review. The file will be written out into the same directory as this Jupyter notebook. It will have a prefix supplied by you and the suffix \"_suggested.csv\"."
-   ]
+   ],
+   "metadata": {
+    "collapsed": false
+   }
   },
   {
    "cell_type": "code",
-   "execution_count": 5,
-   "id": "c16d2e07",
-   "metadata": {},
+   "execution_count": 4,
    "outputs": [],
    "source": [
     "fault_data.suggest_fault_systems(\"central_gt1_5_connected_\")"
-   ]
+   ],
+   "metadata": {
+    "collapsed": false
+   }
   },
   {
-   "attachments": {},
    "cell_type": "markdown",
-   "id": "d937fc02",
-   "metadata": {},
    "source": [
     "This will create a CSV file that looks like this:\n",
-    "![connected_unedited.png](./tutorial_images/connected_unedited.png)\n",
-    "\n",
     "\n",
     "## Making and incorporating manual edits\n",
     "The automatically-generated fault system suggestions will (by design) include hyper-connected fault systems that need to be broken up."
-   ]
+   ],
+   "metadata": {
+    "collapsed": false
+   }
   },
   {
    "cell_type": "code",
    "execution_count": null,
-   "id": "46a30689",
-   "metadata": {},
    "outputs": [],
-   "source": []
+   "source": [],
+   "metadata": {
+    "collapsed": false
+   }
   }
  ],
  "metadata": {

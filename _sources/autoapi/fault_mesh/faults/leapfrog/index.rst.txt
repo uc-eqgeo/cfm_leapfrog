@@ -17,8 +17,23 @@ Classes
 
 .. autoapisummary::
 
+   fault_mesh.faults.leapfrog.LeapfrogMultiFault
    fault_mesh.faults.leapfrog.LeapfrogFault
 
+
+
+
+.. py:class:: LeapfrogMultiFault(fault_geodataframe, sort_sr = False, segment_distance_tolerance = 100.0, smoothing_n_refinements = 5, remove_colons = True)
+
+   Bases: :py:obj:`fault_mesh.faults.generic.GenericMultiFault`
+
+   Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)
+
+   .. py:method:: find_connections(verbose = True)
+
+      Find all connections between faults in the fault list using networkx
+      :param verbose: print out information about individual connections
+      :return:
 
 
 

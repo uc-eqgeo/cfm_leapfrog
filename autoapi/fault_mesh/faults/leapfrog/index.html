@@ -91,11 +91,45 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.leapfrog.LeapfrogFault" title="fault_mesh.faults.leapfrog.LeapfrogFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeapfrogFault</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault" title="fault_mesh.faults.leapfrog.LeapfrogMultiFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeapfrogMultiFault</span></code></a></p></td>
+<td><p>Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.faults.leapfrog.LeapfrogFault" title="fault_mesh.faults.leapfrog.LeapfrogFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LeapfrogFault</span></code></a></p></td>
 <td><p>Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly</p></td>
 </tr>
 </tbody>
 </table>
+<dl class="py class">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">LeapfrogMultiFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_geodataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_distance_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_n_refinements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_colons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../generic/index.html#fault_mesh.faults.generic.GenericMultiFault" title="fault_mesh.faults.generic.GenericMultiFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fault_mesh.faults.generic.GenericMultiFault</span></code></a></p>
+<p>Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fault_geodataframe</strong> (<em>geopandas.GeoDataFrame</em>) – </p></li>
+<li><p><strong>sort_sr</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>segment_distance_tolerance</strong> (<em>float</em>) – </p></li>
+<li><p><strong>smoothing_n_refinements</strong> (<em>int</em>) – </p></li>
+<li><p><strong>remove_colons</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.find_connections">
+<span class="sig-name descname"><span class="pre">find_connections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.find_connections" title="Permalink to this definition"></a></dt>
+<dd><p>Find all connections between faults in the fault list using networkx
+:param verbose: print out information about individual connections
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFault">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">LeapfrogFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_multifault</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trimming_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_distance_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_connected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault" title="Permalink to this definition"></a></dt>
@@ -104,7 +138,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>parent_multifault</strong> (<em>LeapfrogMultiFault</em>) – </p></li>
+<li><p><strong>parent_multifault</strong> (<a class="reference internal" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault" title="fault_mesh.faults.leapfrog.LeapfrogMultiFault"><em>LeapfrogMultiFault</em></a>) – </p></li>
 <li><p><strong>smoothing</strong> (<em>int</em>) – </p></li>
 <li><p><strong>trimming_gradient</strong> (<em>float</em>) – </p></li>
 <li><p><strong>segment_distance_tolerance</strong> (<em>float</em>) – </p></li>
