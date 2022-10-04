@@ -26,7 +26,7 @@ data.generate_curated_faults()
 
 data.suggest_cutting_hierarchy(os.path.join(script_dir,"kaikoura"))
 
-data.read_cutting_hierarchy(os.path.join(script_dir,"kaikoura_suggested_hierarchy_edited_cfm.csv"))
+data.read_cutting_hierarchy(os.path.join(script_dir,"kaikoura_hierarchy_v3_for_py.csv"))
 
 for dir_name in ["shps", "traces", "end_lines", "footprints"]:
     if not os.path.exists(dir_name):
