@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath("../fault_mesh_building/fault_mesh/"))
 # -- Project information -----------------------------------------------------
 
 project = 'cfm-leapfrog'
-copyright = '2022, Andy Howell'
-author = 'Andy Howell'
+copyright = '2022, Andy Howell and Camilla Penney'
+author = 'Andy Howell and Camilla Penney'
 
 # The full version, including alpha/beta/rc tags
 release = "0.0.1"
@@ -37,7 +37,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
     "autoapi.extension",
-    "myst_parser",
+    "myst_nb",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
