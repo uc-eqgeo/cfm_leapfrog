@@ -122,7 +122,7 @@ class LeapfrogMultiFault(GenericMultiFault):
         df.sort_values(["sr", "name"], ascending=(False, True), inplace=True)
 
         out_names = list(df.name)
-        out_file_name = prefix + "_suggested_hierarchy.csv"
+        out_file_name = prefix + "_suggested.csv"
 
         with open(out_file_name, "w") as out_id:
             for name in out_names:
