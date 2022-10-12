@@ -54,6 +54,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#making-and-incorporating-manual-edits">Making and incorporating manual edits</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#suggesting-a-hierarchy-based-on-slip-rate">Suggesting a hierarchy based on slip rate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#editing-the-cutting-hierarchy">Editing the cutting hierarchy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
@@ -139,17 +145,63 @@ Found 142 connections between segment ends
 <p>It is now necessary to write out these connections for manual editing and review. The file will be written out into the same directory as this Jupyter notebook. It will have a prefix supplied by you and the suffix “_suggested.csv”.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_fault_systems</span><span class="p">(</span><span class="s2">&quot;central_gt1_5_connected_&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_fault_systems</span><span class="p">(</span><span class="s2">&quot;central_gt1_5_connected&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 <p>This will create a CSV file that looks like this:</p>
+<p><img alt="unedited_connected" src="../_images/connected_unedited.png" /></p>
+<p>The name of the combined fault system is in the first column, and names of the faults that make up the connected system are in subsequent columns.</p>
 </section>
 <section id="making-and-incorporating-manual-edits">
 <h2>Making and incorporating manual edits<a class="headerlink" href="#making-and-incorporating-manual-edits" title="Permalink to this heading"></a></h2>
-<p>The automatically-generated fault system suggestions will (by design) include hyper-connected fault systems that need to be broken up.</p>
+<p>The automatically-generated fault system suggestions will (by design) include hyper-connected fault systems that need to be broken up. At this stage, the best way to break up these networks into smaller fault systems is to do it manually by editing the CSV file. An example below shows a new line added to the CSV representing the Hope Fault system – The Hope Fault is grouped with the Alpine and Kekerengu-Needles fault systems in the automatically-generated connections CSV. <strong>Make sure you save this new file with a different name to avoid overwriting it!</strong></p>
+<p><img alt="edited_connected" src="../_images/connected_edited.png" /></p>
+<p>Once you have made the necessary edits, read your new CSV to overwite the automatically-generated connected fault systems:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_fault_systems</span><span class="p">(</span><span class="s2">&quot;./define_connections_data/central_gt1_5_connected_edited.csv&quot;</span><span class="p">)</span>
+<span class="n">fault_data</span><span class="o">.</span><span class="n">generate_curated_faults</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
 </section>
+</section>
+<section id="defining-a-cutting-hierarchy">
+<h1>Defining a cutting hierarchy<a class="headerlink" href="#defining-a-cutting-hierarchy" title="Permalink to this heading"></a></h1>
+<p>Now you have defined your fault system (which you will later use to create meshes), it is necessary to specify which faults terminate against other faults. For example, it seems highly likely that the western end of the Hope Fault is truncated at depth by the Alpine fault. This complex mesh cutting is best achieved using dedicated software such as leapfrog (see below), but for cutting to be done automatically, it is best to first specify a <em>cutting hierarchy</em>.</p>
+<section id="suggesting-a-hierarchy-based-on-slip-rate">
+<h2>Suggesting a hierarchy based on slip rate<a class="headerlink" href="#suggesting-a-hierarchy-based-on-slip-rate" title="Permalink to this heading"></a></h2>
+<p>A first pass at a hierarchy can be generated based purely on fault slip rate. Assuming that the fault data you have already read in have slip rates associated with them, this first pass is easy to make:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_cutting_hierarchy</span><span class="p">(</span><span class="s2">&quot;central_gt1_5_hierarchy&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>This operation simply orders the faults (or fault systems) in your model in descending order of slip rate. For connected fault systems that have segments with different slip rates, the maximum slip rate of any segment in that fault system is used to place the fault system in the cutting hierarchy.</p>
+</section>
+<section id="editing-the-cutting-hierarchy">
+<h2>Editing the cutting hierarchy<a class="headerlink" href="#editing-the-cutting-hierarchy" title="Permalink to this heading"></a></h2>
+<p>You can then edit this hierarchy by switching the order of lines in the file. For any pair of faults/systems that intersect, the fault closer to the bottom of the file will terminate against the fault closer to the top of the list.
+An example of a situation where editing is desirable is illustrated below. The maximum slip rate of the Jordan-Kekerengu-Needles Fault System (23 mm/yr) is faster than the corresponding maximum for the Hope Fault (15.8 mm/yr), but we wish to create a fault model where the Jordan Fault terminates against the Hope Fault. We effect this termination by moving <code class="docutils literal notranslate"><span class="pre">Hope</span> <span class="pre">combined</span></code> above <code class="docutils literal notranslate"><span class="pre">Jordan</span> <span class="pre">-</span> <span class="pre">Kek</span> <span class="pre">-</span> <span class="pre">Needles</span> <span class="pre">combined</span></code> in the CSV file. For similar reasons, we move the <code class="docutils literal notranslate"><span class="pre">Hanmer</span></code> Fault above <code class="docutils literal notranslate"><span class="pre">Hope</span> <span class="pre">Hanmer</span> <span class="pre">NW</span></code>.</p>
+<p><img alt="Adjust hierarchy" src="../_images/reorder_hierarchy.png" /></p>
+<p>We read in this new hierarchy as follows:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_cutting_hierarchy</span><span class="p">(</span><span class="s2">&quot;./define_connections_data/central_gt1_5_hierarchy_edited.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="create-shapefiles-for-mesh-creation">
+<h1>Create shapefiles for mesh creation<a class="headerlink" href="#create-shapefiles-for-mesh-creation" title="Permalink to this heading"></a></h1>
+<p>The final step that this module is useful for is the creation of files that can be combined with meshing software to create triangular mesh representations of faults.</p>
 </section>
 
 
