@@ -1,8 +1,13 @@
 from unittest import TestCase
 import geopandas as gpd
 import logging
+import numpy as np
+from numpy.testing import assert_array_almost_equal
 
-from faults.generic import GenericFault, GenericMultiFault, required_fields, expected_fields
+from fault_mesh.faults.generic import GenericFault, GenericMultiFault, required_fields, expected_fields
+import os
+
+file_path = os.path.dirname(os.path.realpath(__file__))
 
 
 
@@ -11,7 +16,7 @@ class test_generic_faults(TestCase):
 
     def setUp(self):
 
-        self.filename = "data/kaikoura_faults.gpkg"
+        self.filename = os.path.join(file_path, "./data/selected_faults.shp")
         self.fault_geodataframe = gpd.read_file(self.filename)
         self.fault_model = GenericMultiFault(self.fault_geodataframe)
         self.logger = logging.getLogger('fault_model_logger')
@@ -69,9 +74,9 @@ class test_generic_faults(TestCase):
 class test_generic_fault(TestCase):
     def setUp(self):
         self.cmf_fault = GenericFault()
-        self.logger = logging.getLogger('cmf_logger')
+        self.logger = logging.getLogger('fault_model_logger')
 
-        self.filename = "../../../data/cfm_linework/NZ_CFM_v0_6_160221.shp"
+        self.filename = os.path.join(file_path, "./data/selected_faults.shp")
         self.fault_geodataframe = gpd.GeoDataFrame.from_file(self.filename)
         self.fault_model = GenericMultiFault(self.fault_geodataframe)
         # Sort alphabetically by name
@@ -79,70 +84,6 @@ class test_generic_fault(TestCase):
         # Reset index to line up with alphabetical sorting
         self.sorted_df = self.sorted_df.reset_index(drop=True)
 
-    # def test_depth_best(self): => This gets tested by depth_max and depth_min
-    #     self.cmf_fault.depth_best = 5.5
-    #     self.assertAlmostEqual(self.cmf_fault.depth_best, 5.5)
-    #     self.cmf_fault._depth_best = 3.3
-    #     self.assertNotEqual(self.cmf_fault.depth_best, 5.5)
-    #
-    #     self.depth_min = 20
-    #     self.depth_max = 25.6
-    #     depth = 17.4
-    #     with self.assertLogs(logger=self.logger, level='WARNING') as cm:
-    #         self.cmf_fault.depth_best = depth
-        #     self.assertIn(
-        #         "WARNING:cmf_logger:depth_best lower than depth_min", cm.output
-        #     )
-
-
-
-
-    def test_depth_max(self):
-        self.cmf_fault.depth_max = 10.5
-        self.assertAlmostEqual(self.cmf_fault.depth_max, 10.5)
-
-        self.cmf_fault._depth_max = 8.6
-        self.assertNotEqual(self.cmf_fault.depth_max, 10.5)
-
-
-        with self.assertRaises(Exception):
-            self.cmf_fault.depth_max = "Hello"
-
-        # depth_min = self.cmf_fault.depth_min
-        # depth_best = self.cmf_fault.depth_best
-        # depth = min(depth_min, depth_best) - 1
-        self.cmf_fault.depth_min = 20
-        self.cmf_fault.depth_best = 20.4
-        depth = 19.5
-
-        with self.assertLogs(logger=self.logger, level='WARNING') as cm:
-            self.cmf_fault.depth_max = depth
-            self.assertIn(
-                "WARNING:cmf_logger:depth_max lower than either depth_min or depth_best", cm.output
-            )
-
-
-
-    def test_depth_min(self):
-        self.cmf_fault.depth_min = 30.5
-        self.assertAlmostEqual(self.cmf_fault.depth_min, 30.5)
-
-        self.cmf_fault._depth_min = 1.5
-        self.assertNotEqual(self.cmf_fault.depth_min, 10.5)
-
-        with self.assertRaises(Exception):
-            self.cmf_fault.depth_min = "Hello"
-
-        self.cmf_fault.depth_max = 50
-        self.cmf_fault.depth_best = 10
-        depth = 30.5
-
-
-        with self.assertLogs(logger=self.logger, level='WARNING') as cm:
-            self.cmf_fault.depth_min = depth
-            self.assertIn(
-                "WARNING:cmf_logger:depth_min higher than either depth_max or depth_best", cm.output
-            )
 
 
 
@@ -164,7 +105,7 @@ class test_generic_fault(TestCase):
         with self.assertLogs(logger=self.logger, level='WARNING') as cm:
             self.cmf_fault.dip_max = dip
             self.assertIn(
-                "WARNING:cmf_logger:dip_max is lower than dip min or dip best", cm.output
+                "WARNING:fault_model_logger:dip_max is lower than dip min or dip best", cm.output
             )
 
 
@@ -185,29 +126,29 @@ class test_generic_fault(TestCase):
         with self.assertLogs(logger=self.logger, level='WARNING') as cm:
             self.cmf_fault.dip_min = dip
             self.assertIn(
-                "WARNING:cmf_logger:dip_min is higher than dip max or dip best", cm.output
+                "WARNING:fault_model_logger:dip_min is higher than dip max or dip best", cm.output
             )
 
 
 
 #not sure if the test beolw is correct;
     def test_dip_dir_str(self):
-        dip_dir = 'NE'
+        dip_dir = 'SW'
         self.cmf_fault.dip_dir_str = dip_dir
         self.assertIsInstance(dip_dir, str)
 
-        series = self.sorted_df.iloc[0]
+        series = self.sorted_df.iloc[1]
         self.cmf_fault.nztm_trace = series['geometry']
 
         with self.assertLogs(logger=self.logger, level='WARNING') as cm:
             self.cmf_fault.validate_dip_direction()
             self.assertIn(
-                "WARNING:cmf_logger:Supplied trace and dip direction are inconsistent", cm.output
+                "WARNING:fault_model_logger:Supplied trace and dip direction are inconsistent", cm.output
             )
 
         dip_dir = None
         self.cmf_fault.dip_dir_str = dip_dir
-        self.assertAlmostEqual(self.cmf_fault.dip_dir, 330.15406806735234)
+        self.assertAlmostEqual(self.cmf_fault.dip_dir, 337.261792201337)
 
 
     #still working on this
@@ -228,14 +169,14 @@ class test_generic_fault(TestCase):
         self.cmf_fault.dip_dir_str = dip_dir
 
         self.cmf_fault.validate_dip_direction()
-        self.assertAlmostEqual(self.cmf_fault.dip_dir, 150.15406806735643)
+        self.assertAlmostEqual(self.cmf_fault.dip_dir, 165.33461826424696)
 
         dip_dir = None
         self.cmf_fault.dip_dir_str = dip_dir
         with self.assertLogs(logger=self.logger, level='WARNING') as cm:
             self.cmf_fault.validate_dip_direction()
             self.assertIn(
-                "WARNING:cmf_logger:Insufficient information to validate dip direction", cm.output
+                "WARNING:fault_model_logger:Insufficient information to validate dip direction", cm.output
             )
 
         dip_dir = 'NE'
@@ -243,7 +184,7 @@ class test_generic_fault(TestCase):
         with self.assertLogs(logger=self.logger, level='WARNING') as cm:
             self.cmf_fault.validate_dip_direction()
             self.assertIn(
-                "WARNING:cmf_logger:Supplied trace and dip direction are inconsistent", cm.output
+                "WARNING:fault_model_logger:Supplied trace and dip direction are inconsistent", cm.output
             )
 
 
@@ -271,77 +212,10 @@ class test_generic_fault(TestCase):
         self.cmf_fault.nztm_trace = trace
 
         reponseX, reponseY = self.cmf_fault.wgs_trace.coords.xy
-        response = reponseX.tolist()
-        actual = [172.81975618060406, 172.78381840673984, 172.7622924223485]
-        self.assertAlmostEqual(response, actual)
+        response = np.array(reponseX.tolist())
+        actual = np.array([173.81651055, 173.75, 173.6, 173.517, 173.428])
+        assert_array_almost_equal(response, actual)
 
 
 
 
-
-
-
-
-
-    #
-    # def test_sense_dom(self):
-    #     assert False
-    #
-
-    #
-    # def test_sense_sec(self):
-    #     assert False
-    #
-
-    #
-    # def test_rake_to_opensha(self):
-    #     assert False
-    #
-    # def test_validate_rake(self):
-    #     assert False
-    #
-    # def test_validate_rake_sense(self):
-    #     assert False
-    #
-    # def test_sr_best(self):
-    #     assert False
-    #
-    #
-    # def test_sr_min(self):
-    #     assert False
-    #
-    # def test_sr_max(self):
-    #     assert False
-    #
-    #
-    # def test_validate_sr(self):
-    #     assert False
-    #
-    # def test_sr_sigma(self):
-    #     assert False
-    #
-    #
-    # def test_name(self):
-    #     assert False
-    #
-    # def test_number(self):
-    #     assert False
-    #
-    # def test_parent(self):
-    #     assert False
-    #
-
-
-    # def test_from_series(self):
-    #     series = self.sorted_df.iloc[0]
-    #     # length = series.
-    #     response = self.cmf_fault.from_series(series)
-
-
-
-
-
-
-    #
-    # def test_to_xml(self):
-    #     assert False

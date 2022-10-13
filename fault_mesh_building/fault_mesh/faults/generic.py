@@ -1,3 +1,6 @@
+"""
+Classes to act as a general/multifault. Leapfrog classes inherit from these.
+"""
 from typing import Union, List
 import os
 import logging
@@ -21,7 +24,7 @@ valid_depth_range = [0, 50]
 valid_sr_range = [0, 80]
 
 # These fields aren't crucial but are in some versions of the relevant files
-expected_fields = ['Depth_pref', 'Depth_max', 'Depth_min', 'Dip_max', 'Dip_min', 'Name', 'SR_pref']
+expected_fields = ['Depth_D90', 'Dip_max', 'Dip_min', 'Name', 'SR_pref']
 
 # There will be a mess if these fields don't exist
 required_fields = ['Name', 'Fault_ID', 'Dip_dir', 'Dip_pref', 'geometry']
@@ -312,23 +315,17 @@ class GenericMultiFault:
             trimmed_fault_gdf = trimmed_fault_gdf[trimmed_fault_gdf.Fault_stat != "A-US"]
 
         if depth_type == "D90":
-            if "D90" in trimmed_fault_gdf.columns:
-                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
-                trimmed_fault_gdf["Depth_std"] = trimmed_fault_gdf["D90_stdev"]
-            elif "Depth_D90" in trimmed_fault_gdf.columns:
+            if "Depth_D90" in trimmed_fault_gdf.columns:
                 trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_D90"]
-                trimmed_fault_gdf["Depth_std"] = 0.
             else:
-                print('Depth D90 not available, please specify another depth type or check CFM field names.\n')
+                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
+            trimmed_fault_gdf["Depth_std"] = 0.
         else:
-            if "Dfcomb" in trimmed_fault_gdf.columns:
-                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Dfcomb"]
-                trimmed_fault_gdf["Depth_std"] = trimmed_fault_gdf["Dfcomb_std"]
-            elif "Depth_Dfc" in trimmed_fault_gdf.columns:
+            if "Depth_D90" in trimmed_fault_gdf.columns:
                 trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_Dfc"]
-                trimmed_fault_gdf["Depth_std"] = 0.
             else:
-                print('Depth Dfc not available, please specify D90 or check CFM field names.\n')
+                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Dfcomb"]
+            trimmed_fault_gdf["Depth_std"] = 0.
 
         return trimmed_fault_gdf
 

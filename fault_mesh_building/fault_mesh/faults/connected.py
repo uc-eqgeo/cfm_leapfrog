@@ -1,3 +1,6 @@
+"""
+Module for connecting segments into a connected fault system
+"""
 from typing import Union, List
 import fnmatch
 from itertools import chain
@@ -7,12 +10,16 @@ from shapely.geometry import MultiLineString, LineString, Point, Polygon
 from shapely.ops import linemerge, unary_union
 import geopandas as gpd
 
-from eq_fault_geom.geomio.cfm_faults import smallest_difference
-from fault_mesh.smoothing import smooth_trace, merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
+from fault_mesh.faults.generic import smallest_difference
+from fault_mesh.utilities.smoothing import smooth_trace
+from fault_mesh.utilities.merging import merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
 from fault_mesh.utilities.cutting import cut_line_at_multiple_points, cut_line_at_point
 
 
 class ConnectedFaultSystem:
+    """
+    Class for a connected fault system
+    """
     def __init__(self, overall_name: str, cfm_faults, segment_names: list = None,
                  search_patterns: Union[str, list] = None,
                  excluded_names: Union[str, list] = None, tolerance: float = 100.,
@@ -109,10 +116,7 @@ class ConnectedFaultSystem:
                 new_l1, new_l2 = align_two_nearly_adjacent_segments([l1.nztm_trace, l2.nztm_trace])
                 boundaries.append(new_l1.intersection(new_l2))
 
-
-
         self.segment_boundaries = [bound for bound in boundaries if not bound.is_empty]
-
 
         if smooth_trace_refinements is not None:
             self.smoothed_overall_trace = smooth_trace(self.overall_trace, n_refinements=smooth_trace_refinements)
@@ -275,7 +279,6 @@ class ConnectedFaultSystem:
     def find_terminations(self):
         return self.parent.find_terminations(self.name)
 
-
     def adjust_footprint(self, smoothed: bool = True):
         if smoothed:
             end1 = Point(self.smoothed_overall_trace.coords[0])
@@ -296,39 +299,6 @@ class ConnectedFaultSystem:
                             closest_seg = fault
 
                         nearest_seg_this_fault.extend_footprint(nearest_end, other_end, closest_seg)
-    # def adjust_footprint(self, line_length: float = 1.5e5, smoothed: bool = True):
-    #     terms = list(set(chain(*self.find_terminations())))
-    #     if terms:
-    #         cutting_faults = [self.parent.curated_fault_dict[name] for name in terms if name is not self.name]
-    #         fp_to_merge = [self.footprint] + [fault.footprint for fault in cutting_faults]
-    #         merged_footprints = unary_union(fp_to_merge)
-    #         cutting_lines = []
-    #
-    #         if smoothed:
-    #             end1 = Point(self.smoothed_overall_trace.coords[0])
-    #             end2 = Point(self.smoothed_overall_trace.coords[-1])
-    #         else:
-    #             end1 = Point(self.trace.coords[0])
-    #             end2 = Point(self.trace.coords[-1])
-    #
-    #         for end_i, other_end in zip([end1, end2], [end2, end1]):
-    #             nearest_seg = min(self.segments, key=lambda x:x.nztm_trace.centroid.distance(end_i))
-    #             if not any([end_i.distance(fault.nztm_trace) < self.parent.segment_distance_tolerance for fault in cutting_faults]):
-    #                 cutting_lines.append((LineString([np.array(end_i) + nearest_seg.across_strike_vector * line_length,
-    #                                                   np.array(end_i) - nearest_seg.across_strike_vector * line_length]),
-    #                                       other_end))
-    #         if len(cutting_lines):
-    #             if len(cutting_lines) > 1:
-    #                 print(f"{self.name}: more than one cutting line, choosing first...")
-    #             splitter, other_end = cutting_lines[0]
-    #             split_footprint = split(merged_footprints, splitter)
-    #             kept_polys = [poly for poly in list(split_footprint) if other_end.within(poly)]
-    #             if len(kept_polys) > 1:
-    #                 print(f"{self.name}: more than one cut polygon, choosing first...")
-    #             self._footprint = kept_polys[0]
-    #
-    #         else:
-    #             self._footprint = merged_footprints
 
 
 

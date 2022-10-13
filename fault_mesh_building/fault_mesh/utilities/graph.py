@@ -1,3 +1,6 @@
+"""
+Submodule that uses networkx to find connections between segments in a fault map
+"""
 from collections import Counter
 from typing import List
 

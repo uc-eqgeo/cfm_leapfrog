@@ -1,3 +1,6 @@
+"""
+Classes that implement the Leapfrog fault model. Inherit from GenericFault and GenericMultiFault.
+"""
 from __future__ import annotations
 import os
 from typing import List, Union
@@ -12,7 +15,7 @@ from shapely.ops import unary_union
 from shapely.geometry import LineString, MultiLineString, Point, Polygon, MultiPoint
 
 from fault_mesh.faults.generic import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference
-from fault_mesh.smoothing import smooth_trace
+from fault_mesh.utilities.smoothing import smooth_trace
 from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
 from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
 from fault_mesh.faults.connected import ConnectedFaultSystem
@@ -119,7 +122,7 @@ class LeapfrogMultiFault(GenericMultiFault):
         df.sort_values(["sr", "name"], ascending=(False, True), inplace=True)
 
         out_names = list(df.name)
-        out_file_name = prefix + "_suggested_hierarchy.csv"
+        out_file_name = prefix + "_suggested.csv"
 
         with open(out_file_name, "w") as out_id:
             for name in out_names:
@@ -133,23 +136,36 @@ class LeapfrogMultiFault(GenericMultiFault):
     def names(self):
         return [fault.name for fault in self.curated_faults]
 
-    def find_connections(self):
+    def find_connections(self, verbose: bool = True):
+        """
+        Find all connections between faults in the fault list using networkx
+        :param verbose: print out information about individual connections
+        :return:
+        """
+        # Total number of connections of any type
         connections = []
+        # Connections between faults that are neighbours (along strike), everything else is a branch
         neighbour_connections = []
         for fault in self.faults:
             for other_fault in self.faults:
                 if other_fault.name != fault.name:
                     if fault.nztm_trace.distance(other_fault.nztm_trace) <= self.segment_distance_tolerance:
-                        print(f"Connection: {fault.name} and {other_fault.name}")
+                        if verbose:
+                            print(f"Connection: {fault.name} and {other_fault.name}")
+
                         connections.append([fault.name, other_fault.name])
+                        # Check if faults are neighbours
                         conditions = []
                         for p1, p2 in product([fault.end1, fault.end2], [other_fault.end1, other_fault.end2]):
                             conditions.append(p1.distance(p2) <= self.segment_distance_tolerance)
                         if any(conditions):
                             neighbour_connections.append([fault.name, other_fault.name])
 
+
         self._connections = connections
         self._neighbour_connections = neighbour_connections
+        print(f"Found {len(connections)} connections")
+        print(f"Found {len(neighbour_connections)} connections between segment ends")
 
     @property
     def connections(self):
@@ -709,27 +725,3 @@ class LeapfrogFault(GenericFault):
                 self._footprint = new_boundary
 
             return
-
-
-
-class LeapfrogConnectedFault:
-    def __init__(self, fault_list: List[LeapfrogFault], parent_multifault: LeapfrogMultiFault = None):
-        assert all([isinstance(x, LeapfrogFault) for x in fault_list])
-        self._parent = parent_multifault
-        self.faults = fault_list
-
-        self.connections = []
-
-
-
-class LeapfrogFaultSegment(LeapfrogFault):
-    def __init__(self, parent_fault: LeapfrogConnectedFault, parent_multifault: LeapfrogMultiFault = None, ):
-        super(LeapfrogFault, self).__init__(parent_multifault)
-        self._fault = parent_fault
-        self.neighbouring_segments = []
-
-
-class LeapfrogFaultModel:
-    def __init__(self, fault_list: List[Union[LeapfrogFault, LeapfrogConnectedFault]]):
-        assert all([isinstance(x, (LeapfrogFault, LeapfrogConnectedFault)) for x in fault_list])
-        self.faults = fault_list

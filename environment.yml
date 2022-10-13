@@ -2,7 +2,7 @@ name: leapfrog-fault-models
 channels:
   - conda-forge
 dependencies:
-  - python=3.8
+  - python=3.10
   - pyproj
   - numpy >= 1.18.1
   - geopandas >= 0.6.1
@@ -12,6 +12,10 @@ dependencies:
   - rasterio >= 1.1.5
   - pip
   - git >= 2.21.1
+  - sphinx
+  - sphinx-autoapi
+  - myst-nb
   - pip:
-    - -e ./fault_mesh_building
+    - ./fault_mesh_building
     - meshio
+    - sphinx-rtd-theme
