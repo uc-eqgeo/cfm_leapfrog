@@ -4,7 +4,7 @@ import subprocess
 import meshio
 from fault_mesh_building.fault_mesh.utilities.cubit import make_journal_file_surface
 
-indir="/home/UOCNT/cpe88/PycharmProjects/cfm_leapfrog/kaikoura_faults/mesh_out_v3"
+indir="/home/UOCNT/cpe88/PycharmProjects/cfm_leapfrog/kaikoura_faults/mesh_out_v4"
 outdir=indir
 
 #make .jou files
