@@ -243,9 +243,9 @@ class GenericMultiFault:
     def faults(self):
         return self._faults
 
-    def add_fault(self, series: pd.Series, remove_colons: bool = False):
+    def add_fault(self, series: pd.Series, remove_colons: bool = False, tolerance: float = 100.):
         fault = GenericFault.from_series(series, parent_multifault=self,
-                                         remove_colons=remove_colons)
+                                         remove_colons=remove_colons, tolerance=tolerance)
         self.faults.append(fault)
 
 
@@ -320,7 +320,7 @@ class GenericMultiFault:
             else:
                 trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
             trimmed_fault_gdf["Depth_std"] = 0.
-        else:
+        elif depth_type == "Dfcomb":
             if "Depth_D90" in trimmed_fault_gdf.columns:
                 trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_Dfc"]
             else:
@@ -345,7 +345,7 @@ class GenericMultiFault:
 
 
 class GenericFault:
-    def __init__(self, parent_multifault: GenericMultiFault = None):
+    def __init__(self, parent_multifault: GenericMultiFault = None, tolerance: float = 100.):
         """
 
         :param parent_multifault:
@@ -363,6 +363,7 @@ class GenericFault:
         self._source1_1, self.source2 = (None,) * 2
         self._sr_best, self._sr_max, self._sr_min = (None,) * 3
         self._nztm_trace = None
+        self._segment_distance_tolerance = tolerance
 
         # Attributes required for OpenSHA XML
         self._section_id, self._section_name = (None,) * 2
@@ -577,6 +578,18 @@ class GenericFault:
         return dip
 
     @property
+    def segment_distance_tolerance(self):
+        if self.parent is not None:
+            return self.parent.segment_distance_tolerance
+        else:
+            return self._segment_distance_tolerance
+
+    @segment_distance_tolerance.setter
+    def segment_distance_tolerance(self, tolerance: float):
+        assert isinstance(tolerance, (float, int))
+        self._segment_distance_tolerance = tolerance
+
+    @property
     def down_dip_vector(self):
         """
         Calculated from dip and dip direction
@@ -758,13 +771,19 @@ class GenericFault:
         return self._parent
 
     @classmethod
-    def from_series(cls, series: pd.Series, parent_multifault: GenericMultiFault = None, remove_colons: bool = False):
+    def from_series(cls, series: pd.Series, parent_multifault: GenericMultiFault = None, remove_colons: bool = False,
+                    tolerance: float = 100.):
         assert isinstance(series, pd.Series)
         fault = cls(parent_multifault=parent_multifault)
         fault.name = series["Name"]
         if remove_colons:
             fault.name = series["Name"].replace(":", "")
-        fault.number = int(series["Fault_ID"])
+        if isinstance(series["Fault_ID"], str):
+            fault_number = series["Fault_ID"].replace("-", "")
+        else:
+            fault_number = series["Fault_ID"]
+
+        fault.number = int(fault_number)
         fault.dip_best = series["Dip_pref"]
 
         if all([a in series.index for a in ["Dip_min", "Dip_max"]]):

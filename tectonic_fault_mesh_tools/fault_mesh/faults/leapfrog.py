@@ -24,7 +24,7 @@ from fault_mesh.faults.connected import ConnectedFaultSystem
 class LeapfrogMultiFault(GenericMultiFault):
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, sort_sr: bool = False,
                  segment_distance_tolerance: float = 100., smoothing_n_refinements: int = 5,
-                 remove_colons: bool = True):
+                 remove_colons: bool = True, tolerance: float = 100.):
 
         self._smoothing_n = smoothing_n_refinements
         super(LeapfrogMultiFault, self).__init__(fault_geodataframe=fault_geodataframe, 
@@ -43,9 +43,10 @@ class LeapfrogMultiFault(GenericMultiFault):
         self._multi_segment_dict = None
         self._inter_fault_connections = None
 
-    def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False):
+    def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False,
+                  tolerance: float = 100.):
         cfmFault = LeapfrogFault.from_series(series, parent_multifault=self,
-                                             remove_colons=remove_colons)
+                                             remove_colons=remove_colons, tolerance=tolerance)
         cfmFault.smoothed_trace = smooth_trace(cfmFault.nztm_trace, n_refinements=self.smoothing_n)
         self.faults.append(cfmFault)
 
@@ -56,6 +57,10 @@ class LeapfrogMultiFault(GenericMultiFault):
     @property
     def segment_distance_tolerance(self):
         return self._segment_distance_tolerance
+
+    @segment_distance_tolerance.setter
+    def segment_distance_tolerance(self, value: float):
+        self._segment_distance_tolerance = value
 
     @property
     def cutting_hierarchy(self):
@@ -211,7 +216,8 @@ class LeapfrogMultiFault(GenericMultiFault):
                 name = name.replace(":", "")
                 segs = [element.strip() for element in elements[1:]]
                 if any([seg in self.names for seg in segs]):
-                    cfault = ConnectedFaultSystem(overall_name=name, cfm_faults=self, segment_names=segs)
+                    cfault = ConnectedFaultSystem(overall_name=name, cfm_faults=self, segment_names=segs,
+                                                  tolerance=self.segment_distance_tolerance)
                     self.connected_faults.append(cfault)
 
     def generate_curated_faults(self):
@@ -546,8 +552,10 @@ class LeapfrogFault(GenericFault):
         if isinstance(trace, MultiLineString):
             trace = list(trace.geoms)[0]
 
-        new_trace = LineString([(xi, yi, 0.) for xi, yi in trace.coords])
-
+        if trace.has_z:
+            new_trace = LineString([(xi, yi, 0.) for xi, yi, _ in trace.coords])
+        else:
+            new_trace = LineString([(xi, yi, 0.) for xi, yi in trace.coords])
         self._nztm_trace = new_trace
         new_coord_array = np.array(new_trace.coords)
         self._end1 = Point(new_coord_array[0])
@@ -594,7 +602,10 @@ class LeapfrogFault(GenericFault):
 
     @property
     def segment_distance_tolerance(self):
-        return self._segment_distance_tolerance
+        if self.parent is not None:
+            return self.parent.segment_distance_tolerance
+        else:
+            return self._segment_distance_tolerance
 
     @property
     def footprint(self):

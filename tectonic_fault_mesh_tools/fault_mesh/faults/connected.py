@@ -28,6 +28,7 @@ class ConnectedFaultSystem:
         self._overall_trace = None
         self._contours = None
         self._footprint = None
+        self._segment_distance_tolerance = tolerance
         segments = []
 
         assert any([segment_names is not None, search_patterns is not None])
@@ -113,7 +114,7 @@ class ConnectedFaultSystem:
             if l1.nztm_trace.distance(l2.nztm_trace) == 0.:
                 boundaries.append(l1.nztm_trace.intersection(l2.nztm_trace))
             else:
-                new_l1, new_l2 = align_two_nearly_adjacent_segments([l1.nztm_trace, l2.nztm_trace])
+                new_l1, new_l2 = align_two_nearly_adjacent_segments([l1.nztm_trace, l2.nztm_trace], tolerance=tolerance)
                 boundaries.append(new_l1.intersection(new_l2))
 
         self.segment_boundaries = [bound for bound in boundaries if not bound.is_empty]
@@ -136,6 +137,10 @@ class ConnectedFaultSystem:
     @property
     def segment_names(self):
         return [segment.name for segment in self.segments]
+
+    @property
+    def segment_distance_tolerance(self):
+        return self._segment_distance_tolerance
 
     @property
     def trace(self):
@@ -185,7 +190,8 @@ class ConnectedFaultSystem:
             self._overall_trace = trace
         else:
             assert isinstance(trace, MultiLineString)
-            self._overall_trace = merge_multiple_nearly_adjacent_segments(list(trace.geoms))
+            self._overall_trace = merge_multiple_nearly_adjacent_segments(list(trace.geoms),
+                                                                          tolerance=self.segment_distance_tolerance)
 
     def trace_and_contours(self, smoothed: bool = True):
         assert self.contours is not None
