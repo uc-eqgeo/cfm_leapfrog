@@ -16,6 +16,6 @@ dependencies:
   - sphinx-autoapi
   - myst-nb
   - pip:
-    - ./fault_mesh_building
+    - ./tectonic_fault_mesh_tools
     - meshio
     - sphinx-rtd-theme

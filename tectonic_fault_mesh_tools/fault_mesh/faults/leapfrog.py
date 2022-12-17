@@ -72,6 +72,18 @@ class LeapfrogMultiFault(GenericMultiFault):
 
         self._cutting_hierarchy = hierarchy
 
+    def trim_cutting_hierarchy(self):
+        trimmed_hierarchy = []
+        for fault in self.cutting_hierarchy:
+            if fault in self.names:
+                trimmed_hierarchy.append(fault)
+        self.cutting_hierarchy = trimmed_hierarchy
+
+    def write_cutting_hierarchy(self, out_file: str):
+        with open(out_file, "w") as out_id:
+            for name in self.cutting_hierarchy:
+                out_id.write(name + "\n")
+
     @property
     def hierarchy_dict(self):
         return self._hierarchy_dict
@@ -198,8 +210,9 @@ class LeapfrogMultiFault(GenericMultiFault):
                 name = elements[0].strip()
                 name = name.replace(":", "")
                 segs = [element.strip() for element in elements[1:]]
-                cfault = ConnectedFaultSystem(overall_name=name, cfm_faults=self, segment_names=segs)
-                self.connected_faults.append(cfault)
+                if any([seg in self.names for seg in segs]):
+                    cfault = ConnectedFaultSystem(overall_name=name, cfm_faults=self, segment_names=segs)
+                    self.connected_faults.append(cfault)
 
     def generate_curated_faults(self):
         curated_faults = []
@@ -588,6 +601,11 @@ class LeapfrogFault(GenericFault):
         if self._footprint is None:
             self.calculate_footprint()
         return self._footprint
+
+
+    @property
+    def footprint_linestring(self):
+        return LineString(self.footprint.exterior.coords)
 
     def calculate_footprint(self, smoothed: bool = True, buffer: float = 5000.):
         if smoothed:
