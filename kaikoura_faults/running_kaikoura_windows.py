@@ -20,7 +20,7 @@ data.find_connections()
 major_faults = connected_nodes(data.neighbour_connections)
 data.suggest_fault_systems(out_prefix=os.path.join(script_dir,"faults_in_windows","kaikoura"))
 #read in edited faults
-data.read_fault_systems(fault_system_csv=os.path.join(script_dir,"faults_in_windows","kaikoura_suggested_faults_edited_cfm_v3.csv"))
+data.read_fault_systems(fault_system_csv=os.path.join(script_dir,"faults_in_windows","kaikoura_suggested_faults_edited_cfm_v3.csv"),tol=300.)
 
 data.generate_curated_faults()
 
