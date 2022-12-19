@@ -165,7 +165,6 @@ class ConnectedFaultSystem:
 
         if max(depths) > 0:
             depths *= -1
-
         self.contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours)
 
     @property
@@ -276,7 +275,11 @@ class ConnectedFaultSystem:
 
         combined = unary_union(end_line_list)
         if isinstance(combined, LineString):
-            return MultiLineString([combined])
+            if not combined.is_empty:
+                return MultiLineString([combined])
+            else:
+                assert not any(end_line.is_empty for end_line in end_line_list)
+                return MultiLineString(end_line_list)
         else:
             return combined
 
