@@ -368,7 +368,10 @@ class LeapfrogFault(GenericFault):
     @neighbouring_segments.setter
     def neighbouring_segments(self, segment_list: list):
         assert isinstance(segment_list, list)
-        assert len(segment_list) <= 2
+        if len(segment_list) > 2:
+            raise ValueError(f"Too many ({len(segment_list):d}) neighbours supplied for segment {self.name:s}.\n"
+                             f"Only two neighbours are allowed. Please turn extra neighbour(s) into separate faults.\n"
+                             f"Neighbours supplied: {[neighbour.name for neighbour in segment_list]}")
         if len(segment_list) == 0:
             self._is_segment = False
         else:

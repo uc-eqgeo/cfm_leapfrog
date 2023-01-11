@@ -82,7 +82,6 @@ class ConnectedFaultSystem:
                     if other_seg != segment:
                         if segment.nztm_trace.distance(other_seg.nztm_trace) < tolerance:
                             neighbour_list.append(other_seg)
-
                 segment.neighbouring_segments = neighbour_list
             segment.parent_connected_fault = self
 
