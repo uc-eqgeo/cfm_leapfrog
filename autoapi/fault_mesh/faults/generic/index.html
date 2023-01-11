@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>fault_mesh.faults.generic &mdash; cfm-leapfrog 0.0.1 documentation</title>
@@ -14,9 +14,6 @@
   <![endif]-->
   
         <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../_static/doctools.js"></script>
         <script src="../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -88,10 +85,6 @@
 <section id="classes">
 <h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.GenericMultiFault" title="fault_mesh.faults.generic.GenericMultiFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GenericMultiFault</span></code></a></p></td>
 <td><p>Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)</p></td>
@@ -102,10 +95,6 @@
 <section id="functions">
 <h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.smallest_difference" title="fault_mesh.faults.generic.smallest_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">smallest_difference</span></code></a>(value1, value2)</p></td>
 <td><p>Finds smallest angle between two bearings</p></td>
@@ -149,7 +138,7 @@
 :param bearing:
 :return:</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>bearing</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>int</em><em>]</em>) – </p>
 </dd>
 </dl>
@@ -164,7 +153,7 @@
 :param tolerance: to account for rounding errors etc
 :return:</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>value</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p></li>
 <li><p><strong>benchmark</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p></li>
@@ -183,7 +172,7 @@
 :param tolerance: to account for rounding errors etc
 :return:</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>value</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p></li>
 <li><p><strong>benchmark</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p></li>
@@ -200,7 +189,7 @@
 :param bearing:
 :return:</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>bearing</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p>
 </dd>
 </dl>
@@ -215,7 +204,7 @@ Important for OpenSHA, I think
 :param line:
 :return:</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>line</strong> (<em>shapely.geometry.LineString</em>) – </p>
 </dd>
 </dl>
@@ -229,7 +218,7 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 :param line: Linestring object
 :return:</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>line</strong> (<em>shapely.geometry.LineString</em>) – </p>
 </dd>
 </dl>
@@ -242,7 +231,7 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 :param value_array: Differences of values (e.g. sr_min and sr_max) from mean.
 :return:</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>value_array</strong> (<em>Union</em><em>[</em><em>numpy.ndarray</em><em>, </em><em>list</em><em>, </em><em>tuple</em><em>]</em>) – </p>
 </dd>
 </dl>
@@ -253,7 +242,7 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">GenericMultiFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_geodataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_colons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.GenericMultiFault" title="Permalink to this definition"></a></dt>
 <dd><p>Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>fault_geodataframe</strong> (<em>geopandas.GeoDataFrame</em>) – </p></li>
 <li><p><strong>sort_sr</strong> (<em>bool</em>) – </p></li>
@@ -266,7 +255,7 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gdf_from_nz_cfm_shp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_region_polygons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'D90'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_region_min_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_aus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.GenericMultiFault.gdf_from_nz_cfm_shp" title="Permalink to this definition"></a></dt>
 <dd><p>Read CFM shapefile</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> (<em>str</em>) – </p></li>
 <li><p><strong>exclude_region_polygons</strong> (<em>List</em><em>[</em><em>shapely.geometry.Polygon</em><em>]</em>) – </p></li>
