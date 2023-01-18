@@ -13,7 +13,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 1,
+   "execution_count": 10,
    "id": "f42e46ec",
    "metadata": {},
    "outputs": [
@@ -35,8 +35,9 @@
    "source": [
     "# Import modules \n",
     "from fault_mesh.faults.leapfrog import LeapfrogMultiFault\n",
-    "from fault_mesh.faults.connected import ConnectedFaultSystem\n",
-    "from fault_mesh.utilities.graph import connected_nodes\n",
+    "import os\n",
+    "import numpy as np\n",
+    "import geopandas as gpd\n",
     "\n",
     "# Read in fault data from shapefile\n",
     "fault_data = LeapfrogMultiFault.from_nz_cfm_shp(\"tutorial_gis/cfm_gt_1_5.gpkg\", remove_colons=True)"
@@ -53,7 +54,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 2,
+   "execution_count": 11,
    "id": "7b431aa1",
    "metadata": {},
    "outputs": [],
@@ -72,7 +73,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 3,
+   "execution_count": 12,
    "outputs": [
     {
      "name": "stdout",
@@ -101,7 +102,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 4,
+   "execution_count": 13,
    "outputs": [],
    "source": [
     "fault_data.suggest_fault_systems(\"central_gt1_5_connected\")"
@@ -132,7 +133,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 7,
+   "execution_count": 14,
    "outputs": [],
    "source": [
     "fault_data.read_fault_systems(\"./define_connections_data/central_gt1_5_connected_edited.csv\")\n",
@@ -156,7 +157,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 8,
+   "execution_count": 15,
    "outputs": [],
    "source": [
     "fault_data.suggest_cutting_hierarchy(\"central_gt1_5_hierarchy\")"
@@ -185,7 +186,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 9,
+   "execution_count": 16,
    "outputs": [],
    "source": [
     "fault_data.read_cutting_hierarchy(\"./define_connections_data/central_gt1_5_hierarchy_edited.csv\")"
@@ -201,7 +202,8 @@
     "The final pre-meshing step is the creation of files that can be combined with meshing software to create triangular mesh representations of faults.\n",
     "Although it is possible to construct these triangular surfaces in multiple software packages (for example, MOVE 3D), the following discussion is geared towards use with Leapfrog Geo software.\n",
     "\n",
-    "## Surface traces\n"
+    "## Create directories to hold shapefiles\n",
+    "For organisational reasons, it helps to have the different shapefiles in different directories"
    ],
    "metadata": {
     "collapsed": false
@@ -209,7 +211,51 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 20,
+   "outputs": [],
+   "source": [
+    "for dir_name in [\"depth_contours\", \"traces\", \"footprints\"]:\n",
+    "    if not os.path.exists(dir_name):\n",
+    "        os.mkdir(dir_name)"
+   ],
+   "metadata": {
+    "collapsed": false
+   }
+  },
+  {
+   "cell_type": "markdown",
+   "source": [
+    "## Write out shapefiles\n"
+   ],
+   "metadata": {
+    "collapsed": false
+   }
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "outputs": [],
+   "source": [
+    "for fault in fault_data.curated_faults:\n",
+    "    # Generate depth contours\n",
+    "    fault.generate_depth_contours(np.arange(2000, 32000., 2000.))\n",
+    "    # Write contours to files\n",
+    "    fault.contours.to_file(f\"depth_contours/{fault.name}_contours.shp\")\n",
+    "    # Write traces\n",
+    "    gpd.GeoSeries(fault.smoothed_trace).to_file(f\"traces/{fault.name}_trace.shp\")\n",
+    "\n",
+    "# Write fault footprints\n",
+    "for fault in reversed(fault_data.curated_faults):\n",
+    "    fault.adjust_footprint()\n",
+    "    gpd.GeoSeries(fault.footprint).to_file(f\"footprints/{fault.name}_footprint.shp\")"
+   ],
+   "metadata": {
+    "collapsed": false
+   }
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
    "outputs": [],
    "source": [],
    "metadata": {

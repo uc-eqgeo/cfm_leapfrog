@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leapfrog 3D mesh generation and fault cutting &mdash; cfm-leapfrog 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Defining connected fault systems" href="../tutorials/define_connected.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> cfm-leapfrog
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction and Setup:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation instructions and updates to code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running_examples.html">Running tutorial examples using Jupyter</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected.html">Defining connected fault systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected.html#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected.html#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Leapfrog 3D mesh generation and fault cutting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#import-inputs">Import inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-fault-modelling">Run fault modelling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quality-control">Quality Control</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cfm-leapfrog</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Leapfrog 3D mesh generation and fault cutting</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/help/camilla.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="leapfrog-3d-mesh-generation-and-fault-cutting">
+<h1>Leapfrog 3D mesh generation and fault cutting<a class="headerlink" href="#leapfrog-3d-mesh-generation-and-fault-cutting" title="Permalink to this heading"></a></h1>
+<section id="import-inputs">
+<h2>Import inputs<a class="headerlink" href="#import-inputs" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Right click on GIS Data, Maps and Photos – New Subfolder +
+create a subfolder with your project name, then subfolders
+of this named <code class="docutils literal notranslate"><span class="pre">traces</span></code>, <code class="docutils literal notranslate"><span class="pre">footprints</span></code>, <code class="docutils literal notranslate"><span class="pre">contours</span></code>.</p></li>
+<li><p>Import the contours, footprints and traces into these
+folders by right clicking on the folder – import vector
+data</p></li>
+<li><p>Import the grid to use as the depth cut off for faulting by
+right clicking on Meshes – import elevation grid</p></li>
+</ol>
+</section>
+<section id="run-fault-modelling">
+<h2>Run fault modelling<a class="headerlink" href="#run-fault-modelling" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">File</span> <span class="pre">-&gt;</span> <span class="pre">Fault</span> <span class="pre">System</span> <span class="pre">Modelling</span> <span class="pre">-&gt;</span> <span class="pre">Rebuild</span> <span class="pre">Fault</span> <span class="pre">System</span></code>. This
+will ask you to select a json file (easiest to keep this in
+the folder where the project is)
+<strong>“name”</strong> needs to be the name of your first subfolder,
+<strong>“faults_filename”</strong> is the file with the fault hierarchy in
+it, “basement_name” is the location (in the leapfrog
+project) of the base mesh, <strong>“uncut_zs”</strong> is the depth range to
+make the initial uncut faults in, “trace buffer” … ,
+“cut_zs” is the depth range to cut the fault surfaces to (in
+practice this will be the depth to the depth mesh but could
+use this if wanted a uniform surface), “resolution” is the
+resolution of fault interactions/terminations in m (based on
+some issues I’ve been having, might want to set this a bit
+smaller e.g. 100m), <strong>“ignore_terminations”</strong>,
+<strong>“run_intersection_check”</strong> runs a check on whether the faults
+intersect once they’ve been cut which is slightly less
+important now that we’re making buffers around the areas
+where faults intersect, <strong>“use_uncut_terminations”</strong> can be used
+to truncate faults against the uncut version of their meshes
+rather than the cut version (which you generally won’t
+want), <strong>“filter_terminations_using_traces”</strong> stops faults on
+opposite sides of an earlier fault from generating
+termination lines on each other.</p></li>
+</ol>
+<p><img alt="" src="../_images/json.png" /></p>
+<ol class="arabic simple" start="2">
+<li><p><code class="docutils literal notranslate"><span class="pre">File</span> <span class="pre">-&gt;</span> <span class="pre">Fault</span> <span class="pre">System</span> <span class="pre">Modelling</span> <span class="pre">-&gt;</span> <span class="pre">Create</span> <span class="pre">termination</span> <span class="pre">models</span></code>
+(seems to fail on some faults, but work if go to Projects –
+retry failed task after running)</p></li>
+<li><p>File – Fault System Modelling – add termination
+boundaries</p></li>
+<li><p>File – Fault System Modelling – Extract main fault parts.
+The final fault network will be in a folder called
+Meshes/{name}/extracted</p></li>
+<li><p>Save the extracted meshes by right clicking on this folder
+– Export Meshes – Select All, Format: *.obj and choose
+the folder you want to save to</p></li>
+<li><p><strong>In practice you’ll want to check that this process gave
+you the faults you were actually expecting and that they’ve
+been cut/truncated properly so…</strong></p></li>
+</ol>
+</section>
+<section id="quality-control">
+<h2>Quality Control<a class="headerlink" href="#quality-control" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Import traces into leapfrog scene (drag + drop the traces
+folder) - I’ve found it helpful to go through the extracted
+meshes and make sure they correspond to the surface traces +
+don’t have intersections with other faults. The most common
+problems are that the trace of another fault doesn’t quite
+truncate a fault so that the fault goes beyond its surface
+trace – might be solved by changing “resolution” to be
+smaller (see above), that a fault intersection doesn’t get
+picked up or that a fault doesn’t fully cut through another
+so you end up with a long slot in the fault rather than a
+truncation.</p></li>
+<li><p>To check for fault intersections in the final model:</p>
+<ol class="arabic simple">
+<li><p>rename Meshes/{name}/output to something else e.g.
+Meshes/{name}/output1</p></li>
+<li><p>rename Meshes/{name}/extracted to Meshes/{name}/output</p></li>
+<li><p>run File – Fault System Modelling – check Fault Mesh
+intersections</p></li>
+<li><p>Change back the folder names (just so you don’t forget
+later) - this is a bit of a hack but Check Fault Mesh
+Intersections works on the folder “output”</p></li>
+</ol>
+</li>
+<li><p>If there are intersections which need adding in as
+terminations, there are two possibilities:</p>
+<ol class="arabic">
+<li><p>The fault which needs truncating already has a
+termination listed in the terminations folder:</p>
+<ol class="arabic simple">
+<li><p>Go to the geological model for this fault –
+boundary – add lateral extent – from distance
+function – create new distance function – choose
+the intersection line as the object for this
+distance function – buffer – set to 100m.</p></li>
+<li><p>rerun “add termination boundaries” and “extract
+main fault parts” – might have to right click on
+the new termination in the GM – switch inside</p></li>
+</ol>
+</li>
+<li><p>The fault which needs truncating doesn’t have a
+termination:</p>
+<p>a.  Copy the intersection line to the “terminations”
+folder</p>
+<p>b.  Rename to the name of the fault being terminated</p>
+<p>c.  rerun “add termination boundaries” and “extract
+main fault parts” (I can’t remember if you need to
+redo the GM section from the first case)</p>
+</li>
+</ol>
+</li>
+<li><p>If a termination line needs editing (e.g. to bring it to the
+edge of a fault):</p>
+<ol class="arabic simple">
+<li><p>Right click on the termination line – edit</p></li>
+<li><p>Select snap to mesh vertex</p></li>
+<li><p>Select 3D (in panel above scene)</p></li>
+<li><p>Click on the last vertex in the line + hold down ctrl as
+you move it where you want it to be. Alternatively click
+“draw new line” in the line above and draw a new
+polyline as a termination boundary.</p></li>
+<li><p>rerun “add termination boundaries” and “extract main
+fault parts”</p></li>
+</ol>
+</li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../tutorials/define_connected.html" class="btn btn-neutral float-left" title="Defining connected fault systems" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Andy Howell and Camilla Penney.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
