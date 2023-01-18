@@ -24,7 +24,7 @@ jobs:
         lfs: true
 
     - name: Cache conda
-      uses: actions/cache@v3
+      uses: actions/cache@v2
       env:
         cache-name: cache-conda-env
       with:
