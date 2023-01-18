@@ -15,7 +15,6 @@ dependencies:
   - sphinx
   - sphinx-autoapi
   - myst-nb
-  - notebook
   - pip:
     - ./tectonic_fault_mesh_tools
     - meshio
