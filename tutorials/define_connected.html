@@ -112,6 +112,10 @@
 
 <span class="c1"># Read in fault data from shapefile</span>
 <span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/cfm_gt_1_5.gpkg&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Alternative for full CFM:</span>
+<span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp(&quot;../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp&quot;, remove_colons=True,</span>
+<span class="c1">#                                                  exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0)</span>
 </pre></div>
 </div>
 </div>
