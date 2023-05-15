@@ -12,9 +12,9 @@ from fault_mesh.utilities.graph import connected_nodes
 # note D90 is the seismogenic thickness, whereas Dfc is the theoretical maximum rupture depth (see p. 30 of the CFM report)
 # warnings about expected fields because of changes in naming conventions of CFM - should be fine
 # easiest way to exclude faults is to edit this gpkg
-script_dir = os.path.abspath(".")
-data = LeapfrogMultiFault.from_nz_cfm_shp(
-    'C:/Users/cpe88/PycharmProjects/cfm_leapfrog/kaikoura_faults/faults_in_windows/qgis_files/cfm_cut_local.gpkg',
+script_dir = os.path.abspath("Z:\Penney\leapfrog_cfm\kaikoura_faults\Changes_from_base\hopeconway\")
+data = LeapfrogMultiFault.from_nz_cfm_shp('Z:\Penney\leapfrog_cfm\kaikoura_faults\Changes_from_base\hopeconway\qgis\hopeconway.gpkg')
+    #'C:/Users/cpe88/PycharmProjects/cfm_leapfrog/kaikoura_faults/faults_in_windows/qgis_files/cfm_cut_local.gpkg',
     remove_colons=True,
     exclude_zero=False, depth_type="Dfc", exclude_aus=False)
 
