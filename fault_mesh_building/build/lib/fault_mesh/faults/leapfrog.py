@@ -14,11 +14,11 @@ from shapely.affinity import translate
 from shapely.ops import unary_union
 from shapely.geometry import LineString, MultiLineString, Point, Polygon, MultiPoint
 
-from fault_mesh_building.fault_mesh.faults.generic import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference
-from fault_mesh_building.fault_mesh.utilities.smoothing import smooth_trace
-from fault_mesh_building.fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
-from fault_mesh_building.fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
-from fault_mesh_building.fault_mesh.faults.connected import ConnectedFaultSystem
+from fault_mesh.faults.generic import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference
+from fault_mesh.utilities.smoothing import smooth_trace
+from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
+from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
+from fault_mesh.faults.connected import ConnectedFaultSystem
 
 
 class LeapfrogMultiFault(GenericMultiFault):
@@ -525,7 +525,7 @@ class LeapfrogFault(GenericFault):
 
     @property
     def contours(self):
-        return self._contours.loc[np.invert(self._contours.geometry.is_empty)]
+        return self._contours.loc[np.invert(self.contours.geometry.is_empty)]
 
 
     @property

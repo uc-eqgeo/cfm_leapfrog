@@ -1,0 +1,6 @@
+Metadata-Version: 2.1
+Name: fault-mesh
+Version: 0.1
+Summary: Tools for building fault meshes in leapfrog
+Author: Andy Howell
+Author-email: a.howell@gns.cri.nz

@@ -10,10 +10,10 @@ from shapely.geometry import MultiLineString, LineString, Point, Polygon
 from shapely.ops import linemerge, unary_union
 import geopandas as gpd
 
-from fault_mesh_building.fault_mesh.faults.generic import smallest_difference
-from fault_mesh_building.fault_mesh.utilities.smoothing import smooth_trace
-from fault_mesh_building.fault_mesh.utilities.merging import merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
-from fault_mesh_building.fault_mesh.utilities.cutting import cut_line_at_multiple_points, cut_line_at_point
+from fault_mesh.faults.generic import smallest_difference
+from fault_mesh.utilities.smoothing import smooth_trace
+from fault_mesh.utilities.merging import merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
+from fault_mesh.utilities.cutting import cut_line_at_multiple_points, cut_line_at_point
 
 
 class ConnectedFaultSystem:
@@ -61,7 +61,6 @@ class ConnectedFaultSystem:
 
         for fault in cfm_faults.faults:
             name = fault.name
-
             if search_patterns is not None:
                 if any([fnmatch.fnmatch(name, pattern) for pattern in search_pattern_list]):
                     if not any([fnmatch.fnmatch(name, pattern) for pattern in excluded_list]):

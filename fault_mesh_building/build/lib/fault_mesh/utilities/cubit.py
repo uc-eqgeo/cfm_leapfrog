@@ -57,11 +57,9 @@ def make_journal_file_surface(inmesh: str, outmesh: str, journalname, mesh_size:
         else:
             out_id.write(f'import asset "{inmesh}" make geometry on\n')
         out_id.write(f'delete mesh surface 1 propagate\n')
-        #out_id.write(f'surface 1 scheme trimesh minimum size {min_mesh_size}\n')
-        out_id.write(f'surface 1 scheme triadvance\n')
-        #out_id.write(f'set trimesher geometry sizing off\n')
+        out_id.write(f'surface 1 scheme trimesh minimum size {min_mesh_size}\n')
+        out_id.write(f'set trimesher geometry sizing off\n')
         out_id.write(f'surface 1 size {mesh_size}\n')
-        #surface 1 sizing function constant
         out_id.write(f'mesh surface 1\n')
         out_id.write(f'export stl ascii "{outmesh}" surface 1 mesh overwrite\n')
         out_id.write(f'exit\n')

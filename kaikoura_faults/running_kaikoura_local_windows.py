@@ -4,32 +4,32 @@ import geopandas as gpd
 from matplotlib import pyplot as plt
 import numpy as np
 
-from fault_mesh.faults.leapfrog import LeapfrogMultiFault
-from fault_mesh.faults.connected import ConnectedFaultSystem
-from fault_mesh.utilities.graph import connected_nodes
+from fault_mesh_building.fault_mesh.faults.leapfrog import LeapfrogMultiFault
+from fault_mesh_building.fault_mesh.faults.connected import ConnectedFaultSystem
+from fault_mesh_building.fault_mesh.utilities.graph import connected_nodes
 
 # read in faults
 # note D90 is the seismogenic thickness, whereas Dfc is the theoretical maximum rupture depth (see p. 30 of the CFM report)
 # warnings about expected fields because of changes in naming conventions of CFM - should be fine
 # easiest way to exclude faults is to edit this gpkg
-script_dir = os.path.abspath("Z:\Penney\leapfrog_cfm\kaikoura_faults\Changes_from_base\hopeconway\")
-data = LeapfrogMultiFault.from_nz_cfm_shp('Z:\Penney\leapfrog_cfm\kaikoura_faults\Changes_from_base\hopeconway\qgis\hopeconway.gpkg')
-    #'C:/Users/cpe88/PycharmProjects/cfm_leapfrog/kaikoura_faults/faults_in_windows/qgis_files/cfm_cut_local.gpkg',
-    remove_colons=True,
+script_dir = os.path.abspath(r"Z:\Penney\leapfrog_cfm\kaikoura_faults\Changes_from_base\better_jkn")
+case_name="better_jkn"
+data = LeapfrogMultiFault.from_nz_cfm_shp(r'Z:\Penney\leapfrog_cfm\kaikoura_faults\Changes_from_base\better_jkn\qgis\better_jkn_subset.gpkg',remove_colons=True,
     exclude_zero=False, depth_type="Dfc", exclude_aus=False)
+#'C:/Users/cpe88/PycharmProjects/cfm_leapfrog/kaikoura_faults/faults_in_windows/qgis_files/cfm_cut_local.gpkg',
 
 # suggest faults to combine (these need editing in csv)
 data.find_connections()
 major_faults = connected_nodes(data.neighbour_connections)
-data.suggest_fault_systems(out_prefix=os.path.join(script_dir, "faults_in_windows", "subset", "kaikoura"))
+data.suggest_fault_systems(out_prefix=os.path.join(script_dir,f"{case_name}"))# "faults_in_windows", "subset", "kaikoura"))
 # read in edited faults
 data.read_fault_systems(
-    fault_system_csv=os.path.join(script_dir, "faults_in_windows", "subset", "kaikoura_local_suggested_faults_edited.csv"),
-    tol=100.)
+    fault_system_csv=os.path.join(script_dir,  f"{case_name}_suggested_faults_edited.csv"), tol=100.) # "faults_in_windows", "subset", f"{case_name}_suggested_faults_edited.csv"),
+
 
 data.generate_curated_faults()
 
-data.suggest_cutting_hierarchy(os.path.join(script_dir, "faults_in_windows", "subset", "kaikoura"))
+data.suggest_cutting_hierarchy(os.path.join(script_dir,f"{case_name}"))# "faults_in_windows", "subset", "kaikoura"))
 # removing particular fault from hierarchy file
 # with open(os.path.join("./faults_in_windows","kaikoura_hierarchy_0slip2rm.csv"),'r') as fin:
 #     rm_list = fin.readlines()
