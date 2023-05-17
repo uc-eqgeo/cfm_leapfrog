@@ -8,7 +8,8 @@ from fault_mesh.faults.leapfrog import LeapfrogMultiFault
 from fault_mesh.faults.connected import ConnectedFaultSystem
 from fault_mesh.utilities.graph import connected_nodes
 
-data = LeapfrogMultiFault.from_nz_cfm_shp("../gis/cfm_gt_1_5.gpkg", remove_colons=True)
+data = LeapfrogMultiFault.from_nz_cfm_shp("../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp", remove_colons=True,
+                                          exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0)
 
 # data = LeapfrogMultiFault.from_nz_cfm_shp("../gis/central_cfm.gpkg")
 # data = LeapfrogMultiFault.from_nz_cfm_shp("../gis/cfm_0_9.gpkg")
@@ -36,7 +37,7 @@ for fault in data.curated_faults:
     trace.plot(ax=ax)
     fault.contours.plot(ax=ax)
 
-    gpd.GeoSeries(fault.smoothed_trace).to_file(f"traces/{fault.name}_trace.shp")
+    gpd.GeoSeries(fault.nztm_trace).to_file(f"traces/{fault.name}_trace.shp")
     if isinstance(fault, ConnectedFaultSystem):
         gpd.GeoSeries(fault.end_lines(smoothed=True)).to_file(f"end_lines/{fault.name}_end_lines.shp")
 

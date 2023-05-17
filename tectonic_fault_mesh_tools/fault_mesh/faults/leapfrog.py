@@ -23,13 +23,15 @@ from fault_mesh.faults.connected import ConnectedFaultSystem
 
 class LeapfrogMultiFault(GenericMultiFault):
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, sort_sr: bool = False,
-                 segment_distance_tolerance: float = 100., smoothing_n_refinements: int = 5,
-                 remove_colons: bool = True, tolerance: float = 100.):
+                 segment_distance_tolerance: float = 100., smoothing_n: int = 5,
+                 remove_colons: bool = True, tolerance: float = 100., dip_choice: str = "pref",
+                 trimming_gradient: float = 1., epsg: int = None):
 
-        self._smoothing_n = smoothing_n_refinements
+        self._smoothing_n = smoothing_n
         super(LeapfrogMultiFault, self).__init__(fault_geodataframe=fault_geodataframe, 
                                                  sort_sr=sort_sr,
-                                                 remove_colons=remove_colons)
+                                                 remove_colons=remove_colons, dip_choice=dip_choice,
+                                                 )
 
         self._segment_distance_tolerance = segment_distance_tolerance
         self._cutting_hierarchy = []
@@ -42,17 +44,27 @@ class LeapfrogMultiFault(GenericMultiFault):
         self._segment_dict = None
         self._multi_segment_dict = None
         self._inter_fault_connections = None
+        self._trimming_gradient = trimming_gradient
+        self._epsg = epsg
 
     def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False,
                   tolerance: float = 100.):
         cfmFault = LeapfrogFault.from_series(series, parent_multifault=self,
-                                             remove_colons=remove_colons, tolerance=tolerance)
-        cfmFault.smoothed_trace = smooth_trace(cfmFault.nztm_trace, n_refinements=self.smoothing_n)
+                                             remove_colons=remove_colons, tolerance=tolerance,
+                                             dip_choice=self.dip_choice)
+        if self.smoothing_n is None:
+            cfmFault.smoothed_trace = cfmFault.nztm_trace
+        else:
+            cfmFault.smoothed_trace = smooth_trace(cfmFault.nztm_trace, n_refinements=self.smoothing_n)
         self.faults.append(cfmFault)
 
     @property
     def smoothing_n(self):
         return self._smoothing_n
+
+    @property
+    def epsg(self):
+        return self._epsg
 
     @property
     def segment_distance_tolerance(self):
@@ -206,7 +218,7 @@ class LeapfrogMultiFault(GenericMultiFault):
                 out_str = ",".join(out_list) + "\n"
                 out_id.write(out_str)
 
-    def read_fault_systems(self, fault_system_csv: str):
+    def read_fault_systems(self, fault_system_csv: str, trimming_gradient: float = 1.):
         self.connected_faults = []
         with open(fault_system_csv, "r") as in_id:
             con_data = in_id.readlines()
@@ -217,7 +229,9 @@ class LeapfrogMultiFault(GenericMultiFault):
                 segs = [element.strip() for element in elements[1:]]
                 if any([seg in self.names for seg in segs]):
                     cfault = ConnectedFaultSystem(overall_name=name, cfm_faults=self, segment_names=segs,
-                                                  tolerance=self.segment_distance_tolerance)
+                                                  tolerance=self.segment_distance_tolerance,
+                                                  trimming_gradient=trimming_gradient,
+                                                  smooth_trace_refinements=self.smoothing_n)
                     self.connected_faults.append(cfault)
 
     def generate_curated_faults(self):
@@ -242,14 +256,15 @@ class LeapfrogMultiFault(GenericMultiFault):
     def from_nz_cfm_shp(cls, filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
                         exclude_region_min_sr: float = 1.8, include_names: list = None, exclude_aus: bool = True,
                         exclude_zero: bool = True, sort_sr: bool = False, remove_colons: bool = False,
-                        smoothing_n_refinements: int = 5):
+                        smoothing_n: Union[int, None] = 5, dip_choice: str = "pref", epsg: int = None):
 
         trimmed_fault_gdf = cls.gdf_from_nz_cfm_shp(filename=filename, exclude_region_polygons=exclude_region_polygons,
                                                     depth_type=depth_type, exclude_region_min_sr=exclude_region_min_sr,
                                                     include_names=include_names, exclude_aus=exclude_aus,
                                                     exclude_zero=exclude_zero)
         multi_fault = cls(trimmed_fault_gdf, sort_sr=sort_sr,
-                          remove_colons=remove_colons, smoothing_n_refinements=smoothing_n_refinements)
+                          remove_colons=remove_colons, smoothing_n=smoothing_n,
+                          dip_choice=dip_choice, epsg=epsg)
 
         return multi_fault
 
@@ -358,8 +373,7 @@ class LeapfrogFault(GenericFault):
         shortened to allow
         :return:
         """
-
-        return self._trimming_gradient
+        return self.parent._trimming_gradient
 
     @property
     def neighbouring_segments(self):
@@ -543,7 +557,10 @@ class LeapfrogFault(GenericFault):
         if max(depths) > 0:
             depths *= -1
 
-        self.contours =  gpd.GeoDataFrame({"depth": depths}, geometry=contours)
+        if self.parent.epsg is not None:
+            self.contours =  gpd.GeoDataFrame({"depth": depths}, geometry=contours,crs=self.parent.epsg)
+        else:
+            self.contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours)
 
     @property
     def nztm_trace(self):
@@ -563,6 +580,13 @@ class LeapfrogFault(GenericFault):
         new_coord_array = np.array(new_trace.coords)
         self._end1 = Point(new_coord_array[0])
         self._end2 = Point(new_coord_array[-1])
+
+    @property
+    def nztm_trace_geoseries(self):
+        if self.parent.epsg is not None:
+            return gpd.GeoSeries(self.nztm_trace, crs=self.parent.epsg)
+        else:
+            return gpd.GeoSeries(self.nztm_trace)
 
 
     @property
@@ -616,7 +640,12 @@ class LeapfrogFault(GenericFault):
             self.calculate_footprint()
         return self._footprint
 
-
+    @property
+    def footprint_geoseries(self):
+        if self.parent.epsg is not None:
+            return gpd.GeoSeries(self.footprint, crs=self.parent.epsg)
+        else:
+            return gpd.GeoSeries(self.footprint)
     @property
     def footprint_linestring(self):
         return LineString(self.footprint.exterior.coords)
@@ -730,10 +759,10 @@ class LeapfrogFault(GenericFault):
         else:
             trace_intersection = search_line.intersection(other_fault.nztm_trace)
             if isinstance(trace_intersection, MultiPoint):
-                trace_intersection = min(list(trace_intersection), key=lambda x: x.distance(Point(bot_i)))
+                trace_intersection = min(list(trace_intersection.geoms), key=lambda x: x.distance(Point(bot_i)))
             contour_intersection = search_line.intersection(other_contour)
             if isinstance(contour_intersection, MultiPoint):
-                contour_intersection = min(list(contour_intersection), key=lambda x: x.distance(Point(bot_i)))
+                contour_intersection = min(list(contour_intersection.geoms), key=lambda x: x.distance(Point(bot_i)))
 
             if any([a.is_empty for a in [trace_intersection, contour_intersection]]):
                 if all([a.is_empty for a in [trace_intersection, contour_intersection]]):

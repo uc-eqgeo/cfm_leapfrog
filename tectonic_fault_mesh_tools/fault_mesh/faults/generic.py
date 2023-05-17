@@ -207,12 +207,14 @@ class GenericMultiFault:
     """
 
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, sort_sr: bool = False,
-                 remove_colons: bool = False):
+                 remove_colons: bool = False, dip_choice: str = "pref"):
         self.logger = logging.getLogger("fault_model_logger")
         self.check_input1(fault_geodataframe)
         self.check_input2(fault_geodataframe)
 
         self._faults = []
+        self.dip_choice = dip_choice
+
 
         if sort_sr:
             sorted_df = fault_geodataframe.sort_values("SR_pref", ascending=False)
@@ -245,7 +247,7 @@ class GenericMultiFault:
 
     def add_fault(self, series: pd.Series, remove_colons: bool = False, tolerance: float = 100.):
         fault = GenericFault.from_series(series, parent_multifault=self,
-                                         remove_colons=remove_colons, tolerance=tolerance)
+                                         remove_colons=remove_colons, tolerance=tolerance, dip_choice=self.dip_choice)
         self.faults.append(fault)
 
 
@@ -772,8 +774,10 @@ class GenericFault:
 
     @classmethod
     def from_series(cls, series: pd.Series, parent_multifault: GenericMultiFault = None, remove_colons: bool = False,
-                    tolerance: float = 100.):
+                    tolerance: float = 100., dip_choice: str = "pref"):
         assert isinstance(series, pd.Series)
+        assert isinstance(dip_choice, str)
+        assert dip_choice in ["pref", "min", "max"]
         fault = cls(parent_multifault=parent_multifault)
         fault.name = series["Name"]
         if remove_colons:
@@ -784,7 +788,12 @@ class GenericFault:
             fault_number = series["Fault_ID"]
 
         fault.number = int(fault_number)
-        fault.dip_best = series["Dip_pref"]
+        if dip_choice == "pref":
+            fault.dip_best = series["Dip_pref"]
+        elif dip_choice == "min":
+            fault.dip_best = series["Dip_min"]
+        else:
+            fault.dip_best = series["Dip_max"]
 
         if all([a in series.index for a in ["Dip_min", "Dip_max"]]):
             fault.dip_min, fault.dip_max = series["Dip_min"], series["Dip_max"]
