@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Defining connected fault systems &mdash; cfm-leapfrog 0.0.1 documentation</title>
+  <title>Defining connected fault systems (without smoothing) &mdash; cfm-leapfrog 0.0.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
@@ -19,8 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Leapfrog 3D mesh generation and fault cutting" href="../help/camilla.html" />
-    <link rel="prev" title="Running tutorial examples using Jupyter" href="../help/running_examples.html" /> 
+    <link rel="prev" title="Leapfrog 3D mesh generation and fault cutting" href="../help/camilla.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -49,31 +48,29 @@
 <li class="toctree-l1"><a class="reference internal" href="../help/running_examples.html">Running tutorial examples using Jupyter</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Python Examples:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Defining connected fault systems</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#reading-in-faults">Reading in faults</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#finding-connections-between-segments">Finding connections between segments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#making-and-incorporating-manual-edits">Making and incorporating manual edits</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#suggesting-a-hierarchy-based-on-slip-rate">Suggesting a hierarchy based on slip rate</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#editing-the-cutting-hierarchy">Editing the cutting hierarchy</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#create-directories-to-hold-shapefiles">Create directories to hold shapefiles</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#write-out-shapefiles">Write out shapefiles</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="define_connected.html">Defining connected fault systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="define_connected.html#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="define_connected.html#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../help/camilla.html">Leapfrog 3D mesh generation and fault cutting</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Alternative workflows:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="define_connected_no_smoothing.html">Defining connected fault systems (without smoothing)</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Defining connected fault systems (without smoothing)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#reading-in-faults">Reading in faults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#finding-connections-between-segments">Finding connections between segments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#making-and-incorporating-manual-edits">Making and incorporating manual edits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#suggesting-a-hierarchy-based-on-slip-rate">Suggesting a hierarchy based on slip rate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#editing-the-cutting-hierarchy">Editing the cutting hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-directories-to-hold-shapefiles">Create directories to hold shapefiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#write-out-shapefiles">Write out shapefiles</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
@@ -94,9 +91,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Defining connected fault systems</li>
+      <li class="breadcrumb-item active">Defining connected fault systems (without smoothing)</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/tutorials/define_connected.ipynb.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/tutorials/define_connected_no_smoothing.ipynb.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -104,9 +101,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="defining-connected-fault-systems">
-<h1>Defining connected fault systems<a class="headerlink" href="#defining-connected-fault-systems" title="Permalink to this heading"></a></h1>
-<p>This notebook demonstrates how to identify which fault segments in a shapefile should be connected up into large fault systems.</p>
+  <section id="defining-connected-fault-systems-without-smoothing">
+<h1>Defining connected fault systems (without smoothing)<a class="headerlink" href="#defining-connected-fault-systems-without-smoothing" title="Permalink to this heading"></a></h1>
+<p>This notebook demonstrates how to identify which fault segments in a shapefile should be connected up into large fault systems. It is identical to the <a class="reference external" href="https://uc-eqgeo.github.io/cfm_leapfrog/tutorials/define_connected.html">standard workflow</a>, except for a few added arguments for some commands. <strong>We recommend using smoothing unless you already have closely-spaced vertices in your input GIS data</strong>. This alternative workflow was implemented to accommodate a version of the NZ CFM with 1 km vertex spacing.</p>
 <section id="reading-in-faults">
 <h2>Reading in faults<a class="headerlink" href="#reading-in-faults" title="Permalink to this heading"></a></h2>
 <p>First, you need to read in your GIS representation of faults. In this example, we use a subset of faults from the New Zealand Community Fault Model (Seebeck et al., 2022).</p>
@@ -122,7 +119,7 @@
 <span class="c1"># If not desired, set to None</span>
 <span class="n">epsg</span> <span class="o">=</span> <span class="mi">2193</span>
 <span class="c1"># Read in fault data from shapefile</span>
-<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/cfm_gt_1_5.gpkg&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">)</span>
+<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/cfm_gt_1_5.gpkg&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">smoothing_n</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <span class="c1"># Alternative for full CFM:</span>
 <span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp(&quot;../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp&quot;, remove_colons=True,</span>
@@ -192,81 +189,12 @@ Found 142 connections between segment ends
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">KeyboardInterrupt</span><span class="g g-Whitespace">                         </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">read_fault_systems</span><span class="p">(</span><span class="s2">&quot;./define_connections_data/central_gt1_5_connected_edited.csv&quot;</span><span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">generate_curated_faults</span><span class="p">()</span>
-
-<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/leapfrog.py:231,</span> in <span class="ni">LeapfrogMultiFault.read_fault_systems</span><span class="nt">(self, fault_system_csv, trimming_gradient)</span>
-<span class="g g-Whitespace">    </span><span class="mi">229</span> <span class="n">segs</span> <span class="o">=</span> <span class="p">[</span><span class="n">element</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
-<span class="g g-Whitespace">    </span><span class="mi">230</span> <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">seg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">segs</span><span class="p">]):</span>
-<span class="ne">--&gt; </span><span class="mi">231</span>     <span class="n">cfault</span> <span class="o">=</span> <span class="n">ConnectedFaultSystem</span><span class="p">(</span><span class="n">overall_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">cfm_faults</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_names</span><span class="o">=</span><span class="n">segs</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">232</span>                                   <span class="n">tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">segment_distance_tolerance</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">233</span>                                   <span class="n">trimming_gradient</span><span class="o">=</span><span class="n">trimming_gradient</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">234</span>                                   <span class="n">smooth_trace_refinements</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">smoothing_n</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">235</span>     <span class="bp">self</span><span class="o">.</span><span class="n">connected_faults</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfault</span><span class="p">)</span>
-
-<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/connected.py:135,</span> in <span class="ni">ConnectedFaultSystem.__init__</span><span class="nt">(self, overall_name, cfm_faults, segment_names, search_patterns, excluded_names, tolerance, smooth_trace_refinements, trimming_gradient)</span>
-<span class="g g-Whitespace">    </span><span class="mi">133</span> <span class="bp">self</span><span class="o">.</span><span class="n">smoothed_overall_trace</span> <span class="o">=</span> <span class="n">smooth_trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">overall_trace</span><span class="p">,</span> <span class="n">n_refinements</span><span class="o">=</span><span class="n">smooth_trace_refinements</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">134</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segment_boundaries</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">135</span>     <span class="bp">self</span><span class="o">.</span><span class="n">smoothed_segments</span> <span class="o">=</span> <span class="n">cut_line_at_multiple_points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smoothed_overall_trace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment_boundaries</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">136</span> <span class="k">else</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">137</span>     <span class="bp">self</span><span class="o">.</span><span class="n">smoothed_segments</span> <span class="o">=</span> <span class="n">cut_line_at_point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smoothed_overall_trace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment_boundaries</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-
-<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/utilities/cutting.py:39,</span> in <span class="ni">cut_line_at_multiple_points</span><span class="nt">(line, points)</span>
-<span class="g g-Whitespace">     </span><span class="mi">37</span>     <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="o">=</span> <span class="n">cut_line_at_point</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">38</span> <span class="k">else</span><span class="p">:</span>
-<span class="ne">---&gt; </span><span class="mi">39</span>     <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="o">=</span> <span class="n">cut_line_at_point</span><span class="p">(</span><span class="n">line_to_cut</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">40</span> <span class="n">line_to_cut</span> <span class="o">=</span> <span class="n">l2</span>
-<span class="g g-Whitespace">     </span><span class="mi">41</span> <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
-
-<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/utilities/cutting.py:27,</span> in <span class="ni">cut_line_at_point</span><span class="nt">(line, point)</span>
-<span class="g g-Whitespace">     </span><span class="mi">25</span> <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">Point</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">26</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
-<span class="ne">---&gt; </span><span class="mi">27</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="o">=</span> <span class="n">cut</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">28</span> <span class="k">return</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span>
-
-<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/utilities/cutting.py:11,</span> in <span class="ni">cut</span><span class="nt">(line, distance)</span>
-<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="n">coords</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
-<span class="ne">---&gt; </span><span class="mi">11</span>     <span class="n">pd</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
-<span class="g g-Whitespace">     </span><span class="mi">12</span>     <span class="k">if</span> <span class="n">pd</span> <span class="o">==</span> <span class="n">distance</span><span class="p">:</span>
-<span class="g g-Whitespace">     </span><span class="mi">13</span>         <span class="k">return</span> <span class="p">[</span>
-<span class="g g-Whitespace">     </span><span class="mi">14</span>             <span class="n">LineString</span><span class="p">(</span><span class="n">coords</span><span class="p">[:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]),</span>
-<span class="g g-Whitespace">     </span><span class="mi">15</span>             <span class="n">LineString</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">i</span><span class="p">:])]</span>
-
-<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/impl.py:37,</span> in <span class="ni">delegated.&lt;locals&gt;.wrapper</span><span class="nt">(*args, **kwargs)</span>
-<span class="g g-Whitespace">     </span><span class="mi">34</span> <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">35</span> <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="g g-Whitespace">     </span><span class="mi">36</span>     <span class="k">try</span><span class="p">:</span>
-<span class="ne">---&gt; </span><span class="mi">37</span>         <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">38</span>     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-<span class="g g-Whitespace">     </span><span class="mi">39</span>         <span class="k">raise</span> <span class="n">ImplementationError</span><span class="p">(</span>
-<span class="g g-Whitespace">     </span><span class="mi">40</span>             <span class="s2">&quot;Method &#39;</span><span class="si">%s</span><span class="s2">&#39; not provided by registered &quot;</span>
-<span class="g g-Whitespace">     </span><span class="mi">41</span>             <span class="s2">&quot;implementation &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">impl</span><span class="p">))</span>
-
-<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/geometry/base.py:913,</span> in <span class="ni">BaseGeometry.project</span><span class="nt">(self, other, normalized)</span>
-<span class="g g-Whitespace">    </span><span class="mi">911</span> <span class="k">else</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">912</span>     <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;project&#39;</span><span class="p">]</span>
-<span class="ne">--&gt; </span><span class="mi">913</span> <span class="k">return</span> <span class="n">op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
-
-<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/linref.py:18,</span> in <span class="ni">ProjectOp.__call__</span><span class="nt">(self, this, other)</span>
-<span class="g g-Whitespace">     </span><span class="mi">16</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_line</span><span class="p">(</span><span class="n">this</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">17</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-<span class="ne">---&gt; </span><span class="mi">18</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">_geom</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_geom</span><span class="p">)</span>
-
-<span class="ne">KeyboardInterrupt</span>: 
-</pre></div>
 </div>
-</div>
-</div>
-</section>
 </section>
 <section id="defining-a-cutting-hierarchy">
-<h1>Defining a cutting hierarchy<a class="headerlink" href="#defining-a-cutting-hierarchy" title="Permalink to this heading"></a></h1>
+<h2>Defining a cutting hierarchy<a class="headerlink" href="#defining-a-cutting-hierarchy" title="Permalink to this heading"></a></h2>
 <p>Now you have defined your fault system (which you will later use to create meshes), it is necessary to specify which faults terminate against other faults. For example, it seems highly likely that the western end of the Hope Fault is truncated at depth by the Alpine fault. This complex mesh cutting is best achieved using dedicated software such as leapfrog (see below), but for cutting to be done automatically, it is best to first specify a <em>cutting hierarchy</em>.</p>
+</section>
 <section id="suggesting-a-hierarchy-based-on-slip-rate">
 <h2>Suggesting a hierarchy based on slip rate<a class="headerlink" href="#suggesting-a-hierarchy-based-on-slip-rate" title="Permalink to this heading"></a></h2>
 <p>A first pass at a hierarchy can be generated based purely on fault slip rate. Assuming that the fault data you have already read in have slip rates associated with them, this first pass is easy to make:</p>
@@ -293,11 +221,11 @@ An example of a situation where editing is desirable is illustrated below. The m
 </div>
 </div>
 </section>
-</section>
 <section id="create-shapefiles-for-mesh-creation">
-<h1>Create shapefiles for mesh creation<a class="headerlink" href="#create-shapefiles-for-mesh-creation" title="Permalink to this heading"></a></h1>
+<h2>Create shapefiles for mesh creation<a class="headerlink" href="#create-shapefiles-for-mesh-creation" title="Permalink to this heading"></a></h2>
 <p>The final pre-meshing step is the creation of files that can be combined with meshing software to create triangular mesh representations of faults.
 Although it is possible to construct these triangular surfaces in multiple software packages (for example, MOVE 3D), the following discussion is geared towards use with Leapfrog Geo software.</p>
+</section>
 <section id="create-directories-to-hold-shapefiles">
 <h2>Create directories to hold shapefiles<a class="headerlink" href="#create-directories-to-hold-shapefiles" title="Permalink to this heading"></a></h2>
 <p>For organisational reasons, it helps to have the different shapefiles in different directories</p>
@@ -317,7 +245,7 @@ Although it is possible to construct these triangular surfaces in multiple softw
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">curated_faults</span><span class="p">:</span>
     <span class="c1"># Generate depth contours</span>
-    <span class="n">fault</span><span class="o">.</span><span class="n">generate_depth_contours</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mf">32000.</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">),</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">generate_depth_contours</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mf">32000.</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">),</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="c1"># Write contours to files</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;depth_contours/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_contours.shp&quot;</span><span class="p">)</span>
     <span class="c1"># Write traces</span>
@@ -338,8 +266,7 @@ Although it is possible to construct these triangular surfaces in multiple softw
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../help/running_examples.html" class="btn btn-neutral float-left" title="Running tutorial examples using Jupyter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../help/camilla.html" class="btn btn-neutral float-right" title="Leapfrog 3D mesh generation and fault cutting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../help/camilla.html" class="btn btn-neutral float-left" title="Leapfrog 3D mesh generation and fault cutting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
