@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>fault_mesh.faults.connected &mdash; cfm-leapfrog 0.0.1 documentation</title>
@@ -26,11 +26,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../index.html" class="icon icon-home"> cfm-leapfrog
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            cfm-leapfrog
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -70,7 +74,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.faults.connected</span></code></li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../_sources/autoapi/fault_mesh/faults/connected/index.rst.txt" rel="nofollow"> View page source</a>
@@ -97,7 +101,7 @@
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="fault_mesh.faults.connected.ConnectedFaultSystem">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.connected.</span></span><span class="sig-name descname"><span class="pre">ConnectedFaultSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overall_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfm_faults</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excluded_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth_trace_refinements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.connected.ConnectedFaultSystem" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.connected.</span></span><span class="sig-name descname"><span class="pre">ConnectedFaultSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overall_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfm_faults</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excluded_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth_trace_refinements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trimming_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.connected.ConnectedFaultSystem" title="Permalink to this definition"></a></dt>
 <dd><p>Class for a connected fault system</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -108,6 +112,7 @@
 <li><p><strong>excluded_names</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>list</em><em>]</em>) – </p></li>
 <li><p><strong>tolerance</strong> (<em>float</em>) – </p></li>
 <li><p><strong>smooth_trace_refinements</strong> (<em>int</em>) – </p></li>
+<li><p><strong>trimming_gradient</strong> (<em>float</em>) – </p></li>
 </ul>
 </dd>
 </dl>

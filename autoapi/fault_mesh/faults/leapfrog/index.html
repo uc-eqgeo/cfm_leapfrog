@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>fault_mesh.faults.leapfrog &mdash; cfm-leapfrog 0.0.1 documentation</title>
@@ -26,11 +26,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../index.html" class="icon icon-home"> cfm-leapfrog
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            cfm-leapfrog
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -70,7 +74,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.faults.leapfrog</span></code></li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../_sources/autoapi/fault_mesh/faults/leapfrog/index.rst.txt" rel="nofollow"> View page source</a>
@@ -100,7 +104,7 @@
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">LeapfrogMultiFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_geodataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_distance_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_n_refinements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_colons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">LeapfrogMultiFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_geodataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_distance_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_colons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_choice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pref'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trimming_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="../generic/index.html#fault_mesh.faults.generic.GenericMultiFault" title="fault_mesh.faults.generic.GenericMultiFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fault_mesh.faults.generic.GenericMultiFault</span></code></a></p>
 <p>Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)</p>
 <dl class="field-list simple">
@@ -109,9 +113,12 @@
 <li><p><strong>fault_geodataframe</strong> (<em>geopandas.GeoDataFrame</em>) – </p></li>
 <li><p><strong>sort_sr</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>segment_distance_tolerance</strong> (<em>float</em>) – </p></li>
-<li><p><strong>smoothing_n_refinements</strong> (<em>int</em>) – </p></li>
+<li><p><strong>smoothing_n</strong> (<em>int</em>) – </p></li>
 <li><p><strong>remove_colons</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>tolerance</strong> (<em>float</em>) – </p></li>
+<li><p><strong>dip_choice</strong> (<em>str</em>) – </p></li>
+<li><p><strong>trimming_gradient</strong> (<em>float</em>) – </p></li>
+<li><p><strong>epsg</strong> (<em>int</em>) – </p></li>
 </ul>
 </dd>
 </dl>

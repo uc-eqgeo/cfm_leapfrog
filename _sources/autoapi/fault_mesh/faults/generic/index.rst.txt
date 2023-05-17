@@ -101,7 +101,7 @@ Functions
    :return:
 
 
-.. py:class:: GenericMultiFault(fault_geodataframe, sort_sr = False, remove_colons = False)
+.. py:class:: GenericMultiFault(fault_geodataframe, sort_sr = False, remove_colons = False, dip_choice = 'pref')
 
    Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)
 

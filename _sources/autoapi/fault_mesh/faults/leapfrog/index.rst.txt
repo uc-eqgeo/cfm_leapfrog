@@ -23,7 +23,7 @@ Classes
 
 
 
-.. py:class:: LeapfrogMultiFault(fault_geodataframe, sort_sr = False, segment_distance_tolerance = 100.0, smoothing_n_refinements = 5, remove_colons = True, tolerance = 100.0)
+.. py:class:: LeapfrogMultiFault(fault_geodataframe, sort_sr = False, segment_distance_tolerance = 100.0, smoothing_n = 5, remove_colons = True, tolerance = 100.0, dip_choice = 'pref', trimming_gradient = 1.0, epsg = None)
 
    Bases: :py:obj:`fault_mesh.faults.generic.GenericMultiFault`
 
