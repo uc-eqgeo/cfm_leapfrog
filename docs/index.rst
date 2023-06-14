@@ -14,7 +14,7 @@ Leapfrog software should be used for mesh cutting operations.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Introduction and Setup:
 
    help/intro.md
    help/install.md
@@ -22,9 +22,21 @@ Leapfrog software should be used for mesh cutting operations.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Examples:
+   :caption: Python Examples:
 
    tutorials/define_connected.ipynb
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Meshing in Leapfrog:
+
+   help/camilla.md
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Alternative workflows:
+
+    tutorials/define_connected_no_smoothing.ipynb
 
 .. toctree::
    :maxdepth: 4

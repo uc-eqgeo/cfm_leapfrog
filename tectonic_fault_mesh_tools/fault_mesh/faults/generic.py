@@ -207,12 +207,14 @@ class GenericMultiFault:
     """
 
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, sort_sr: bool = False,
-                 remove_colons: bool = False):
+                 remove_colons: bool = False, dip_choice: str = "pref"):
         self.logger = logging.getLogger("fault_model_logger")
         self.check_input1(fault_geodataframe)
         self.check_input2(fault_geodataframe)
 
         self._faults = []
+        self.dip_choice = dip_choice
+
 
         if sort_sr:
             sorted_df = fault_geodataframe.sort_values("SR_pref", ascending=False)
@@ -243,9 +245,9 @@ class GenericMultiFault:
     def faults(self):
         return self._faults
 
-    def add_fault(self, series: pd.Series, remove_colons: bool = False):
+    def add_fault(self, series: pd.Series, remove_colons: bool = False, tolerance: float = 100.):
         fault = GenericFault.from_series(series, parent_multifault=self,
-                                         remove_colons=remove_colons)
+                                         remove_colons=remove_colons, tolerance=tolerance, dip_choice=self.dip_choice)
         self.faults.append(fault)
 
 
@@ -320,7 +322,7 @@ class GenericMultiFault:
             else:
                 trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
             trimmed_fault_gdf["Depth_std"] = 0.
-        else:
+        elif depth_type == "Dfcomb":
             if "Depth_D90" in trimmed_fault_gdf.columns:
                 trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_Dfc"]
             else:
@@ -345,7 +347,7 @@ class GenericMultiFault:
 
 
 class GenericFault:
-    def __init__(self, parent_multifault: GenericMultiFault = None):
+    def __init__(self, parent_multifault: GenericMultiFault = None, tolerance: float = 100.):
         """
 
         :param parent_multifault:
@@ -363,6 +365,7 @@ class GenericFault:
         self._source1_1, self.source2 = (None,) * 2
         self._sr_best, self._sr_max, self._sr_min = (None,) * 3
         self._nztm_trace = None
+        self._segment_distance_tolerance = tolerance
 
         # Attributes required for OpenSHA XML
         self._section_id, self._section_name = (None,) * 2
@@ -577,6 +580,18 @@ class GenericFault:
         return dip
 
     @property
+    def segment_distance_tolerance(self):
+        if self.parent is not None:
+            return self.parent.segment_distance_tolerance
+        else:
+            return self._segment_distance_tolerance
+
+    @segment_distance_tolerance.setter
+    def segment_distance_tolerance(self, tolerance: float):
+        assert isinstance(tolerance, (float, int))
+        self._segment_distance_tolerance = tolerance
+
+    @property
     def down_dip_vector(self):
         """
         Calculated from dip and dip direction
@@ -758,14 +773,27 @@ class GenericFault:
         return self._parent
 
     @classmethod
-    def from_series(cls, series: pd.Series, parent_multifault: GenericMultiFault = None, remove_colons: bool = False):
+    def from_series(cls, series: pd.Series, parent_multifault: GenericMultiFault = None, remove_colons: bool = False,
+                    tolerance: float = 100., dip_choice: str = "pref"):
         assert isinstance(series, pd.Series)
+        assert isinstance(dip_choice, str)
+        assert dip_choice in ["pref", "min", "max"]
         fault = cls(parent_multifault=parent_multifault)
         fault.name = series["Name"]
         if remove_colons:
             fault.name = series["Name"].replace(":", "")
-        fault.number = int(series["Fault_ID"])
-        fault.dip_best = series["Dip_pref"]
+        if isinstance(series["Fault_ID"], str):
+            fault_number = series["Fault_ID"].replace("-", "")
+        else:
+            fault_number = series["Fault_ID"]
+
+        fault.number = int(fault_number)
+        if dip_choice == "pref":
+            fault.dip_best = series["Dip_pref"]
+        elif dip_choice == "min":
+            fault.dip_best = series["Dip_min"]
+        else:
+            fault.dip_best = series["Dip_max"]
 
         if all([a in series.index for a in ["Dip_min", "Dip_max"]]):
             fault.dip_min, fault.dip_max = series["Dip_min"], series["Dip_max"]

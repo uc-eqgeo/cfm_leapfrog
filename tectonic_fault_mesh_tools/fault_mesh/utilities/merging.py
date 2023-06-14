@@ -3,7 +3,7 @@ Functions for merging segments that are nearly adjacent.
 """
 
 import numpy as np
-from typing import List
+from typing import List, Union
 from shapely.geometry import LineString, Point
 from shapely.ops import linemerge
 
@@ -47,27 +47,28 @@ def align_two_nearly_adjacent_segments(segment_list: List[LineString], tolerance
 
     return LineString(new_line1), LineString(new_line2)
 
-def merge_two_nearly_adjacent_segments(segment_list: List[LineString], tolerance: float = 200.):
-    new_line1, new_line2 = align_two_nearly_adjacent_segments(segment_list, tolerance)
+def merge_two_nearly_adjacent_segments(segment_list: List[LineString], tolerance: float = 200., densify: float = 1.e3):
+    new_line1, new_line2 = align_two_nearly_adjacent_segments(segment_list, tolerance, densify=densify)
     return linemerge([new_line1, new_line2])
 
 
-def merge_multiple_nearly_adjacent_segments(segment_list: List[LineString], tolerance: float = 200.):
+def merge_multiple_nearly_adjacent_segments(segment_list: List[LineString], tolerance: float = 200.,
+                                            densify: Union[float, None] = 1.e3):
     assert len(segment_list) >= 2
     if len(segment_list) == 2:
-        return merge_two_nearly_adjacent_segments(segment_list, tolerance)
+        return merge_two_nearly_adjacent_segments(segment_list, tolerance, densify=densify)
     else:
 
-        return sorted_merge(segment_list, tolerance)
+        return sorted_merge(segment_list, tolerance, densify=densify)
 
-def sorted_merge(seg_list: List[LineString], tolerance: float = 200.):
+def sorted_merge(seg_list: List[LineString], tolerance: float = 200., densify: float = 1.e3):
     sorted_list = [min(seg_list, key=lambda x:x.centroid.y)]
     combined_segment = sorted_list[0]
     while len(sorted_list) < len(seg_list):
         remaining_list = [seg for seg in seg_list if seg not in sorted_list]
         nearest_remaining = sorted(remaining_list, key=lambda x: x.distance(combined_segment))[0]
         combined_segment = merge_two_nearly_adjacent_segments([combined_segment, nearest_remaining],
-                                                              tolerance=tolerance)
+                                                              tolerance=tolerance, densify=densify)
         sorted_list.append(nearest_remaining)
 
     return combined_segment

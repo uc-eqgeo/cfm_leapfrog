@@ -23,11 +23,14 @@ class ConnectedFaultSystem:
     def __init__(self, overall_name: str, cfm_faults, segment_names: list = None,
                  search_patterns: Union[str, list] = None,
                  excluded_names: Union[str, list] = None, tolerance: float = 100.,
-                 smooth_trace_refinements: int = 5):
+                 smooth_trace_refinements: int = 5, trimming_gradient: float = 1.):
         self.name = overall_name
         self._overall_trace = None
         self._contours = None
         self._footprint = None
+        self._segment_distance_tolerance = tolerance
+        self._trimming_gradient = trimming_gradient
+        self._smooth_trace_refinements = smooth_trace_refinements
         segments = []
 
         assert any([segment_names is not None, search_patterns is not None])
@@ -81,7 +84,6 @@ class ConnectedFaultSystem:
                     if other_seg != segment:
                         if segment.nztm_trace.distance(other_seg.nztm_trace) < tolerance:
                             neighbour_list.append(other_seg)
-
                 segment.neighbouring_segments = neighbour_list
             segment.parent_connected_fault = self
 
@@ -105,7 +107,11 @@ class ConnectedFaultSystem:
                     if segment.nztm_trace.distance(ordered_segments[-1].nztm_trace) <= tolerance:
                         ordered_segments.append(segment)
         self.segments = ordered_segments
-        self.overall_trace = linemerge([seg.nztm_trace for seg in self.segments])
+        if self._smooth_trace_refinements is None:
+            self.overall_trace = merge_multiple_nearly_adjacent_segments([seg.nztm_trace for seg in self.segments],
+                                                                         densify=None)
+        else:
+            self.overall_trace = merge_multiple_nearly_adjacent_segments([seg.nztm_trace for seg in self.segments])
 
         # boundaries = [l1.nztm_trace.intersection(l2.nztm_trace) for l1, l2 in zip(self.segments, self.segments[1:])]
         boundaries = []
@@ -113,7 +119,12 @@ class ConnectedFaultSystem:
             if l1.nztm_trace.distance(l2.nztm_trace) == 0.:
                 boundaries.append(l1.nztm_trace.intersection(l2.nztm_trace))
             else:
-                new_l1, new_l2 = align_two_nearly_adjacent_segments([l1.nztm_trace, l2.nztm_trace])
+                if self._smooth_trace_refinements is None:
+                    new_l1, new_l2 = align_two_nearly_adjacent_segments([l1.nztm_trace, l2.nztm_trace], tolerance=tolerance,
+                                                                        densify=None)
+                else:
+                    new_l1, new_l2 = align_two_nearly_adjacent_segments([l1.nztm_trace, l2.nztm_trace],
+                                                                        tolerance=tolerance)
                 boundaries.append(new_l1.intersection(new_l2))
 
         self.segment_boundaries = [bound for bound in boundaries if not bound.is_empty]
@@ -138,12 +149,23 @@ class ConnectedFaultSystem:
         return [segment.name for segment in self.segments]
 
     @property
+    def segment_distance_tolerance(self):
+        return self._segment_distance_tolerance
+
+    @property
     def trace(self):
         return self.overall_trace
 
     @property
     def nztm_trace(self):
         return self.overall_trace
+
+    @property
+    def nztm_trace_geoseries(self):
+        if self.parent.epsg is not None:
+            return gpd.GeoSeries(self.nztm_trace, crs=self.parent.epsg)
+        else:
+            return gpd.GeoSeries(self.nztm_trace)
 
     @property
     def smoothed_trace(self):
@@ -160,8 +182,10 @@ class ConnectedFaultSystem:
 
         if max(depths) > 0:
             depths *= -1
-
-        self.contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours)
+        if self.parent.epsg is not None:
+            self.contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours, crs=self.parent.epsg)
+        else:
+            self.contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours)
 
     @property
     def contours(self):
@@ -185,7 +209,8 @@ class ConnectedFaultSystem:
             self._overall_trace = trace
         else:
             assert isinstance(trace, MultiLineString)
-            self._overall_trace = merge_multiple_nearly_adjacent_segments(list(trace.geoms))
+            self._overall_trace = merge_multiple_nearly_adjacent_segments(list(trace.geoms),
+                                                                          tolerance=self.segment_distance_tolerance)
 
     def trace_and_contours(self, smoothed: bool = True):
         assert self.contours is not None
@@ -240,11 +265,21 @@ class ConnectedFaultSystem:
         return self._footprint
 
     @property
+    def footprint_geoseries(self):
+        if self.parent.epsg is not None:
+            return gpd.GeoSeries(self.footprint, crs=self.parent.epsg)
+        else:
+            return gpd.GeoSeries(self.footprint)
+
+    @property
     def footprint_linestring(self):
         return LineString(self.footprint.exterior.coords)
 
-    def calculate_footprint(self, smoothed: bool = True, buffer: float = 15000.):
-        footprint = self.trace_and_contours(smoothed).minimum_rotated_rectangle.buffer(buffer, cap_style=2).intersection(self.end_polygon(smoothed=smoothed))
+    def calculate_footprint(self, buffer: float = 15000.):
+        if self.parent.smoothing_n is not None:
+            footprint = self.trace_and_contours(smoothed=True).minimum_rotated_rectangle.buffer(buffer, cap_style=2).intersection(self.end_polygon(smoothed=True))
+        else:
+            footprint = self.trace_and_contours(smoothed=False).minimum_rotated_rectangle.buffer(buffer, cap_style=2).intersection(self.end_polygon(smoothed=False))
         self._footprint = footprint
 
     def end_lines(self, smoothed: bool = False, depth: float = 20.e3, spacing: float = 2000.):
@@ -270,15 +305,19 @@ class ConnectedFaultSystem:
 
         combined = unary_union(end_line_list)
         if isinstance(combined, LineString):
-            return MultiLineString([combined])
+            if not combined.is_empty:
+                return MultiLineString([combined])
+            else:
+                assert not any(end_line.is_empty for end_line in end_line_list)
+                return MultiLineString(end_line_list)
         else:
             return combined
 
     def find_terminations(self):
         return self.parent.find_terminations(self.name)
 
-    def adjust_footprint(self, smoothed: bool = True):
-        if smoothed:
+    def adjust_footprint(self):
+        if self.parent.smoothing_n is not None:
             end1 = Point(self.smoothed_overall_trace.coords[0])
             end2 = Point(self.smoothed_overall_trace.coords[-1])
         else:

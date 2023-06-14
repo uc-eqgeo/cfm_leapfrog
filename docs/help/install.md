@@ -1,4 +1,4 @@
-# Installation instructions
+# Installation instructions and updates to code
 
 ## Prerequisites
 
@@ -22,3 +22,8 @@ Note that if you have downloaded to a drive that is different from your `C:` dri
    3. Run `conda env create` and hit `Enter`.
    4. Run `conda activate leapfrog-fault-models` and hit `Enter`
 
+## Updating the code to a new version
+In the early stages of this project, we will be updating the code frequently. To update to the latest version, follow these steps:
+   1. Open Anaconda or Miniforge Prompt
+   2. Activate the environment: `conda activate leapfrog-fault-models` followed by `Enter`
+   3. Enter the command `pip install git+https://github.com/uc-eqgeo/cfm_leapfrog/#subdirectory=tectonic_fault_mesh_tools` followed by `Enter`

@@ -5,7 +5,7 @@ import numpy as np
 for dip in [30., 40., 50., 60.]:
     fault = LeapfrogFault()
     trace = gpd.read_file("hundalee_trace.shp").geometry.values[0]
-    fault.nztm_trace = trace
+    fault.cartesian_trace = trace
 
     fault.dip_dir_str = "NW"
     fault.dip_best = dip
