@@ -13,11 +13,11 @@
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/doctools.js"></script>
-        <script src="../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -91,13 +91,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-fault_mesh.faults.generic">
-<span id="fault-mesh-faults-generic"></span><h1><a class="reference internal" href="#module-fault_mesh.faults.generic" title="fault_mesh.faults.generic"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.faults.generic</span></code></a><a class="headerlink" href="#module-fault_mesh.faults.generic" title="Permalink to this heading"></a></h1>
-<p>Classes to act as a general/multifault. Leapfrog classes inherit from these.</p>
+  <section id="fault-mesh-faults-generic">
+<h1><a class="reference internal" href="#module-fault_mesh.faults.generic" title="fault_mesh.faults.generic"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.faults.generic</span></code></a><a class="headerlink" href="#fault-mesh-faults-generic" title="Link to this heading"></a></h1>
+<p id="module-fault_mesh.faults.generic">Classes to act as a general/multifault. Leapfrog classes inherit from these.</p>
 <section id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
 <section id="classes">
-<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading"></a></h3>
+<h3>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.GenericMultiFault" title="fault_mesh.faults.generic.GenericMultiFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GenericMultiFault</span></code></a></p></td>
@@ -107,7 +107,7 @@
 </table>
 </section>
 <section id="functions">
-<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.smallest_difference" title="fault_mesh.faults.generic.smallest_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">smallest_difference</span></code></a>(value1, value2)</p></td>
@@ -138,7 +138,7 @@
 </table>
 <dl class="py function">
 <dt class="sig sig-object py" id="fault_mesh.faults.generic.smallest_difference">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">smallest_difference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.smallest_difference" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">smallest_difference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.smallest_difference" title="Link to this definition"></a></dt>
 <dd><p>Finds smallest angle between two bearings
 :param value1:
 :param value2:
@@ -147,7 +147,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fault_mesh.faults.generic.normalize_bearing">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">normalize_bearing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bearing</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.normalize_bearing" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">normalize_bearing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bearing</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.normalize_bearing" title="Link to this definition"></a></dt>
 <dd><p>change a bearing (in degrees) so that it is an azimuth between 0 and 360.
 :param bearing:
 :return:</p>
@@ -160,7 +160,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fault_mesh.faults.generic.bearing_leq">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">bearing_leq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benchmark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.bearing_leq" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">bearing_leq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benchmark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.bearing_leq" title="Link to this definition"></a></dt>
 <dd><p>Check whether a bearing (value) is anticlockwise of another bearing (benchmark)
 :param value:
 :param benchmark:
@@ -179,7 +179,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fault_mesh.faults.generic.bearing_geq">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">bearing_geq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benchmark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.bearing_geq" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">bearing_geq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benchmark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.bearing_geq" title="Link to this definition"></a></dt>
 <dd><p>Check whether a bearing (value) is clockwise of another bearing (benchmark)
 :param value:
 :param benchmark:
@@ -198,7 +198,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fault_mesh.faults.generic.reverse_bearing">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">reverse_bearing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bearing</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.reverse_bearing" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">reverse_bearing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bearing</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.reverse_bearing" title="Link to this definition"></a></dt>
 <dd><p>180 degrees from supplied bearing
 :param bearing:
 :return:</p>
@@ -211,7 +211,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fault_mesh.faults.generic.reverse_line">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">reverse_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.reverse_line" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">reverse_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.reverse_line" title="Link to this definition"></a></dt>
 <dd><p>Change the order that points in a LineString object are presented.
 Updated to work with 3d lines (has_z), September 2021
 Important for OpenSHA, I think
@@ -226,7 +226,7 @@ Important for OpenSHA, I think
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fault_mesh.faults.generic.calculate_dip_direction">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">calculate_dip_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.calculate_dip_direction" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">calculate_dip_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.calculate_dip_direction" title="Link to this definition"></a></dt>
 <dd><p>Calculate the strike of a shapely linestring object with coordinates in NZTM,
 then adds 90 to get dip direction. Dip direction is always 90 clockwise from strike of line.
 :param line: Linestring object
@@ -240,7 +240,7 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fault_mesh.faults.generic.root_mean_square">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">root_mean_square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.root_mean_square" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">root_mean_square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.root_mean_square" title="Link to this definition"></a></dt>
 <dd><p>Helper function to turn max and min to stdev for inclusion in XML.
 :param value_array: Differences of values (e.g. sr_min and sr_max) from mean.
 :return:</p>
@@ -253,7 +253,7 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 
 <dl class="py class">
 <dt class="sig sig-object py" id="fault_mesh.faults.generic.GenericMultiFault">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">GenericMultiFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_geodataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_colons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_choice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pref'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.GenericMultiFault" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">GenericMultiFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_geodataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_colons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_choice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pref'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.GenericMultiFault" title="Link to this definition"></a></dt>
 <dd><p>Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -267,7 +267,7 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="fault_mesh.faults.generic.GenericMultiFault.gdf_from_nz_cfm_shp">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gdf_from_nz_cfm_shp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_region_polygons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'D90'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_region_min_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_aus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.GenericMultiFault.gdf_from_nz_cfm_shp" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gdf_from_nz_cfm_shp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_region_polygons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'D90'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_region_min_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_aus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.GenericMultiFault.gdf_from_nz_cfm_shp" title="Link to this definition"></a></dt>
 <dd><p>Read CFM shapefile</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
