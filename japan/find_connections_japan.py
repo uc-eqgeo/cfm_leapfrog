@@ -11,7 +11,7 @@ from fault_mesh.faults.connected import ConnectedFaultSystem
 data = LeapfrogMultiFault.from_nz_cfm_shp("example1_faults_trimmed.geojson", depth_type=None, exclude_aus=False)
 
 # Set minimum distance for fault traces to be treated as connected
-data.segment_distance_tolerance = 1000.
+data.segment_distance_tolerance = 3000.
 
 # Find connections between fault traces
 data.find_connections()
