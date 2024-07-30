@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Defining connected fault systems &mdash; cfm-leapfrog 0.0.1 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,7 +18,7 @@
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../_static/documentation_options.js?v=d45e8c67"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -239,21 +241,25 @@ Found 142 connections between segment ends
 <span class="g g-Whitespace">     </span><span class="mi">14</span>             <span class="n">LineString</span><span class="p">(</span><span class="n">coords</span><span class="p">[:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]),</span>
 <span class="g g-Whitespace">     </span><span class="mi">15</span>             <span class="n">LineString</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">i</span><span class="p">:])]</span>
 
-<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/geometry/point.py:51,</span> in <span class="ni">Point.__init__</span><span class="nt">(self, *args)</span>
-<span class="g g-Whitespace">     </span><span class="mi">49</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-<span class="g g-Whitespace">     </span><span class="mi">50</span>     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-<span class="ne">---&gt; </span><span class="mi">51</span>         <span class="n">geom</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">geos_point_from_py</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="g g-Whitespace">     </span><span class="mi">52</span>     <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
-<span class="g g-Whitespace">     </span><span class="mi">53</span>         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-<span class="g g-Whitespace">     </span><span class="mi">54</span>             <span class="s2">&quot;Point() takes at most 3 arguments (</span><span class="si">{}</span><span class="s2"> given)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
-<span class="g g-Whitespace">     </span><span class="mi">55</span>         <span class="p">)</span>
+<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/impl.py:37,</span> in <span class="ni">delegated.&lt;locals&gt;.wrapper</span><span class="nt">(*args, **kwargs)</span>
+<span class="g g-Whitespace">     </span><span class="mi">34</span> <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">35</span> <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="g g-Whitespace">     </span><span class="mi">36</span>     <span class="k">try</span><span class="p">:</span>
+<span class="ne">---&gt; </span><span class="mi">37</span>         <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">38</span>     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+<span class="g g-Whitespace">     </span><span class="mi">39</span>         <span class="k">raise</span> <span class="n">ImplementationError</span><span class="p">(</span>
+<span class="g g-Whitespace">     </span><span class="mi">40</span>             <span class="s2">&quot;Method &#39;</span><span class="si">%s</span><span class="s2">&#39; not provided by registered &quot;</span>
+<span class="g g-Whitespace">     </span><span class="mi">41</span>             <span class="s2">&quot;implementation &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">impl</span><span class="p">))</span>
 
-<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/geometry/point.py:278,</span> in <span class="ni">geos_point_from_py</span><span class="nt">(ob, update_geom, update_ndim)</span>
-<span class="g g-Whitespace">    </span><span class="mi">275</span>     <span class="n">cs</span> <span class="o">=</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSCoordSeq_create</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">277</span> <span class="c1"># Because of a bug in the GEOS C API, always set X before Y</span>
-<span class="ne">--&gt; </span><span class="mi">278</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSCoordSeq_setX</span><span class="p">(</span><span class="n">cs</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">279</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSCoordSeq_setY</span><span class="p">(</span><span class="n">cs</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">280</span> <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/geometry/base.py:913,</span> in <span class="ni">BaseGeometry.project</span><span class="nt">(self, other, normalized)</span>
+<span class="g g-Whitespace">    </span><span class="mi">911</span> <span class="k">else</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">912</span>     <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;project&#39;</span><span class="p">]</span>
+<span class="ne">--&gt; </span><span class="mi">913</span> <span class="k">return</span> <span class="n">op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+<span class="nn">File /usr/share/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/linref.py:18,</span> in <span class="ni">ProjectOp.__call__</span><span class="nt">(self, this, other)</span>
+<span class="g g-Whitespace">     </span><span class="mi">16</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_line</span><span class="p">(</span><span class="n">this</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">17</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+<span class="ne">---&gt; </span><span class="mi">18</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">_geom</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_geom</span><span class="p">)</span>
 
 <span class="ne">KeyboardInterrupt</span>: 
 </pre></div>

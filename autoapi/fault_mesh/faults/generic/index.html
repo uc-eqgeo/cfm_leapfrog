@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>fault_mesh.faults.generic &mdash; cfm-leapfrog 0.0.1 documentation</title>
-      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,11 +18,13 @@
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../../../../_static/documentation_options.js?v=d45e8c67"></script>
-        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../../search.html" /> 
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="fault_mesh.faults.leapfrog" href="../leapfrog/index.html" />
+    <link rel="prev" title="fault_mesh.faults.connected" href="../connected/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -63,8 +67,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/define_connected_no_smoothing.html">Defining connected fault systems (without smoothing)</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../index.html">API Reference</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh</span></code></a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.faults</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utilities/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.utilities</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -81,6 +95,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh</span></code></a></li>
+          <li class="breadcrumb-item"><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.faults</span></code></a></li>
       <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.faults.generic</span></code></li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../_sources/autoapi/fault_mesh/faults/generic/index.rst.txt" rel="nofollow"> View page source</a>
@@ -91,9 +108,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="fault-mesh-faults-generic">
-<h1><a class="reference internal" href="#module-fault_mesh.faults.generic" title="fault_mesh.faults.generic"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.faults.generic</span></code></a><a class="headerlink" href="#fault-mesh-faults-generic" title="Link to this heading"></a></h1>
-<p id="module-fault_mesh.faults.generic">Classes to act as a general/multifault. Leapfrog classes inherit from these.</p>
+  <section id="module-fault_mesh.faults.generic">
+<span id="fault-mesh-faults-generic"></span><h1><a class="reference internal" href="#module-fault_mesh.faults.generic" title="fault_mesh.faults.generic"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fault_mesh.faults.generic</span></code></a><a class="headerlink" href="#module-fault_mesh.faults.generic" title="Link to this heading"></a></h1>
+<p>Classes to act as a general/multifault. Leapfrog classes inherit from these.</p>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
 <section id="classes">
@@ -153,7 +170,7 @@
 :return:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>bearing</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>int</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>bearing</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>int</em><em>]</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -169,9 +186,9 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p></li>
-<li><p><strong>benchmark</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p></li>
-<li><p><strong>tolerance</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p></li>
+<li><p><strong>value</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>benchmark</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>tolerance</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -188,9 +205,9 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p></li>
-<li><p><strong>benchmark</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p></li>
-<li><p><strong>tolerance</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p></li>
+<li><p><strong>value</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>benchmark</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>tolerance</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -204,7 +221,7 @@
 :return:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>bearing</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>bearing</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -219,7 +236,7 @@ Important for OpenSHA, I think
 :return:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>line</strong> (<em>shapely.geometry.LineString</em>) – </p>
+<dd class="field-odd"><p><strong>line</strong> (<em>shapely.geometry.LineString</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -233,7 +250,7 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 :return:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>line</strong> (<em>shapely.geometry.LineString</em>) – </p>
+<dd class="field-odd"><p><strong>line</strong> (<em>shapely.geometry.LineString</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -246,7 +263,7 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 :return:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>value_array</strong> (<em>Union</em><em>[</em><em>numpy.ndarray</em><em>, </em><em>list</em><em>, </em><em>tuple</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>value_array</strong> (<em>Union</em><em>[</em><em>numpy.ndarray</em><em>, </em><em>list</em><em>, </em><em>tuple</em><em>]</em>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -258,10 +275,10 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>fault_geodataframe</strong> (<em>geopandas.GeoDataFrame</em>) – </p></li>
-<li><p><strong>sort_sr</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>remove_colons</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>dip_choice</strong> (<em>str</em>) – </p></li>
+<li><p><strong>fault_geodataframe</strong> (<em>geopandas.GeoDataFrame</em>)</p></li>
+<li><p><strong>sort_sr</strong> (<em>bool</em>)</p></li>
+<li><p><strong>remove_colons</strong> (<em>bool</em>)</p></li>
+<li><p><strong>dip_choice</strong> (<em>str</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -272,13 +289,13 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> (<em>str</em>) – </p></li>
-<li><p><strong>exclude_region_polygons</strong> (<em>List</em><em>[</em><em>shapely.geometry.Polygon</em><em>]</em>) – </p></li>
-<li><p><strong>depth_type</strong> (<em>str</em>) – </p></li>
-<li><p><strong>exclude_region_min_sr</strong> (<em>float</em>) – </p></li>
-<li><p><strong>include_names</strong> (<em>list</em>) – </p></li>
-<li><p><strong>exclude_aus</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>exclude_zero</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>filename</strong> (<em>str</em>)</p></li>
+<li><p><strong>exclude_region_polygons</strong> (<em>List</em><em>[</em><em>shapely.geometry.Polygon</em><em>]</em>)</p></li>
+<li><p><strong>depth_type</strong> (<em>str</em>)</p></li>
+<li><p><strong>exclude_region_min_sr</strong> (<em>float</em>)</p></li>
+<li><p><strong>include_names</strong> (<em>list</em>)</p></li>
+<li><p><strong>exclude_aus</strong> (<em>bool</em>)</p></li>
+<li><p><strong>exclude_zero</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -293,7 +310,10 @@ then adds 90 to get dip direction. Dip direction is always 90 clockwise from str
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../connected/index.html" class="btn btn-neutral float-left" title="fault_mesh.faults.connected" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../leapfrog/index.html" class="btn btn-neutral float-right" title="fault_mesh.faults.leapfrog" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

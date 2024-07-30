@@ -103,6 +103,7 @@ Functions
 
 .. py:class:: GenericMultiFault(fault_geodataframe, sort_sr = False, remove_colons = False, dip_choice = 'pref')
 
+
    Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)
 
    .. py:method:: gdf_from_nz_cfm_shp(filename, exclude_region_polygons = None, depth_type = 'D90', exclude_region_min_sr = 1.8, include_names = None, exclude_aus = True, exclude_zero = True)
