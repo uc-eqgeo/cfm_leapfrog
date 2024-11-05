@@ -18,6 +18,8 @@
       <script src="../_static/documentation_options.js?v=d45e8c67"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -103,7 +105,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="defining-connected-fault-systems">
+  <section class="tex2jax_ignore mathjax_ignore" id="defining-connected-fault-systems">
 <h1>Defining connected fault systems<a class="headerlink" href="#defining-connected-fault-systems" title="Link to this heading"></a></h1>
 <p>This notebook demonstrates how to identify which fault segments in a shapefile should be connected up into large fault systems.</p>
 <p>We’ll begin by importing relevant modules</p>
@@ -123,8 +125,8 @@
 <p>There are a few parameters that are worth setting here:</p>
 <ol class="arabic simple">
 <li><p>Coordinate system via EPSG code (2193 for New Zealand) — this is optional but useful if you wish to visualize contours in GIS software.</p></li>
-<li><p>Trimming gradient ($\alpha_{trim}$) for clipping depth contours — see Section 3.3 of Howell et al. (in review)</p></li>
-<li><p>Dip multiplier and strike multiplier for calculating $\Theta_{change}$ — see Section 3.3 of Howell et al. (in review)</p></li>
+<li><p>Trimming gradient (<span class="math notranslate nohighlight">\(\alpha_{trim}\)</span>) for clipping depth contours — see Section 3.3 of Howell et al. (in review)</p></li>
+<li><p>Dip multiplier and strike multiplier for calculating <span class="math notranslate nohighlight">\(\Theta_{change}\)</span> — see Section 3.3 of Howell et al. (in review)</p></li>
 </ol>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -232,7 +234,7 @@ Found 142 connections between segment ends
 </div>
 </section>
 </section>
-<section id="defining-a-cutting-hierarchy">
+<section class="tex2jax_ignore mathjax_ignore" id="defining-a-cutting-hierarchy">
 <h1>Defining a cutting hierarchy<a class="headerlink" href="#defining-a-cutting-hierarchy" title="Link to this heading"></a></h1>
 <p>Now you have defined your fault system (which you will later use to create meshes), it is necessary to specify which faults terminate against other faults. For example, it seems highly likely that the western end of the Hope Fault is truncated at depth by the Alpine fault. This complex mesh cutting is best achieved using dedicated software such as leapfrog (see below), but for cutting to be done automatically, it is best to first specify a <em>cutting hierarchy</em>.</p>
 <section id="suggesting-a-hierarchy-based-on-slip-rate">
@@ -262,7 +264,7 @@ An example of a situation where editing is desirable is illustrated below. The m
 </div>
 </section>
 </section>
-<section id="create-shapefiles-for-mesh-creation">
+<section class="tex2jax_ignore mathjax_ignore" id="create-shapefiles-for-mesh-creation">
 <h1>Create shapefiles for mesh creation<a class="headerlink" href="#create-shapefiles-for-mesh-creation" title="Link to this heading"></a></h1>
 <p>The final pre-meshing step is the creation of files that can be combined with meshing software to create triangular mesh representations of faults.
 Although it is possible to construct these triangular surfaces in multiple software packages (for example, MOVE 3D), the following discussion is geared towards use with Leapfrog Geo software.</p>
