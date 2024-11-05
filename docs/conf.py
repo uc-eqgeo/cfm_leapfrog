@@ -40,7 +40,13 @@ extensions = [
     "myst_nb",
 ]
 # For myst_nb equations
-myst_amsmath_enable = True
+myst_enable_extensions = [
+    "amsmath",
+    "attrs_inline",
+    "colon_fence",
+    "deflist",
+    "dollarmath"
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
