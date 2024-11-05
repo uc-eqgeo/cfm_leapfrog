@@ -1,5 +1,5 @@
-:py:mod:`fault_mesh.faults.leapfrog`
-====================================
+fault_mesh.faults.leapfrog
+==========================
 
 .. py:module:: fault_mesh.faults.leapfrog
 
@@ -9,11 +9,8 @@
 
 
 
-Module Contents
----------------
-
 Classes
-~~~~~~~
+-------
 
 .. autoapisummary::
 
@@ -21,14 +18,16 @@ Classes
    fault_mesh.faults.leapfrog.LeapfrogFault
 
 
+Module Contents
+---------------
 
-
-.. py:class:: LeapfrogMultiFault(fault_geodataframe, sort_sr = False, segment_distance_tolerance = 100.0, smoothing_n = 5, remove_colons = True, tolerance = 100.0, dip_choice = 'pref', trimming_gradient = 1.0, epsg = None)
-
+.. py:class:: LeapfrogMultiFault(fault_geodataframe, sort_sr = False, segment_distance_tolerance = 100.0, smoothing_n = None, remove_colons = True, dip_choice = 'pref', trimming_gradient = 1.0, epsg = None)
 
    Bases: :py:obj:`fault_mesh.faults.generic.GenericMultiFault`
 
+
    Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)
+
 
    .. py:method:: find_connections(verbose = True)
 
@@ -40,20 +39,23 @@ Classes
 
 .. py:class:: LeapfrogFault(parent_multifault = None, smoothing = 5, trimming_gradient = 1.0, segment_distance_tolerance = 100.0, parent_connected=None)
 
-
    Bases: :py:obj:`fault_mesh.faults.generic.GenericFault`
 
+
    Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly
+
 
    .. py:property:: is_segment
 
       Records whether instance is a segment of a larger multi-segment fault like the Alpine Fault.
       :return:
 
+
    .. py:property:: smoothing
 
       n value to use in Chaikin's corner-cutting algorithm.
       :return:
+
 
    .. py:property:: trimming_gradient
 
@@ -61,10 +63,12 @@ Classes
       shortened to allow
       :return:
 
+
    .. py:property:: parent
 
       Return LeapfrogMultiFault instance that this fault is part of.
       :return:
+
 
    .. py:method:: depth_contour(depth, smoothing = True, km=False)
 
@@ -73,6 +77,7 @@ Classes
       :param smoothing: N for use with Chaikin's corner cutting
       :param km: If True, divide depth by 1000
       :return: LineString or MultiLineString representing contour
+
 
 
    .. py:method:: extend_footprint(end_i, other_end, other_segment, deepest_contour_depth = 30000.0, search_line_length = 150000.0, buffer_size = 5000.0, fall_back_distance = 40.3)

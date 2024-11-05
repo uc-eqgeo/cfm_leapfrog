@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -6,20 +8,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Defining connected fault systems (without smoothing) &mdash; cfm-leapfrog 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
-      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=d45e8c67"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -137,10 +135,47 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>missing expected field
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Warning: missing expected field: (Depth_D90)
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">AssertionError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">11</span>
+<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="n">epsg</span> <span class="o">=</span> <span class="mi">2193</span>
+<span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="c1"># Read in fault data from shapefile</span>
+<span class="ne">---&gt; </span><span class="mi">11</span> <span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/cfm_gt_1_5.gpkg&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">smoothing_n</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">13</span> <span class="c1"># Alternative for full CFM:</span>
+<span class="g g-Whitespace">     </span><span class="mi">14</span> <span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp(&quot;../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp&quot;, remove_colons=True,</span>
+<span class="g g-Whitespace">     </span><span class="mi">15</span> <span class="c1">#                                                  exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0)</span>
+   <span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="g g-Whitespace">     </span><span class="mi">18</span> <span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp(&quot;../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp&quot;, remove_colons=True,</span>
+<span class="g g-Whitespace">     </span><span class="mi">19</span> <span class="c1">#                                                  exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0, dip)</span>
+
+<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/leapfrog.py:261,</span> in <span class="ni">LeapfrogMultiFault.from_nz_cfm_shp</span><span class="nt">(cls, filename, exclude_region_polygons, depth_type, exclude_region_min_sr, include_names, exclude_aus, exclude_zero, sort_sr, remove_colons, smoothing_n, dip_choice, epsg)</span>
+<span class="g g-Whitespace">    </span><span class="mi">255</span> <span class="nd">@classmethod</span>
+<span class="g g-Whitespace">    </span><span class="mi">256</span> <span class="k">def</span> <span class="nf">from_nz_cfm_shp</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exclude_region_polygons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">depth_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;D90&quot;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">257</span>                     <span class="n">exclude_region_min_sr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.8</span><span class="p">,</span> <span class="n">include_names</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">exclude_aus</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">258</span>                     <span class="n">exclude_zero</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">sort_sr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">remove_colons</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">259</span>                     <span class="n">smoothing_n</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">dip_choice</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;pref&quot;</span><span class="p">,</span> <span class="n">epsg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="ne">--&gt; </span><span class="mi">261</span>     <span class="n">trimmed_fault_gdf</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">gdf_from_nz_cfm_shp</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">exclude_region_polygons</span><span class="o">=</span><span class="n">exclude_region_polygons</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">262</span>                                                 <span class="n">depth_type</span><span class="o">=</span><span class="n">depth_type</span><span class="p">,</span> <span class="n">exclude_region_min_sr</span><span class="o">=</span><span class="n">exclude_region_min_sr</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">263</span>                                                 <span class="n">include_names</span><span class="o">=</span><span class="n">include_names</span><span class="p">,</span> <span class="n">exclude_aus</span><span class="o">=</span><span class="n">exclude_aus</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">264</span>                                                 <span class="n">exclude_zero</span><span class="o">=</span><span class="n">exclude_zero</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">265</span>     <span class="n">multi_fault</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">trimmed_fault_gdf</span><span class="p">,</span> <span class="n">sort_sr</span><span class="o">=</span><span class="n">sort_sr</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">266</span>                       <span class="n">remove_colons</span><span class="o">=</span><span class="n">remove_colons</span><span class="p">,</span> <span class="n">smoothing_n</span><span class="o">=</span><span class="n">smoothing_n</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">267</span>                       <span class="n">dip_choice</span><span class="o">=</span><span class="n">dip_choice</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">269</span>     <span class="k">return</span> <span class="n">multi_fault</span>
+
+<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/generic.py:269,</span> in <span class="ni">GenericMultiFault.gdf_from_nz_cfm_shp</span><span class="nt">(filename, exclude_region_polygons, depth_type, exclude_region_min_sr, include_names, exclude_aus, exclude_zero)</span>
+<span class="g g-Whitespace">    </span><span class="mi">262</span> <span class="nd">@staticmethod</span>
+<span class="g g-Whitespace">    </span><span class="mi">263</span> <span class="k">def</span> <span class="nf">gdf_from_nz_cfm_shp</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exclude_region_polygons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">depth_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;D90&quot;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">264</span>                         <span class="n">exclude_region_min_sr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.8</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">265</span>                         <span class="n">include_names</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">exclude_aus</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">exclude_zero</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="g g-Whitespace">    </span><span class="mi">266</span><span class="w">     </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="g g-Whitespace">    </span><span class="mi">267</span><span class="sd">     Read CFM shapefile</span>
+<span class="g g-Whitespace">    </span><span class="mi">268</span><span class="sd">     &quot;&quot;&quot;</span>
+<span class="ne">--&gt; </span><span class="mi">269</span>     <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">270</span>     <span class="n">fault_geodataframe</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">272</span>     <span class="c1"># If appropriate, clip out data that fall within exclude_regions</span>
+
+<span class="ne">AssertionError</span>: 
 </pre></div>
 </div>
 </div>

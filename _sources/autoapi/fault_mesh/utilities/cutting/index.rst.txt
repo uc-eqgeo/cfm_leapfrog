@@ -1,8 +1,0 @@
-:orphan:
-
-:py:mod:`fault_mesh.utilities.cutting`
-======================================
-
-.. py:module:: fault_mesh.utilities.cutting
-
-

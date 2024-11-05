@@ -1,5 +1,5 @@
-:py:mod:`fault_mesh.utilities.cubit`
-====================================
+fault_mesh.utilities.cubit
+==========================
 
 .. py:module:: fault_mesh.utilities.cubit
 

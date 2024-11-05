@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -6,20 +8,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Defining connected fault systems &mdash; cfm-leapfrog 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
-      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=d45e8c67"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -126,15 +124,7 @@
 <span class="c1"># If not desired, set to None</span>
 <span class="n">epsg</span> <span class="o">=</span> <span class="mi">2193</span>
 <span class="c1"># Read in fault data from shapefile</span>
-<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/cfm_gt_1_5.gpkg&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">)</span>
-
-<span class="c1"># Alternative for full CFM:</span>
-<span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp(&quot;../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp&quot;, remove_colons=True,</span>
-<span class="c1">#                                                  exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0)</span>
-
-<span class="c1"># Alternative for different dip:</span>
-<span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp(&quot;../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp&quot;, remove_colons=True,</span>
-<span class="c1">#                                                  exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0, dip)</span>
+<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/central_nz_gt1_5_1km.shp&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">smoothing_n</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -196,75 +186,6 @@ Found 142 connections between segment ends
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">KeyboardInterrupt</span><span class="g g-Whitespace">                         </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">read_fault_systems</span><span class="p">(</span><span class="s2">&quot;./define_connections_data/central_gt1_5_connected_edited.csv&quot;</span><span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">generate_curated_faults</span><span class="p">()</span>
-
-<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/leapfrog.py:231,</span> in <span class="ni">LeapfrogMultiFault.read_fault_systems</span><span class="nt">(self, fault_system_csv, trimming_gradient)</span>
-<span class="g g-Whitespace">    </span><span class="mi">229</span> <span class="n">segs</span> <span class="o">=</span> <span class="p">[</span><span class="n">element</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
-<span class="g g-Whitespace">    </span><span class="mi">230</span> <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">seg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">segs</span><span class="p">]):</span>
-<span class="ne">--&gt; </span><span class="mi">231</span>     <span class="n">cfault</span> <span class="o">=</span> <span class="n">ConnectedFaultSystem</span><span class="p">(</span><span class="n">overall_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">cfm_faults</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">segment_names</span><span class="o">=</span><span class="n">segs</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">232</span>                                   <span class="n">tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">segment_distance_tolerance</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">233</span>                                   <span class="n">trimming_gradient</span><span class="o">=</span><span class="n">trimming_gradient</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">234</span>                                   <span class="n">smooth_trace_refinements</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">smoothing_n</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">235</span>     <span class="bp">self</span><span class="o">.</span><span class="n">connected_faults</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfault</span><span class="p">)</span>
-
-<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/connected.py:135,</span> in <span class="ni">ConnectedFaultSystem.__init__</span><span class="nt">(self, overall_name, cfm_faults, segment_names, search_patterns, excluded_names, tolerance, smooth_trace_refinements, trimming_gradient)</span>
-<span class="g g-Whitespace">    </span><span class="mi">133</span> <span class="bp">self</span><span class="o">.</span><span class="n">smoothed_overall_trace</span> <span class="o">=</span> <span class="n">smooth_trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">overall_trace</span><span class="p">,</span> <span class="n">n_refinements</span><span class="o">=</span><span class="n">smooth_trace_refinements</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">134</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segment_boundaries</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">135</span>     <span class="bp">self</span><span class="o">.</span><span class="n">smoothed_segments</span> <span class="o">=</span> <span class="n">cut_line_at_multiple_points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smoothed_overall_trace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment_boundaries</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">136</span> <span class="k">else</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">137</span>     <span class="bp">self</span><span class="o">.</span><span class="n">smoothed_segments</span> <span class="o">=</span> <span class="n">cut_line_at_point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smoothed_overall_trace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment_boundaries</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-
-<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/utilities/cutting.py:39,</span> in <span class="ni">cut_line_at_multiple_points</span><span class="nt">(line, points)</span>
-<span class="g g-Whitespace">     </span><span class="mi">37</span>     <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="o">=</span> <span class="n">cut_line_at_point</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">38</span> <span class="k">else</span><span class="p">:</span>
-<span class="ne">---&gt; </span><span class="mi">39</span>     <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="o">=</span> <span class="n">cut_line_at_point</span><span class="p">(</span><span class="n">line_to_cut</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">40</span> <span class="n">line_to_cut</span> <span class="o">=</span> <span class="n">l2</span>
-<span class="g g-Whitespace">     </span><span class="mi">41</span> <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
-
-<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/utilities/cutting.py:27,</span> in <span class="ni">cut_line_at_point</span><span class="nt">(line, point)</span>
-<span class="g g-Whitespace">     </span><span class="mi">25</span> <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">Point</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">26</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
-<span class="ne">---&gt; </span><span class="mi">27</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="o">=</span> <span class="n">cut</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">28</span> <span class="k">return</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span>
-
-<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/utilities/cutting.py:11,</span> in <span class="ni">cut</span><span class="nt">(line, distance)</span>
-<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="n">coords</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
-<span class="ne">---&gt; </span><span class="mi">11</span>     <span class="n">pd</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
-<span class="g g-Whitespace">     </span><span class="mi">12</span>     <span class="k">if</span> <span class="n">pd</span> <span class="o">==</span> <span class="n">distance</span><span class="p">:</span>
-<span class="g g-Whitespace">     </span><span class="mi">13</span>         <span class="k">return</span> <span class="p">[</span>
-<span class="g g-Whitespace">     </span><span class="mi">14</span>             <span class="n">LineString</span><span class="p">(</span><span class="n">coords</span><span class="p">[:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]),</span>
-<span class="g g-Whitespace">     </span><span class="mi">15</span>             <span class="n">LineString</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">i</span><span class="p">:])]</span>
-
-<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/impl.py:37,</span> in <span class="ni">delegated.&lt;locals&gt;.wrapper</span><span class="nt">(*args, **kwargs)</span>
-<span class="g g-Whitespace">     </span><span class="mi">34</span> <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">35</span> <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="g g-Whitespace">     </span><span class="mi">36</span>     <span class="k">try</span><span class="p">:</span>
-<span class="ne">---&gt; </span><span class="mi">37</span>         <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">38</span>     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-<span class="g g-Whitespace">     </span><span class="mi">39</span>         <span class="k">raise</span> <span class="n">ImplementationError</span><span class="p">(</span>
-<span class="g g-Whitespace">     </span><span class="mi">40</span>             <span class="s2">&quot;Method &#39;</span><span class="si">%s</span><span class="s2">&#39; not provided by registered &quot;</span>
-<span class="g g-Whitespace">     </span><span class="mi">41</span>             <span class="s2">&quot;implementation &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">impl</span><span class="p">))</span>
-
-<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/geometry/base.py:913,</span> in <span class="ni">BaseGeometry.project</span><span class="nt">(self, other, normalized)</span>
-<span class="g g-Whitespace">    </span><span class="mi">911</span> <span class="k">else</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">912</span>     <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;project&#39;</span><span class="p">]</span>
-<span class="ne">--&gt; </span><span class="mi">913</span> <span class="k">return</span> <span class="n">op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
-
-<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/shapely/linref.py:18,</span> in <span class="ni">ProjectOp.__call__</span><span class="nt">(self, this, other)</span>
-<span class="g g-Whitespace">     </span><span class="mi">16</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_line</span><span class="p">(</span><span class="n">this</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">17</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-<span class="ne">---&gt; </span><span class="mi">18</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">_geom</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_geom</span><span class="p">)</span>
-
-<span class="ne">KeyboardInterrupt</span>: 
-</pre></div>
-</div>
-</div>
 </div>
 </section>
 </section>
@@ -321,7 +242,7 @@ Although it is possible to construct these triangular surfaces in multiple softw
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">curated_faults</span><span class="p">:</span>
     <span class="c1"># Generate depth contours</span>
-    <span class="n">fault</span><span class="o">.</span><span class="n">generate_depth_contours</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mf">32000.</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">),</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">generate_depth_contours</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mf">32000.</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">),</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="c1"># Write contours to files</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;depth_contours/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_contours.shp&quot;</span><span class="p">)</span>
     <span class="c1"># Write traces</span>

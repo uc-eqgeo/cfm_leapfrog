@@ -1,5 +1,5 @@
-:py:mod:`fault_mesh.utilities.smoothing`
-========================================
+fault_mesh.utilities.smoothing
+==============================
 
 .. py:module:: fault_mesh.utilities.smoothing
 
@@ -11,18 +11,16 @@
 
 
 
-Module Contents
----------------
-
-
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
    fault_mesh.utilities.smoothing.chaikins_corner_cutting
 
 
+Module Contents
+---------------
 
 .. py:function:: chaikins_corner_cutting(coords, refinements=5)
 

@@ -1,5 +1,5 @@
-:py:mod:`fault_mesh.utilities.merging`
-======================================
+fault_mesh.utilities.merging
+============================
 
 .. py:module:: fault_mesh.utilities.merging
 

@@ -1,5 +1,5 @@
-:py:mod:`fault_mesh.faults.generic`
-===================================
+fault_mesh.faults.generic
+=========================
 
 .. py:module:: fault_mesh.faults.generic
 
@@ -9,20 +9,16 @@
 
 
 
-Module Contents
----------------
-
 Classes
-~~~~~~~
+-------
 
 .. autoapisummary::
 
    fault_mesh.faults.generic.GenericMultiFault
 
 
-
 Functions
-~~~~~~~~~
+---------
 
 .. autoapisummary::
 
@@ -36,6 +32,8 @@ Functions
    fault_mesh.faults.generic.root_mean_square
 
 
+Module Contents
+---------------
 
 .. py:function:: smallest_difference(value1, value2)
 
@@ -103,11 +101,12 @@ Functions
 
 .. py:class:: GenericMultiFault(fault_geodataframe, sort_sr = False, remove_colons = False, dip_choice = 'pref')
 
-
    Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)
+
 
    .. py:method:: gdf_from_nz_cfm_shp(filename, exclude_region_polygons = None, depth_type = 'D90', exclude_region_min_sr = 1.8, include_names = None, exclude_aus = True, exclude_zero = True)
       :staticmethod:
+
 
       Read CFM shapefile
 

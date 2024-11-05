@@ -1,5 +1,5 @@
-:py:mod:`fault_mesh.faults`
-===========================
+fault_mesh.faults
+=================
 
 .. py:module:: fault_mesh.faults
 
@@ -15,12 +15,12 @@
 
 Submodules
 ----------
+
 .. toctree::
-   :titlesonly:
    :maxdepth: 1
 
-   connected/index.rst
-   generic/index.rst
-   leapfrog/index.rst
+   /autoapi/fault_mesh/faults/connected/index
+   /autoapi/fault_mesh/faults/generic/index
+   /autoapi/fault_mesh/faults/leapfrog/index
 
 

@@ -1,5 +1,5 @@
-:py:mod:`fault_mesh.faults.connected`
-=====================================
+fault_mesh.faults.connected
+===========================
 
 .. py:module:: fault_mesh.faults.connected
 
@@ -9,21 +9,18 @@
 
 
 
-Module Contents
----------------
-
 Classes
-~~~~~~~
+-------
 
 .. autoapisummary::
 
    fault_mesh.faults.connected.ConnectedFaultSystem
 
 
-
+Module Contents
+---------------
 
 .. py:class:: ConnectedFaultSystem(overall_name, cfm_faults, segment_names = None, search_patterns = None, excluded_names = None, tolerance = 100.0, smooth_trace_refinements = 5, trimming_gradient = 1.0)
-
 
    Class for a connected fault system
 

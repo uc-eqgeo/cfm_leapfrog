@@ -13,9 +13,14 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 1,
+   "execution_count": 6,
    "id": "f42e46ec",
-   "metadata": {},
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2024-09-09T01:07:24.614124Z",
+     "start_time": "2024-09-09T01:07:23.042426Z"
+    }
+   },
    "outputs": [
     {
      "name": "stderr",
@@ -43,15 +48,7 @@
     "# If not desired, set to None\n",
     "epsg = 2193\n",
     "# Read in fault data from shapefile\n",
-    "fault_data = LeapfrogMultiFault.from_nz_cfm_shp(\"tutorial_gis/cfm_gt_1_5.gpkg\", remove_colons=True, epsg=epsg)\n",
-    "\n",
-    "# Alternative for full CFM:\n",
-    "# fault_data = LeapfrogMultiFault.from_nz_cfm_shp(\"../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp\", remove_colons=True,\n",
-    "#                                                  exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0)\n",
-    "\n",
-    "# Alternative for different dip:\n",
-    "# fault_data = LeapfrogMultiFault.from_nz_cfm_shp(\"../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp\", remove_colons=True,\n",
-    "#                                                  exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0, dip)"
+    "fault_data = LeapfrogMultiFault.from_nz_cfm_shp(\"tutorial_gis/central_nz_gt1_5_1km.shp\", remove_colons=True, epsg=epsg, smoothing_n=None)\n"
    ]
   },
   {
@@ -65,9 +62,14 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 2,
+   "execution_count": 7,
    "id": "7b431aa1",
-   "metadata": {},
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2024-09-09T01:07:48.543281Z",
+     "start_time": "2024-09-09T01:07:48.526226Z"
+    }
+   },
    "outputs": [],
    "source": [
     "dist_tolerance = 200."
@@ -75,16 +77,31 @@
   },
   {
    "cell_type": "markdown",
+   "id": "19368c9706a69c29",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "source": [
     "The next cell uses python module networkx to find segment traces that are within the specified distance tolerance of each other."
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": 3,
+   "execution_count": 8,
+   "id": "f340fb5c4614aeb3",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2024-09-09T01:08:00.064130Z",
+     "start_time": "2024-09-09T01:07:51.363530Z"
+    },
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "outputs": [
     {
      "name": "stdout",
@@ -97,33 +114,49 @@
    ],
    "source": [
     "fault_data.find_connections(verbose=False)"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "markdown",
+   "id": "24712f1125de10cc",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "source": [
     "It is now necessary to write out these connections for manual editing and review. The file will be written out into the same directory as this Jupyter notebook. It will have a prefix supplied by you and the suffix \"_suggested.csv\"."
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": 4,
+   "execution_count": 9,
+   "id": "352706d562d17779",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2024-09-09T01:08:04.520751Z",
+     "start_time": "2024-09-09T01:08:04.502764Z"
+    },
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "outputs": [],
    "source": [
     "fault_data.suggest_fault_systems(\"central_gt1_5_connected\")"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "markdown",
+   "id": "436a99ce9f4fd8a8",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "source": [
     "This will create a CSV file that looks like this:\n",
     "\n",
@@ -137,48 +170,68 @@
     "![edited_connected](./tutorial_images/connected_edited.png)\n",
     "\n",
     "Once you have made the necessary edits, read your new CSV to overwite the automatically-generated connected fault systems:"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": 5,
+   "execution_count": 11,
+   "id": "7a7e1102cf1a2c2d",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2024-09-09T01:10:18.583252Z",
+     "start_time": "2024-09-09T01:08:14.602099Z"
+    },
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "outputs": [],
    "source": [
     "fault_data.read_fault_systems(\"./define_connections_data/central_gt1_5_connected_edited.csv\")\n",
     "fault_data.generate_curated_faults()"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "markdown",
+   "id": "ea20f06737828931",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "source": [
     "# Defining a cutting hierarchy\n",
     "Now you have defined your fault system (which you will later use to create meshes), it is necessary to specify which faults terminate against other faults. For example, it seems highly likely that the western end of the Hope Fault is truncated at depth by the Alpine fault. This complex mesh cutting is best achieved using dedicated software such as leapfrog (see below), but for cutting to be done automatically, it is best to first specify a *cutting hierarchy*.\n",
     "## Suggesting a hierarchy based on slip rate\n",
     "A first pass at a hierarchy can be generated based purely on fault slip rate. Assuming that the fault data you have already read in have slip rates associated with them, this first pass is easy to make:\n"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": 6,
+   "execution_count": 12,
+   "id": "8aa91cf663cf7172",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "outputs": [],
    "source": [
     "fault_data.suggest_cutting_hierarchy(\"central_gt1_5_hierarchy\")"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "markdown",
+   "id": "3a3a0a0ecc14a0ad",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "source": [
     "This operation simply orders the faults (or fault systems) in your model in descending order of slip rate. For connected fault systems that have segments with different slip rates, the maximum slip rate of any segment in that fault system is used to place the fault system in the cutting hierarchy.\n",
     "\n",
@@ -190,24 +243,32 @@
     "![Adjust hierarchy](./tutorial_images/reorder_hierarchy.png)\n",
     "\n",
     "We read in this new hierarchy as follows:\n"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": 7,
+   "execution_count": 13,
+   "id": "504ea2826059a9a0",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "outputs": [],
    "source": [
     "fault_data.read_cutting_hierarchy(\"./define_connections_data/central_gt1_5_hierarchy_edited.csv\")"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "markdown",
+   "id": "43dc18e38058d9fe",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "source": [
     "# Create shapefiles for mesh creation\n",
     "The final pre-meshing step is the creation of files that can be combined with meshing software to create triangular mesh representations of faults.\n",
@@ -215,41 +276,56 @@
     "\n",
     "## Create directories to hold shapefiles\n",
     "For organisational reasons, it helps to have the different shapefiles in different directories"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": 8,
+   "execution_count": 14,
+   "id": "dd1885097c3687f4",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "outputs": [],
    "source": [
     "for dir_name in [\"depth_contours\", \"traces\", \"footprints\"]:\n",
     "    if not os.path.exists(dir_name):\n",
     "        os.mkdir(dir_name)"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "markdown",
+   "id": "40775920ce78d301",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
    "source": [
     "## Write out shapefiles\n"
-   ],
-   "metadata": {
-    "collapsed": false
-   }
+   ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 15,
+   "id": "6d74561b6ae9388",
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    },
+    "pycharm": {
+     "is_executing": true
+    }
+   },
    "outputs": [],
    "source": [
     "for fault in fault_data.curated_faults:\n",
     "    # Generate depth contours\n",
-    "    fault.generate_depth_contours(np.arange(2000, 32000., 2000.), smoothing=True)\n",
+    "    fault.generate_depth_contours(np.arange(2000, 32000., 2000.), smoothing=False)\n",
     "    # Write contours to files\n",
     "    fault.contours.to_file(f\"depth_contours/{fault.name}_contours.shp\")\n",
     "    # Write traces\n",
@@ -259,25 +335,15 @@
     "for fault in reversed(fault_data.curated_faults):\n",
     "    fault.adjust_footprint()\n",
     "    fault.footprint_geoseries.to_file(f\"footprints/{fault.name}_footprint.shp\")"
-   ],
-   "metadata": {
-    "collapsed": false,
-    "pycharm": {
-     "is_executing": true
-    }
-   }
+   ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
+   "id": "a6f2ce1f-8d29-407b-8f67-63bd03669d6e",
+   "metadata": {},
    "outputs": [],
-   "source": [],
-   "metadata": {
-    "collapsed": false,
-    "pycharm": {
-     "is_executing": true
-    }
-   }
+   "source": []
   }
  ],
  "metadata": {
@@ -296,7 +362,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.10.6"
+   "version": "3.10.15"
   }
  },
  "nbformat": 4,

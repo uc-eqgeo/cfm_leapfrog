@@ -1,5 +1,5 @@
-:py:mod:`fault_mesh.utilities`
-==============================
+fault_mesh.utilities
+====================
 
 .. py:module:: fault_mesh.utilities
 
@@ -11,13 +11,13 @@
 
 Submodules
 ----------
+
 .. toctree::
-   :titlesonly:
    :maxdepth: 1
 
-   cubit/index.rst
-   graph/index.rst
-   merging/index.rst
-   smoothing/index.rst
+   /autoapi/fault_mesh/utilities/cubit/index
+   /autoapi/fault_mesh/utilities/graph/index
+   /autoapi/fault_mesh/utilities/merging/index
+   /autoapi/fault_mesh/utilities/smoothing/index
 
 
