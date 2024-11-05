@@ -39,6 +39,8 @@ extensions = [
     "autoapi.extension",
     "myst_nb",
 ]
+# For myst_nb equations
+myst_amsmath_enable = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
