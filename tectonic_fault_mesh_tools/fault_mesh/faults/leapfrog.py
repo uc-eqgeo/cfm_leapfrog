@@ -23,8 +23,8 @@ from fault_mesh.faults.connected import ConnectedFaultSystem
 
 class LeapfrogMultiFault(GenericMultiFault):
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, sort_sr: bool = False,
-                 segment_distance_tolerance: float = 100., smoothing_n: int = 5,
-                 remove_colons: bool = True, tolerance: float = 100., dip_choice: str = "pref",
+                 segment_distance_tolerance: float = 100., smoothing_n: int = None,
+                 remove_colons: bool = True, dip_choice: str = "pref",
                  trimming_gradient: float = 1., epsg: int = None):
 
         self._smoothing_n = smoothing_n
