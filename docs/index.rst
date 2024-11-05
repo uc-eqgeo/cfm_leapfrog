@@ -33,12 +33,6 @@ Leapfrog software should be used for mesh cutting operations.
    help/camilla.md
 
 .. toctree::
-    :maxdepth: 2
-    :caption: Alternative workflows:
-
-    tutorials/define_connected_no_smoothing.ipynb
-
-.. toctree::
    :maxdepth: 4
    :caption: API Reference:
 

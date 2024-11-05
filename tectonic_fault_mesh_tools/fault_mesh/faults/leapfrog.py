@@ -25,13 +25,14 @@ class LeapfrogMultiFault(GenericMultiFault):
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, sort_sr: bool = False,
                  segment_distance_tolerance: float = 100., smoothing_n: int = None,
                  remove_colons: bool = True, dip_choice: str = "pref",
-                 trimming_gradient: float = 1., epsg: int = None):
+                 trimming_gradient: float = 1., epsg: int = None, dip_multiplier: float = 1.,
+                 strike_multiplier: float = 0.5, check_optional_fields: bool = True):
 
         self._smoothing_n = smoothing_n
         super(LeapfrogMultiFault, self).__init__(fault_geodataframe=fault_geodataframe, 
                                                  sort_sr=sort_sr,
                                                  remove_colons=remove_colons, dip_choice=dip_choice,
-                                                 )
+                                                 check_optional_fields=check_optional_fields)
 
         self._segment_distance_tolerance = segment_distance_tolerance
         self._cutting_hierarchy = []
@@ -46,6 +47,8 @@ class LeapfrogMultiFault(GenericMultiFault):
         self._inter_fault_connections = None
         self._trimming_gradient = trimming_gradient
         self._epsg = epsg
+        self._dip_multiplier = dip_multiplier
+        self._strike_multiplier = strike_multiplier
 
     def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False,
                   tolerance: float = 100.):
@@ -77,6 +80,14 @@ class LeapfrogMultiFault(GenericMultiFault):
     @property
     def cutting_hierarchy(self):
         return self._cutting_hierarchy
+
+    @property
+    def dip_multiplier(self):
+        return self._dip_multiplier
+
+    @property
+    def strike_multiplier(self):
+        return self._strike_multiplier
 
     @cutting_hierarchy.setter
     def cutting_hierarchy(self, hierarchy: List[str]):
@@ -256,7 +267,9 @@ class LeapfrogMultiFault(GenericMultiFault):
     def from_nz_cfm_shp(cls, filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
                         exclude_region_min_sr: float = 1.8, include_names: list = None, exclude_aus: bool = True,
                         exclude_zero: bool = True, sort_sr: bool = False, remove_colons: bool = False,
-                        smoothing_n: Union[int, None] = 5, dip_choice: str = "pref", epsg: int = None):
+                        smoothing_n: Union[int, None] = 5, dip_choice: str = "pref", epsg: int = None,
+                        trimming_gradient: float = 1., dip_multiplier: float = 1., strike_multiplier: float = 0.5,
+                        check_optional_fields: bool = True):
 
         trimmed_fault_gdf = cls.gdf_from_nz_cfm_shp(filename=filename, exclude_region_polygons=exclude_region_polygons,
                                                     depth_type=depth_type, exclude_region_min_sr=exclude_region_min_sr,
@@ -264,8 +277,25 @@ class LeapfrogMultiFault(GenericMultiFault):
                                                     exclude_zero=exclude_zero)
         multi_fault = cls(trimmed_fault_gdf, sort_sr=sort_sr,
                           remove_colons=remove_colons, smoothing_n=smoothing_n,
-                          dip_choice=dip_choice, epsg=epsg)
+                          dip_choice=dip_choice, epsg=epsg, trimming_gradient=trimming_gradient,
+                          dip_multiplier=dip_multiplier, strike_multiplier=strike_multiplier,
+                          check_optional_fields=check_optional_fields)
 
+        return multi_fault
+
+    @classmethod
+    def from_shp(cls, filename: str, remove_colons: bool = False, sort_sr: bool = False, epsg: int = None,
+                 dip_choice: str = "pref", trimming_gradient: float = 1.,
+                 dip_multiplier: float = 1., strike_multiplier: float = 0.5, check_optional_fields: bool = False):
+        assert os.path.exists(filename)
+        trimmed_fault_gdf = cls.gdf_from_nz_cfm_shp(filename=filename, exclude_region_polygons=None, depth_type=None,
+                                                    exclude_region_min_sr=1.8, include_names=None,
+                                                    exclude_aus=False,
+                                                    exclude_zero=False, )
+        multi_fault = cls(trimmed_fault_gdf, sort_sr=sort_sr, remove_colons=remove_colons, epsg=epsg,
+                          dip_choice=dip_choice, trimming_gradient=trimming_gradient,
+                          dip_multiplier=dip_multiplier, strike_multiplier=strike_multiplier,
+                          check_optional_fields=check_optional_fields)
         return multi_fault
 
     @property
@@ -365,6 +395,14 @@ class LeapfrogFault(GenericFault):
         :return:
         """
         return self._smoothing
+
+    @property
+    def dip_multiplier(self):
+        return self.parent._dip_multiplier
+
+    @property
+    def strike_multiplier(self):
+        return self.parent._strike_multiplier
 
     @property
     def trimming_gradient(self):
@@ -550,7 +588,7 @@ class LeapfrogFault(GenericFault):
 
         return trimmed_contour
 
-    def generate_depth_contours(self, depths: Union[np.ndarray, List[float]], smoothing: bool = True, damping: int = None,
+    def generate_depth_contours(self, depths: Union[np.ndarray, List[float]], smoothing: bool = False,
                        km: bool = False):
         contours = [self.depth_contour(depth, smoothing, km) for depth in depths]
 
@@ -625,7 +663,7 @@ class LeapfrogFault(GenericFault):
                                  "Are you sure you want to connect?")
         else:
             dip_diff = abs(neighbour.dip_best - self.dip_best)
-        return max([2 * dip_diff, strike_diff]) / 2.
+        return max([self.dip_multiplier * dip_diff, self.strike_multiplier * strike_diff])
 
     @property
     def segment_distance_tolerance(self):

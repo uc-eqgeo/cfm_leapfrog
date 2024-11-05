@@ -24,10 +24,10 @@ valid_depth_range = [0, 50]
 valid_sr_range = [0, 80]
 
 # These fields aren't crucial but are in some versions of the relevant files
-expected_fields = ['Depth_D90', 'Dip_max', 'Dip_min', 'Name', 'SR_pref']
+expected_fields = ['Depth_D90', 'Dip_max', 'Dip_min']
 
 # There will be a mess if these fields don't exist
-required_fields = ['Name', 'Fault_ID', 'Dip_dir', 'Dip_pref', 'geometry']
+required_fields = ['Name', 'Fault_ID', 'Dip_dir', 'Dip_pref', 'geometry', 'SR_pref']
 
 
 def smallest_difference(value1, value2):
@@ -207,10 +207,11 @@ class GenericMultiFault:
     """
 
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, sort_sr: bool = False,
-                 remove_colons: bool = False, dip_choice: str = "pref"):
+                 remove_colons: bool = False, dip_choice: str = "pref", check_optional_fields: bool = True):
         self.logger = logging.getLogger("fault_model_logger")
         self.check_input1(fault_geodataframe)
-        self.check_input2(fault_geodataframe)
+        if check_optional_fields:
+            self.check_input2(fault_geodataframe)
 
         self._faults = []
         self.dip_choice = dip_choice
@@ -260,7 +261,7 @@ class GenericMultiFault:
             return []
 
     @staticmethod
-    def gdf_from_nz_cfm_shp(filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
+    def gdf_from_nz_cfm_shp(filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = None,
                             exclude_region_min_sr: float = 1.8,
                             include_names: list = None, exclude_aus: bool = True, exclude_zero: bool = True):
         """
@@ -310,23 +311,29 @@ class GenericMultiFault:
 
         # Exclude faults with zero slip rate
         if exclude_zero:
-            trimmed_fault_gdf = trimmed_fault_gdf[trimmed_fault_gdf.SR_pref > 0.]
+            if "SR_pref" in trimmed_fault_gdf.columns:
+                trimmed_fault_gdf = trimmed_fault_gdf[trimmed_fault_gdf.SR_pref > 0.]
 
         # Exclude upper slope faults (A-US classification)
         if exclude_aus:
-            trimmed_fault_gdf = trimmed_fault_gdf[trimmed_fault_gdf.Fault_stat != "A-US"]
+            if "Fault_stat" in trimmed_fault_gdf.columns:
+                trimmed_fault_gdf = trimmed_fault_gdf[trimmed_fault_gdf.Fault_stat != "A-US"]
 
-        if depth_type == "D90":
-            if "Depth_D90" in trimmed_fault_gdf.columns:
-                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_D90"]
-            else:
-                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
-            trimmed_fault_gdf["Depth_std"] = 0.
-        elif depth_type == "Dfcomb":
-            if "Depth_D90" in trimmed_fault_gdf.columns:
-                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_Dfc"]
-            else:
-                trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Dfcomb"]
+        if depth_type is not None:
+            if depth_type == "D90":
+                if "Depth_D90" in trimmed_fault_gdf.columns:
+                    trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_D90"]
+                else:
+                    trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
+                trimmed_fault_gdf["Depth_std"] = 0.
+            elif depth_type == "Dfcomb":
+                if "Depth_D90" in trimmed_fault_gdf.columns:
+                    trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_Dfc"]
+                else:
+                    trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Dfcomb"]
+                trimmed_fault_gdf["Depth_std"] = 0.
+        else:
+            trimmed_fault_gdf["Depth_pref"] = 3.e4
             trimmed_fault_gdf["Depth_std"] = 0.
 
         return trimmed_fault_gdf
@@ -334,16 +341,28 @@ class GenericMultiFault:
     @classmethod
     def from_nz_cfm_shp(cls, filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
                         exclude_region_min_sr: float = 1.8, include_names: list = None, exclude_aus: bool = True,
-                        exclude_zero: bool = True, sort_sr: bool = False, remove_colons: bool = False):
+                        exclude_zero: bool = True, sort_sr: bool = False, remove_colons: bool = False,
+                        check_optional_fields: bool = True):
 
         trimmed_fault_gdf = cls.gdf_from_nz_cfm_shp(filename=filename, exclude_region_polygons=exclude_region_polygons,
                                                     depth_type=depth_type, exclude_region_min_sr=exclude_region_min_sr,
                                                     include_names=include_names, exclude_aus=exclude_aus,
                                                     exclude_zero=exclude_zero)
         multi_fault = cls(trimmed_fault_gdf, sort_sr=sort_sr,
-                          remove_colons=remove_colons)
+                          remove_colons=remove_colons, check_optional_fields=check_optional_fields)
 
         return multi_fault
+
+    @classmethod
+    def from_shp(cls, filename: str, remove_colons: bool = False, sort_sr: bool = False, check_optional_fields: bool = False):
+        assert os.path.exists(filename)
+        trimmed_fault_gdf = cls.gdf_from_nz_cfm_shp(filename=filename, exclude_region_polygons=None, depth_type="D90",
+                                                    exclude_region_min_sr=1.8, include_names=None, exclude_aus=False,
+                                                    exclude_zero=False)
+        multi_fault = cls(trimmed_fault_gdf, sort_sr=sort_sr, remove_colons=remove_colons,
+                          check_optional_fields=check_optional_fields)
+        return multi_fault
+
 
 
 class GenericFault:
