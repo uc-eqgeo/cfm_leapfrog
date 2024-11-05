@@ -53,6 +53,7 @@
 <p class="caption" role="heading"><span class="caption-text">Python Examples:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Defining connected fault systems</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setting-useful-parameters">Setting useful parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reading-in-faults">Reading in faults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#finding-connections-between-segments">Finding connections between segments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#making-and-incorporating-manual-edits">Making and incorporating manual edits</a></li>
@@ -72,10 +73,6 @@
 <p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../help/camilla.html">Leapfrog 3D mesh generation and fault cutting</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Alternative workflows:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="define_connected_no_smoothing.html">Defining connected fault systems (without smoothing)</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
@@ -109,9 +106,7 @@
   <section id="defining-connected-fault-systems">
 <h1>Defining connected fault systems<a class="headerlink" href="#defining-connected-fault-systems" title="Link to this heading"></a></h1>
 <p>This notebook demonstrates how to identify which fault segments in a shapefile should be connected up into large fault systems.</p>
-<section id="reading-in-faults">
-<h2>Reading in faults<a class="headerlink" href="#reading-in-faults" title="Link to this heading"></a></h2>
-<p>First, you need to read in your GIS representation of faults. In this example, we use a subset of faults from the New Zealand Community Fault Model (Seebeck et al., 2022).</p>
+<p>We’ll begin by importing relevant modules</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import modules </span>
@@ -119,20 +114,68 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
-
-<span class="c1"># Set coordinate system (optional) EPSG code</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="setting-useful-parameters">
+<h2>Setting useful parameters<a class="headerlink" href="#setting-useful-parameters" title="Link to this heading"></a></h2>
+<p>There are a few parameters that are worth setting here:</p>
+<ol class="arabic simple">
+<li><p>Coordinate system via EPSG code (2193 for New Zealand) — this is optional but useful if you wish to visualize contours in GIS software.</p></li>
+<li><p>Trimming gradient ($\alpha_{trim}$) for clipping depth contours — see Section 3.3 of Howell et al. (in review)</p></li>
+<li><p>Dip multiplier and strike multiplier for calculating $\Theta_{change}$ — see Section 3.3 of Howell et al. (in review)</p></li>
+</ol>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set coordinate system (optional) EPSG code</span>
 <span class="c1"># If not desired, set to None</span>
 <span class="n">epsg</span> <span class="o">=</span> <span class="mi">2193</span>
-<span class="c1"># Read in fault data from shapefile</span>
-<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/central_nz_gt1_5_1km.shp&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">smoothing_n</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<span class="c1"># Trimming gradient (alpha) and strike and dip multipliers for trimming depth contours of multi-segment faults</span>
+<span class="n">trimming_gradient</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="n">dip_multiplier</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="n">strike_multiplier</span> <span class="o">=</span> <span class="mf">0.5</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="reading-in-faults">
+<h2>Reading in faults<a class="headerlink" href="#reading-in-faults" title="Link to this heading"></a></h2>
+<p>First, you need to read in your GIS representation of faults. In this example, we use a subset of faults from the New Zealand Community Fault Model (Seebeck et al., 2022).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Read in fault data from shapefile</span>
+<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/central_nz_minimal_data.shp&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">trimming_gradient</span><span class="o">=</span><span class="n">trimming_gradient</span><span class="p">,</span>
+                                        <span class="n">dip_multiplier</span><span class="o">=</span><span class="n">dip_multiplier</span><span class="p">,</span> <span class="n">strike_multiplier</span><span class="o">=</span><span class="n">strike_multiplier</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>missing expected field
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Warning: missing expected field: (Depth_D90)
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">AssertionError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="c1"># Read in fault data from shapefile</span>
+<span class="ne">----&gt; </span><span class="mi">2</span> <span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/central_nz_minimal_data.shp&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">trimming_gradient</span><span class="o">=</span><span class="n">trimming_gradient</span><span class="p">,</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span>                                         <span class="n">dip_multiplier</span><span class="o">=</span><span class="n">dip_multiplier</span><span class="p">,</span> <span class="n">strike_multiplier</span><span class="o">=</span><span class="n">strike_multiplier</span><span class="p">)</span>
+
+<span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/leapfrog.py:290,</span> in <span class="ni">LeapfrogMultiFault.from_shp</span><span class="nt">(cls, filename, remove_colons, sort_sr, epsg, dip_choice, trimming_gradient, dip_multiplier, strike_multiplier, check_optional_fields)</span>
+<span class="g g-Whitespace">    </span><span class="mi">286</span> <span class="nd">@classmethod</span>
+<span class="g g-Whitespace">    </span><span class="mi">287</span> <span class="k">def</span> <span class="nf">from_shp</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">remove_colons</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">sort_sr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">epsg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">288</span>              <span class="n">dip_choice</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;pref&quot;</span><span class="p">,</span> <span class="n">trimming_gradient</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">289</span>              <span class="n">dip_multiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">strike_multiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">check_optional_fields</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="ne">--&gt; </span><span class="mi">290</span>     <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">291</span>     <span class="n">trimmed_fault_gdf</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">gdf_from_nz_cfm_shp</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">exclude_region_polygons</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">292</span>                                                 <span class="n">exclude_region_min_sr</span><span class="o">=</span><span class="mf">1.8</span><span class="p">,</span> <span class="n">include_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">293</span>                                                 <span class="n">exclude_aus</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">294</span>                                                 <span class="n">exclude_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">295</span>     <span class="n">multi_fault</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">trimmed_fault_gdf</span><span class="p">,</span> <span class="n">sort_sr</span><span class="o">=</span><span class="n">sort_sr</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="n">remove_colons</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">296</span>                       <span class="n">dip_choice</span><span class="o">=</span><span class="n">dip_choice</span><span class="p">,</span> <span class="n">trimming_gradient</span><span class="o">=</span><span class="n">trimming_gradient</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">297</span>                       <span class="n">dip_multiplier</span><span class="o">=</span><span class="n">dip_multiplier</span><span class="p">,</span> <span class="n">strike_multiplier</span><span class="o">=</span><span class="n">strike_multiplier</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">298</span>                       <span class="n">check_optional_fields</span><span class="o">=</span><span class="n">check_optional_fields</span><span class="p">)</span>
+
+<span class="ne">AssertionError</span>: 
 </pre></div>
 </div>
 </div>

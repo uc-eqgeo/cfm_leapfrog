@@ -50,32 +50,35 @@ Cell [0;32mIn[1], line 11[0m
 [1;32m     18[0m [38;5;66;03m# fault_data = LeapfrogMultiFault.from_nz_cfm_shp("../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp", remove_colons=True,[39;00m
 [1;32m     19[0m [38;5;66;03m#                                                  exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0, dip)[39;00m
 
-File [0;32m~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/leapfrog.py:261[0m, in [0;36mLeapfrogMultiFault.from_nz_cfm_shp[0;34m(cls, filename, exclude_region_polygons, depth_type, exclude_region_min_sr, include_names, exclude_aus, exclude_zero, sort_sr, remove_colons, smoothing_n, dip_choice, epsg)[0m
-[1;32m    255[0m [38;5;129m@classmethod[39m
-[1;32m    256[0m [38;5;28;01mdef[39;00m [38;5;21mfrom_nz_cfm_shp[39m([38;5;28mcls[39m, filename: [38;5;28mstr[39m, exclude_region_polygons: List[Polygon] [38;5;241m=[39m [38;5;28;01mNone[39;00m, depth_type: [38;5;28mstr[39m [38;5;241m=[39m [38;5;124m"[39m[38;5;124mD90[39m[38;5;124m"[39m,
-[1;32m    257[0m                     exclude_region_min_sr: [38;5;28mfloat[39m [38;5;241m=[39m [38;5;241m1.8[39m, include_names: [38;5;28mlist[39m [38;5;241m=[39m [38;5;28;01mNone[39;00m, exclude_aus: [38;5;28mbool[39m [38;5;241m=[39m [38;5;28;01mTrue[39;00m,
-[1;32m    258[0m                     exclude_zero: [38;5;28mbool[39m [38;5;241m=[39m [38;5;28;01mTrue[39;00m, sort_sr: [38;5;28mbool[39m [38;5;241m=[39m [38;5;28;01mFalse[39;00m, remove_colons: [38;5;28mbool[39m [38;5;241m=[39m [38;5;28;01mFalse[39;00m,
-[1;32m    259[0m                     smoothing_n: Union[[38;5;28mint[39m, [38;5;28;01mNone[39;00m] [38;5;241m=[39m [38;5;241m5[39m, dip_choice: [38;5;28mstr[39m [38;5;241m=[39m [38;5;124m"[39m[38;5;124mpref[39m[38;5;124m"[39m, epsg: [38;5;28mint[39m [38;5;241m=[39m [38;5;28;01mNone[39;00m):
-[0;32m--> 261[0m     trimmed_fault_gdf [38;5;241m=[39m [38;5;28;43mcls[39;49m[38;5;241;43m.[39;49m[43mgdf_from_nz_cfm_shp[49m[43m([49m[43mfilename[49m[38;5;241;43m=[39;49m[43mfilename[49m[43m,[49m[43m [49m[43mexclude_region_polygons[49m[38;5;241;43m=[39;49m[43mexclude_region_polygons[49m[43m,[49m
-[1;32m    262[0m [43m                                                [49m[43mdepth_type[49m[38;5;241;43m=[39;49m[43mdepth_type[49m[43m,[49m[43m [49m[43mexclude_region_min_sr[49m[38;5;241;43m=[39;49m[43mexclude_region_min_sr[49m[43m,[49m
-[1;32m    263[0m [43m                                                [49m[43minclude_names[49m[38;5;241;43m=[39;49m[43minclude_names[49m[43m,[49m[43m [49m[43mexclude_aus[49m[38;5;241;43m=[39;49m[43mexclude_aus[49m[43m,[49m
-[1;32m    264[0m [43m                                                [49m[43mexclude_zero[49m[38;5;241;43m=[39;49m[43mexclude_zero[49m[43m)[49m
-[1;32m    265[0m     multi_fault [38;5;241m=[39m [38;5;28mcls[39m(trimmed_fault_gdf, sort_sr[38;5;241m=[39msort_sr,
-[1;32m    266[0m                       remove_colons[38;5;241m=[39mremove_colons, smoothing_n[38;5;241m=[39msmoothing_n,
-[1;32m    267[0m                       dip_choice[38;5;241m=[39mdip_choice, epsg[38;5;241m=[39mepsg)
-[1;32m    269[0m     [38;5;28;01mreturn[39;00m multi_fault
+File [0;32m~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/leapfrog.py:274[0m, in [0;36mLeapfrogMultiFault.from_nz_cfm_shp[0;34m(cls, filename, exclude_region_polygons, depth_type, exclude_region_min_sr, include_names, exclude_aus, exclude_zero, sort_sr, remove_colons, smoothing_n, dip_choice, epsg, trimming_gradient, dip_multiplier, strike_multiplier, check_optional_fields)[0m
+[1;32m    266[0m [38;5;129m@classmethod[39m
+[1;32m    267[0m [38;5;28;01mdef[39;00m [38;5;21mfrom_nz_cfm_shp[39m([38;5;28mcls[39m, filename: [38;5;28mstr[39m, exclude_region_polygons: List[Polygon] [38;5;241m=[39m [38;5;28;01mNone[39;00m, depth_type: [38;5;28mstr[39m [38;5;241m=[39m [38;5;124m"[39m[38;5;124mD90[39m[38;5;124m"[39m,
+[1;32m    268[0m                     exclude_region_min_sr: [38;5;28mfloat[39m [38;5;241m=[39m [38;5;241m1.8[39m, include_names: [38;5;28mlist[39m [38;5;241m=[39m [38;5;28;01mNone[39;00m, exclude_aus: [38;5;28mbool[39m [38;5;241m=[39m [38;5;28;01mTrue[39;00m,
+[0;32m   (...)[0m
+[1;32m    271[0m                     trimming_gradient: [38;5;28mfloat[39m [38;5;241m=[39m [38;5;241m1.[39m, dip_multiplier: [38;5;28mfloat[39m [38;5;241m=[39m [38;5;241m1.[39m, strike_multiplier: [38;5;28mfloat[39m [38;5;241m=[39m [38;5;241m0.5[39m,
+[1;32m    272[0m                     check_optional_fields: [38;5;28mbool[39m [38;5;241m=[39m [38;5;28;01mTrue[39;00m):
+[0;32m--> 274[0m     trimmed_fault_gdf [38;5;241m=[39m [38;5;28;43mcls[39;49m[38;5;241;43m.[39;49m[43mgdf_from_nz_cfm_shp[49m[43m([49m[43mfilename[49m[38;5;241;43m=[39;49m[43mfilename[49m[43m,[49m[43m [49m[43mexclude_region_polygons[49m[38;5;241;43m=[39;49m[43mexclude_region_polygons[49m[43m,[49m
+[1;32m    275[0m [43m                                                [49m[43mdepth_type[49m[38;5;241;43m=[39;49m[43mdepth_type[49m[43m,[49m[43m [49m[43mexclude_region_min_sr[49m[38;5;241;43m=[39;49m[43mexclude_region_min_sr[49m[43m,[49m
+[1;32m    276[0m [43m                                                [49m[43minclude_names[49m[38;5;241;43m=[39;49m[43minclude_names[49m[43m,[49m[43m [49m[43mexclude_aus[49m[38;5;241;43m=[39;49m[43mexclude_aus[49m[43m,[49m
+[1;32m    277[0m [43m                                                [49m[43mexclude_zero[49m[38;5;241;43m=[39;49m[43mexclude_zero[49m[43m)[49m
+[1;32m    278[0m     multi_fault [38;5;241m=[39m [38;5;28mcls[39m(trimmed_fault_gdf, sort_sr[38;5;241m=[39msort_sr,
+[1;32m    279[0m                       remove_colons[38;5;241m=[39mremove_colons, smoothing_n[38;5;241m=[39msmoothing_n,
+[1;32m    280[0m                       dip_choice[38;5;241m=[39mdip_choice, epsg[38;5;241m=[39mepsg, trimming_gradient[38;5;241m=[39mtrimming_gradient,
+[1;32m    281[0m                       dip_multiplier[38;5;241m=[39mdip_multiplier, strike_multiplier[38;5;241m=[39mstrike_multiplier,
+[1;32m    282[0m                       check_optional_fields[38;5;241m=[39mcheck_optional_fields)
+[1;32m    284[0m     [38;5;28;01mreturn[39;00m multi_fault
 
-File [0;32m~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/generic.py:269[0m, in [0;36mGenericMultiFault.gdf_from_nz_cfm_shp[0;34m(filename, exclude_region_polygons, depth_type, exclude_region_min_sr, include_names, exclude_aus, exclude_zero)[0m
-[1;32m    262[0m [38;5;129m@staticmethod[39m
-[1;32m    263[0m [38;5;28;01mdef[39;00m [38;5;21mgdf_from_nz_cfm_shp[39m(filename: [38;5;28mstr[39m, exclude_region_polygons: List[Polygon] [38;5;241m=[39m [38;5;28;01mNone[39;00m, depth_type: [38;5;28mstr[39m [38;5;241m=[39m [38;5;124m"[39m[38;5;124mD90[39m[38;5;124m"[39m,
-[1;32m    264[0m                         exclude_region_min_sr: [38;5;28mfloat[39m [38;5;241m=[39m [38;5;241m1.8[39m,
-[1;32m    265[0m                         include_names: [38;5;28mlist[39m [38;5;241m=[39m [38;5;28;01mNone[39;00m, exclude_aus: [38;5;28mbool[39m [38;5;241m=[39m [38;5;28;01mTrue[39;00m, exclude_zero: [38;5;28mbool[39m [38;5;241m=[39m [38;5;28;01mTrue[39;00m):
-[1;32m    266[0m [38;5;250m    [39m[38;5;124;03m"""[39;00m
-[1;32m    267[0m [38;5;124;03m    Read CFM shapefile[39;00m
-[1;32m    268[0m [38;5;124;03m    """[39;00m
-[0;32m--> 269[0m     [38;5;28;01massert[39;00m os[38;5;241m.[39mpath[38;5;241m.[39mexists(filename)
-[1;32m    270[0m     fault_geodataframe [38;5;241m=[39m gpd[38;5;241m.[39mGeoDataFrame[38;5;241m.[39mfrom_file(filename)
-[1;32m    272[0m     [38;5;66;03m# If appropriate, clip out data that fall within exclude_regions[39;00m
+File [0;32m~/miniconda3/envs/leapfrog-fault-models/lib/python3.10/site-packages/fault_mesh/faults/generic.py:270[0m, in [0;36mGenericMultiFault.gdf_from_nz_cfm_shp[0;34m(filename, exclude_region_polygons, depth_type, exclude_region_min_sr, include_names, exclude_aus, exclude_zero)[0m
+[1;32m    263[0m [38;5;129m@staticmethod[39m
+[1;32m    264[0m [38;5;28;01mdef[39;00m [38;5;21mgdf_from_nz_cfm_shp[39m(filename: [38;5;28mstr[39m, exclude_region_polygons: List[Polygon] [38;5;241m=[39m [38;5;28;01mNone[39;00m, depth_type: [38;5;28mstr[39m [38;5;241m=[39m [38;5;28;01mNone[39;00m,
+[1;32m    265[0m                         exclude_region_min_sr: [38;5;28mfloat[39m [38;5;241m=[39m [38;5;241m1.8[39m,
+[1;32m    266[0m                         include_names: [38;5;28mlist[39m [38;5;241m=[39m [38;5;28;01mNone[39;00m, exclude_aus: [38;5;28mbool[39m [38;5;241m=[39m [38;5;28;01mTrue[39;00m, exclude_zero: [38;5;28mbool[39m [38;5;241m=[39m [38;5;28;01mTrue[39;00m):
+[1;32m    267[0m [38;5;250m    [39m[38;5;124;03m"""[39;00m
+[1;32m    268[0m [38;5;124;03m    Read CFM shapefile[39;00m
+[1;32m    269[0m [38;5;124;03m    """[39;00m
+[0;32m--> 270[0m     [38;5;28;01massert[39;00m os[38;5;241m.[39mpath[38;5;241m.[39mexists(filename)
+[1;32m    271[0m     fault_geodataframe [38;5;241m=[39m gpd[38;5;241m.[39mGeoDataFrame[38;5;241m.[39mfrom_file(filename)
+[1;32m    273[0m     [38;5;66;03m# If appropriate, clip out data that fall within exclude_regions[39;00m
 
 [0;31mAssertionError[0m: 
 

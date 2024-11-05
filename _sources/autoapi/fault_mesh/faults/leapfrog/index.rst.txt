@@ -21,7 +21,7 @@ Classes
 Module Contents
 ---------------
 
-.. py:class:: LeapfrogMultiFault(fault_geodataframe, sort_sr = False, segment_distance_tolerance = 100.0, smoothing_n = None, remove_colons = True, dip_choice = 'pref', trimming_gradient = 1.0, epsg = None)
+.. py:class:: LeapfrogMultiFault(fault_geodataframe, sort_sr = False, segment_distance_tolerance = 100.0, smoothing_n = None, remove_colons = True, dip_choice = 'pref', trimming_gradient = 1.0, epsg = None, dip_multiplier = 1.0, strike_multiplier = 0.5, check_optional_fields = True)
 
    Bases: :py:obj:`fault_mesh.faults.generic.GenericMultiFault`
 
