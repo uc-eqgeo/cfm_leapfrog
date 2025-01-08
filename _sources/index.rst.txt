@@ -17,6 +17,7 @@ Leapfrog software should be used for mesh cutting operations.
    :caption: Introduction and Setup:
 
    help/intro.md
+   help/preparation.md
    help/install.md
    help/running_examples.md
 

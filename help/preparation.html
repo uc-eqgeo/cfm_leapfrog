@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Introduction &mdash; cfm-leapfrog 0.0.1 documentation</title>
+  <title>Preparing inputs for use &mdash; cfm-leapfrog 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
@@ -21,8 +21,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Preparing inputs for use" href="preparation.html" />
-    <link rel="prev" title="Welcome to cfm-leapfrog’s documentation!" href="../index.html" /> 
+    <link rel="next" title="Installation instructions and updates to code" href="install.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,8 +46,12 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Introduction and Setup:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preparation.html">Preparing inputs for use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Preparing inputs for use</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#shapefile-fields">Shapefile fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#vertex-spacing">Vertex spacing</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation instructions and updates to code</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running_examples.html">Running tutorial examples using Jupyter</a></li>
 </ul>
@@ -80,9 +84,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Introduction</li>
+      <li class="breadcrumb-item active">Preparing inputs for use</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/help/intro.md.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/help/preparation.md.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -90,18 +94,36 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h1>
-<p>Welcome. This online documentation is intended to walk users through the steps described in Howell et al. (in review). That paper focusses more on the rationale for each step in the workflow, whereas here we focus on the computational steps required to implement the workflow.</p>
-<p>Please do get in touch if you have any questions or suggestions for improvement.</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="preparing-inputs-for-use">
+<h1>Preparing inputs for use<a class="headerlink" href="#preparing-inputs-for-use" title="Link to this heading"></a></h1>
+<section id="shapefile-fields">
+<h2>Shapefile fields<a class="headerlink" href="#shapefile-fields" title="Link to this heading"></a></h2>
+<p>The primary input to the workflow is a shapefile of similar (GeoJSON and GPKG also work).
+This shapefile includes the linework for surface traces, but should also include enough metadata to unambiguously constrain the fault geometry.</p>
+<p>A minimal example of a shapefile with the required fields is provided in <code class="docutils literal notranslate"><span class="pre">tutorial_gis/central_nz_minimal_data.shp</span></code>.</p>
+<p>The required fields are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code>: a unique identifier for each fault</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Fault_ID</span></code>: a unique identifier (number) for each fault</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Dip_pref</span></code>: the preferred dip of the fault in degrees</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Dip_dir</span></code>: the dip direction of the fault in compass direction (e.g. “N”, “NE”, “E”, “SE”, “S”, “SW”, “W”, “NW”). Note that two possible dip azimuths will be calculated based on the fault trace. Inclusion of this letter-based field allows the workflow to choose between these two possible azimuths, and also allows consistency checks (e.g., an error will be thrown if “E” is provided for an EW-striking fault).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SR_pref</span></code>: the preferred slip rate of the fault in mm/yr</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">SR_pref</span></code> field is optional, but if it is not provided, the automated method to estimate which faults terminate against each other (cutting hierarchy) will not work.</p>
+<p><strong>Note</strong>: Other fields can be included in the shapefile, but they will be ignored by the workflow.</p>
+</section>
+<section id="vertex-spacing">
+<h2>Vertex spacing<a class="headerlink" href="#vertex-spacing" title="Link to this heading"></a></h2>
+<p>The workflow requires that the fault traces are represented by a series of vertices. The spacing of these vertices is important for the accuracy of the calculations. We suggest a spacing of 1 km, but this can be adjusted based on the size of fault networks and complexity of the fault geometries. It would be possible to set this point spacing programmatically using python, but in our experience this iterative process is best carried out interatively in GIS software, for example using the <a class="reference external" href="https://docs.qgis.org/3.34/en/docs/user_manual/processing_algs/qgis/vectorgeometry.html#densify-by-interval">Densify by interval</a> tool in QGIS.</p>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to cfm-leapfrog’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="preparation.html" class="btn btn-neutral float-right" title="Preparing inputs for use" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="intro.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="install.html" class="btn btn-neutral float-right" title="Installation instructions and updates to code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
