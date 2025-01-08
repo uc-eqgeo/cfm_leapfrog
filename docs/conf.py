@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath("../tectonic_fault_mesh_tools/fault_mesh/"))
 # -- Project information -----------------------------------------------------
 
 project = 'cfm-leapfrog'
-copyright = '2022, Andy Howell and Camilla Penney'
+copyright = '2025, Andy Howell and Camilla Penney'
 author = 'Andy Howell and Camilla Penney'
 
 # The full version, including alpha/beta/rc tags
-release = "0.0.1"
+release = "1.0.0"
 
 
 # -- General configuration ---------------------------------------------------
