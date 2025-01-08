@@ -25,7 +25,7 @@ jobs:
     - name: Setup miniconda
       uses: conda-incubator/setup-miniconda@v3
       with:
-        miniforge-variant: Mambaforge
+        miniforge-variant: Miniforge3
         channels: conda-forge
         activate-environment: leapfrog-fault-models
         environment-file: environment.yml
