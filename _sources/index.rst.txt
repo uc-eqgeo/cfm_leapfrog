@@ -34,6 +34,12 @@ Leapfrog software should be used for mesh cutting operations.
    help/camilla.md
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Python Examples (Japanese):
+
+   tutorials/define_connected_japanese.ipynb
+
+.. toctree::
    :maxdepth: 4
    :caption: API Reference:
 

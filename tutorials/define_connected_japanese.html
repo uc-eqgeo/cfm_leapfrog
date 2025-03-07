@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Defining connected fault systems &mdash; cfm-leapfrog 1.0.0 documentation</title>
+  <title>接続された断層システムの定義 &mdash; cfm-leapfrog 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
@@ -23,8 +23,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Leapfrog 3D mesh generation and fault cutting" href="../help/camilla.html" />
-    <link rel="prev" title="Running tutorial examples using Jupyter" href="../help/running_examples.html" /> 
+    <link rel="next" title="API Reference" href="../autoapi/index.html" />
+    <link rel="prev" title="Leapfrog 3D mesh generation and fault cutting" href="../help/camilla.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -54,34 +54,34 @@
 <li class="toctree-l1"><a class="reference internal" href="../help/running_examples.html">Running tutorial examples using Jupyter</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Python Examples:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Defining connected fault systems</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#setting-useful-parameters">Setting useful parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#reading-in-faults">Reading in faults</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#finding-connections-between-segments">Finding connections between segments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#making-and-incorporating-manual-edits">Making and incorporating manual edits</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#suggesting-a-hierarchy-based-on-slip-rate">Suggesting a hierarchy based on slip rate</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#editing-the-cutting-hierarchy">Editing the cutting hierarchy</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#create-directories-to-hold-shapefiles">Create directories to hold shapefiles</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#write-out-shapefiles">Write out shapefiles</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="define_connected.html">Defining connected fault systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="define_connected.html#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="define_connected.html#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../help/camilla.html">Leapfrog 3D mesh generation and fault cutting</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Python Examples (Japanese):</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="define_connected_japanese.html">接続された断層システムの定義</a></li>
-<li class="toctree-l1"><a class="reference internal" href="define_connected_japanese.html#id6">切断階層の定義</a></li>
-<li class="toctree-l1"><a class="reference internal" href="define_connected_japanese.html#id9">メッシュ作成のためのシェープファイルの作成</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">接続された断層システムの定義</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">有用なパラメータの設定</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">断層の読み込み</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">セグメント間の接続を見つける</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">手動編集の実施と組み込み</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#id6">切断階層の定義</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id7">すべり速度に基づく階層の提案</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">切断階層の編集</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#id9">メッシュ作成のためのシェープファイルの作成</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id10">シェープファイルを保持するディレクトリの作成</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id11">シェープファイルの書き出し</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
@@ -102,9 +102,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Defining connected fault systems</li>
+      <li class="breadcrumb-item active">接続された断層システムの定義</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/tutorials/define_connected.ipynb.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/tutorials/define_connected_japanese.ipynb.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -112,13 +112,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="defining-connected-fault-systems">
-<h1>Defining connected fault systems<a class="headerlink" href="#defining-connected-fault-systems" title="Link to this heading"></a></h1>
-<p>This notebook demonstrates how to identify which fault segments in a shapefile should be connected up into large fault systems.</p>
-<p>We’ll begin by importing relevant modules</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="id1">
+<h1>接続された断層システムの定義<a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<p>このノートブックは、シェープファイル内のどの断層セグメントが大きな断層システムに接続されるべきかを識別する方法を示しています。</p>
+<p>まず、関連するモジュールをインポートします</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import modules </span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># モジュールのインポート</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fault_mesh.faults.leapfrog</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeapfrogMultiFault</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -127,21 +127,21 @@
 </div>
 </div>
 </div>
-<section id="setting-useful-parameters">
-<h2>Setting useful parameters<a class="headerlink" href="#setting-useful-parameters" title="Link to this heading"></a></h2>
-<p>There are a few parameters that are worth setting here:</p>
+<section id="id2">
+<h2>有用なパラメータの設定<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>ここで設定する価値のあるいくつかのパラメータがあります：</p>
 <ol class="arabic simple">
-<li><p>Coordinate system via EPSG code (2193 for New Zealand) — this is optional but useful if you wish to visualize contours in GIS software.</p></li>
-<li><p>Trimming gradient (<span class="math notranslate nohighlight">\(\alpha_{trim}\)</span>) for clipping depth contours — see Section 3.3 of Howell et al. (in review)</p></li>
-<li><p>Dip multiplier and strike multiplier for calculating <span class="math notranslate nohighlight">\(\Theta_{change}\)</span> — see Section 3.3 of Howell et al. (in review)</p></li>
+<li><p>EPSGコードによる座標系（ニュージーランドの場合は2193）— これはオプションですが、GISソフトウェアで等高線を視覚化したい場合に便利です。</p></li>
+<li><p>深度等高線をクリッピングするためのトリミング勾配（<span class="math notranslate nohighlight">\(\alpha_{trim}\)</span>）— Howell et al.（レビュー中）のセクション3.3を参照</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Theta_{change}\)</span>を計算するための傾斜乗数とストライク乗数— Howell et al.（レビュー中）のセクション3.3を参照</p></li>
 </ol>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set coordinate system (optional) EPSG code</span>
-<span class="c1"># If not desired, set to None</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># 座標系の設定（オプション）EPSGコード</span>
+<span class="c1"># 必要ない場合はNoneに設定</span>
 <span class="n">epsg</span> <span class="o">=</span> <span class="mi">2193</span>
 
-<span class="c1"># Trimming gradient (alpha) and strike and dip multipliers for trimming depth contours of multi-segment faults</span>
+<span class="c1"># マルチセグメント断層の深度等高線をトリミングするためのトリミング勾配（アルファ）およびストライクとディップの乗数</span>
 <span class="n">trimming_gradient</span> <span class="o">=</span> <span class="mf">1.</span>
 <span class="n">dip_multiplier</span> <span class="o">=</span> <span class="mf">1.</span>
 <span class="n">strike_multiplier</span> <span class="o">=</span> <span class="mf">0.5</span>
@@ -150,12 +150,12 @@
 </div>
 </div>
 </section>
-<section id="reading-in-faults">
-<h2>Reading in faults<a class="headerlink" href="#reading-in-faults" title="Link to this heading"></a></h2>
-<p>First, you need to read in your GIS representation of faults. In this example, we use a subset of faults from the New Zealand Community Fault Model (Seebeck et al., 2022).</p>
+<section id="id3">
+<h2>断層の読み込み<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<p>まず、断層のGIS表現を読み込む必要があります。この例では、ニュージーランドコミュニティ断層モデル（Seebeck et al., 2022）の断層のサブセットを使用します。</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Read in fault data from shapefile</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># シェープファイルから断層データを読み込む</span>
 <span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/central_nz_minimal_data.shp&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">trimming_gradient</span><span class="o">=</span><span class="n">trimming_gradient</span><span class="p">,</span>
                                         <span class="n">dip_multiplier</span><span class="o">=</span><span class="n">dip_multiplier</span><span class="p">,</span> <span class="n">strike_multiplier</span><span class="o">=</span><span class="n">strike_multiplier</span><span class="p">)</span>
 </pre></div>
@@ -163,9 +163,9 @@
 </div>
 </div>
 </section>
-<section id="finding-connections-between-segments">
-<h2>Finding connections between segments<a class="headerlink" href="#finding-connections-between-segments" title="Link to this heading"></a></h2>
-<p>Now your data are read in, you need to set the distance tolerance. This tolerance is the minimum horizontal distance between two fault traces that is allowed to count as a connection.</p>
+<section id="id4">
+<h2>セグメント間の接続を見つける<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<p>データが読み込まれたら、距離許容値を設定する必要があります。この許容値は、接続としてカウントされる2つの断層トレース間の最小水平距離です。</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dist_tolerance</span> <span class="o">=</span> <span class="mf">200.</span>
@@ -173,7 +173,7 @@
 </div>
 </div>
 </div>
-<p>The next cell uses python module networkx to find segment traces that are within the specified distance tolerance of each other.</p>
+<p>次のセルは、指定された距離許容値内にあるセグメントトレースを見つけるためにpythonモジュールnetworkxを使用します。</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">find_connections</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -187,7 +187,7 @@ Found 142 connections between segment ends
 </div>
 </div>
 </div>
-<p>It is now necessary to write out these connections for manual editing and review. The file will be written out into the same directory as this Jupyter notebook. It will have a prefix supplied by you and the suffix “_suggested.csv”.</p>
+<p>これらの接続を手動で編集およびレビューするために書き出す必要があります。ファイルはこのJupyterノートブックと同じディレクトリに書き出されます。接頭辞はあなたが指定し、接尾辞は”_suggested.csv”です。</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_fault_systems</span><span class="p">(</span><span class="s2">&quot;central_gt1_5_connected&quot;</span><span class="p">)</span>
@@ -195,15 +195,15 @@ Found 142 connections between segment ends
 </div>
 </div>
 </div>
-<p>This will create a CSV file that looks like this:</p>
+<p>これにより、次のようなCSVファイルが作成されます：</p>
 <p><img alt="unedited_connected" src="../_images/connected_unedited.png" /></p>
-<p>The name of the combined fault system is in the first column, and names of the faults that make up the connected system are in subsequent columns.</p>
+<p>結合された断層システムの名前は最初の列にあり、接続されたシステムを構成する断層の名前は後続の列にあります。</p>
 </section>
-<section id="making-and-incorporating-manual-edits">
-<h2>Making and incorporating manual edits<a class="headerlink" href="#making-and-incorporating-manual-edits" title="Link to this heading"></a></h2>
-<p>The automatically-generated fault system suggestions will (by design) include hyper-connected fault systems that need to be broken up. At this stage, the best way to break up these networks into smaller fault systems is to do it manually by editing the CSV file. An example below shows a new line added to the CSV representing the Hope Fault system – The Hope Fault is grouped with the Alpine and Kekerengu-Needles fault systems in the automatically-generated connections CSV. <strong>Make sure you save this new file with a different name to avoid overwriting it!</strong></p>
+<section id="id5">
+<h2>手動編集の実施と組み込み<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<p>自動生成された断層システムの提案には（設計上）分割する必要がある過剰に接続された断層システムが含まれます。この段階では、これらのネットワークを小さな断層システムに分割する最良の方法は、CSVファイルを手動で編集することです。以下の例は、Hope Faultシステムを表す新しい行をCSVに追加したものです – Hope Faultは自動生成された接続CSVでAlpineおよびKekerengu-Needles断層システムとグループ化されています。<strong>この新しいファイルを保存する際には、上書きしないように異なる名前で保存してください！</strong></p>
 <p><img alt="edited_connected" src="../_images/connected_edited.png" /></p>
-<p>Once you have made the necessary edits, read your new CSV to overwite the automatically-generated connected fault systems:</p>
+<p>必要な編集を行ったら、新しいCSVを読み込んで自動生成された接続断層システムを上書きします：</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_fault_systems</span><span class="p">(</span><span class="s2">&quot;./define_connections_data/central_gt1_5_connected_edited.csv&quot;</span><span class="p">)</span>
@@ -214,12 +214,12 @@ Found 142 connections between segment ends
 </div>
 </section>
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="defining-a-cutting-hierarchy">
-<h1>Defining a cutting hierarchy<a class="headerlink" href="#defining-a-cutting-hierarchy" title="Link to this heading"></a></h1>
-<p>Now you have defined your fault system (which you will later use to create meshes), it is necessary to specify which faults terminate against other faults. For example, it seems highly likely that the western end of the Hope Fault is truncated at depth by the Alpine fault. This complex mesh cutting is best achieved using dedicated software such as leapfrog (see below), but for cutting to be done automatically, it is best to first specify a <em>cutting hierarchy</em>.</p>
-<section id="suggesting-a-hierarchy-based-on-slip-rate">
-<h2>Suggesting a hierarchy based on slip rate<a class="headerlink" href="#suggesting-a-hierarchy-based-on-slip-rate" title="Link to this heading"></a></h2>
-<p>A first pass at a hierarchy can be generated based purely on fault slip rate. Assuming that the fault data you have already read in have slip rates associated with them, this first pass is easy to make:</p>
+<section class="tex2jax_ignore mathjax_ignore" id="id6">
+<h1>切断階層の定義<a class="headerlink" href="#id6" title="Link to this heading"></a></h1>
+<p>断層システムを定義したら（後でメッシュを作成するために使用します）、他の断層に対してどの断層が終了するかを指定する必要があります。例えば、Hope Faultの西端が深さでAlpine Faultによって切断される可能性が高いようです。この複雑なメッシュ切断は、leapfrogなどの専用ソフトウェアを使用して最も効果的に行われますが、自動的に切断を行うためには、最初に<em>切断階層</em>を指定するのが最善です。</p>
+<section id="id7">
+<h2>すべり速度に基づく階層の提案<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<p>階層の最初のパスは、断層のすべり速度に基づいて純粋に生成できます。既に読み込んだ断層データにすべり速度が関連付けられていると仮定すると、この最初のパスは簡単に行えます：</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_cutting_hierarchy</span><span class="p">(</span><span class="s2">&quot;central_gt1_5_hierarchy&quot;</span><span class="p">)</span>
@@ -227,14 +227,14 @@ Found 142 connections between segment ends
 </div>
 </div>
 </div>
-<p>This operation simply orders the faults (or fault systems) in your model in descending order of slip rate. For connected fault systems that have segments with different slip rates, the maximum slip rate of any segment in that fault system is used to place the fault system in the cutting hierarchy.</p>
+<p>この操作は、モデル内の断層（または断層システム）をすべり速度の降順に並べ替えるだけです。異なるすべり速度を持つセグメントを持つ接続された断層システムの場合、その断層システム内の任意のセグメントの最大すべり速度が使用され、切断階層に断層システムが配置されます。</p>
 </section>
-<section id="editing-the-cutting-hierarchy">
-<h2>Editing the cutting hierarchy<a class="headerlink" href="#editing-the-cutting-hierarchy" title="Link to this heading"></a></h2>
-<p>You can then edit this hierarchy by switching the order of lines in the file. For any pair of faults/systems that intersect, the fault closer to the bottom of the file will terminate against the fault closer to the top of the list.
-An example of a situation where editing is desirable is illustrated below. The maximum slip rate of the Jordan-Kekerengu-Needles Fault System (23 mm/yr) is faster than the corresponding maximum for the Hope Fault (15.8 mm/yr), but we wish to create a fault model where the Jordan Fault terminates against the Hope Fault. We effect this termination by moving <code class="docutils literal notranslate"><span class="pre">Hope</span> <span class="pre">combined</span></code> above <code class="docutils literal notranslate"><span class="pre">Jordan</span> <span class="pre">-</span> <span class="pre">Kek</span> <span class="pre">-</span> <span class="pre">Needles</span> <span class="pre">combined</span></code> in the CSV file. For similar reasons, we move the <code class="docutils literal notranslate"><span class="pre">Hanmer</span></code> Fault above <code class="docutils literal notranslate"><span class="pre">Hope</span> <span class="pre">Hanmer</span> <span class="pre">NW</span></code>.</p>
+<section id="id8">
+<h2>切断階層の編集<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<p>次に、ファイル内の行の順序を切り替えることでこの階層を編集できます。交差する断層/システムのペアについては、ファイルの下部に近い断層が上部に近い断層に対して終了します。
+編集が望ましい状況の例を以下に示します。Jordan-Kekerengu-Needles Fault Systemの最大すべり速度（23 mm/yr）はHope Faultの対応する最大値（15.8 mm/yr）よりも速いですが、Jordan FaultがHope Faultに対して終了する断層モデルを作成したいと考えています。この終了を実現するために、CSVファイル内で<code class="docutils literal notranslate"><span class="pre">Hope</span> <span class="pre">combined</span></code>を<code class="docutils literal notranslate"><span class="pre">Jordan</span> <span class="pre">-</span> <span class="pre">Kek</span> <span class="pre">-</span> <span class="pre">Needles</span> <span class="pre">combined</span></code>の上に移動します。同様の理由で、<code class="docutils literal notranslate"><span class="pre">Hanmer</span></code> Faultを<code class="docutils literal notranslate"><span class="pre">Hope</span> <span class="pre">Hanmer</span> <span class="pre">NW</span></code>の上に移動します。</p>
 <p><img alt="Adjust hierarchy" src="../_images/reorder_hierarchy.png" /></p>
-<p>We read in this new hierarchy as follows:</p>
+<p>次のようにしてこの新しい階層を読み込みます：</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_cutting_hierarchy</span><span class="p">(</span><span class="s2">&quot;./define_connections_data/central_gt1_5_hierarchy_edited.csv&quot;</span><span class="p">)</span>
@@ -244,13 +244,13 @@ An example of a situation where editing is desirable is illustrated below. The m
 </div>
 </section>
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="create-shapefiles-for-mesh-creation">
-<h1>Create shapefiles for mesh creation<a class="headerlink" href="#create-shapefiles-for-mesh-creation" title="Link to this heading"></a></h1>
-<p>The final pre-meshing step is the creation of files that can be combined with meshing software to create triangular mesh representations of faults.
-Although it is possible to construct these triangular surfaces in multiple software packages (for example, MOVE 3D), the following discussion is geared towards use with Leapfrog Geo software.</p>
-<section id="create-directories-to-hold-shapefiles">
-<h2>Create directories to hold shapefiles<a class="headerlink" href="#create-directories-to-hold-shapefiles" title="Link to this heading"></a></h2>
-<p>For organisational reasons, it helps to have the different shapefiles in different directories</p>
+<section class="tex2jax_ignore mathjax_ignore" id="id9">
+<h1>メッシュ作成のためのシェープファイルの作成<a class="headerlink" href="#id9" title="Link to this heading"></a></h1>
+<p>メッシュ作成前の最終ステップは、断層の三角メッシュ表現を作成するためにメッシュ作成ソフトウェアと組み合わせることができるファイルの作成です。
+これらの三角形の表面を複数のソフトウェアパッケージ（例えば、MOVE 3D）で構築することは可能ですが、以下の議論はLeapfrog Geoソフトウェアの使用を前提としています。</p>
+<section id="id10">
+<h2>シェープファイルを保持するディレクトリの作成<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<p>組織上の理由から、異なるシェープファイルを異なるディレクトリに配置することが役立ちます</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">dir_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;depth_contours&quot;</span><span class="p">,</span> <span class="s2">&quot;traces&quot;</span><span class="p">,</span> <span class="s2">&quot;footprints&quot;</span><span class="p">,</span> <span class="s2">&quot;footprints_lines&quot;</span><span class="p">]:</span>
@@ -261,23 +261,23 @@ Although it is possible to construct these triangular surfaces in multiple softw
 </div>
 </div>
 </section>
-<section id="write-out-shapefiles">
-<h2>Write out shapefiles<a class="headerlink" href="#write-out-shapefiles" title="Link to this heading"></a></h2>
+<section id="id11">
+<h2>シェープファイルの書き出し<a class="headerlink" href="#id11" title="Link to this heading"></a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">curated_faults</span><span class="p">:</span>
-    <span class="c1"># Generate depth contours</span>
+    <span class="c1"># 深度等高線の生成</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">generate_depth_contours</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mf">32000.</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">),</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="c1"># Write contours to files</span>
+    <span class="c1"># 等高線をファイルに書き出し</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;depth_contours/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_contours.shp&quot;</span><span class="p">)</span>
-    <span class="c1"># Write traces</span>
+    <span class="c1"># トレースの書き出し</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">nztm_trace_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;traces/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_trace.shp&quot;</span><span class="p">)</span>
 
-<span class="c1"># Write fault footprints</span>
+<span class="c1"># 断層フットプリントの書き出し</span>
 <span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">fault_data</span><span class="o">.</span><span class="n">curated_faults</span><span class="p">):</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">adjust_footprint</span><span class="p">()</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;footprints/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp&quot;</span><span class="p">)</span>
-    <span class="c1"># Write fault footprints as lines (necessary for newer Leapfrog Geo betas)</span>
+    <span class="c1"># Leapfrog Geoの新しいバージョンでは、断層フットプリントをラインとして書き出す必要があります</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">boundary</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;footprints_lines/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -290,8 +290,8 @@ Although it is possible to construct these triangular surfaces in multiple softw
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../help/running_examples.html" class="btn btn-neutral float-left" title="Running tutorial examples using Jupyter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../help/camilla.html" class="btn btn-neutral float-right" title="Leapfrog 3D mesh generation and fault cutting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../help/camilla.html" class="btn btn-neutral float-left" title="Leapfrog 3D mesh generation and fault cutting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../autoapi/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
