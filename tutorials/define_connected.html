@@ -247,7 +247,7 @@ Although it is possible to construct these triangular surfaces in multiple softw
 <p>For organisational reasons, it helps to have the different shapefiles in different directories</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">dir_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;depth_contours&quot;</span><span class="p">,</span> <span class="s2">&quot;traces&quot;</span><span class="p">,</span> <span class="s2">&quot;footprints&quot;</span><span class="p">]:</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">dir_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;depth_contours&quot;</span><span class="p">,</span> <span class="s2">&quot;traces&quot;</span><span class="p">,</span> <span class="s2">&quot;footprints&quot;</span><span class="p">,</span> <span class="s2">&quot;footprints_lines&quot;</span><span class="p">]:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dir_name</span><span class="p">):</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dir_name</span><span class="p">)</span>
 </pre></div>
@@ -271,6 +271,7 @@ Although it is possible to construct these triangular surfaces in multiple softw
 <span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">fault_data</span><span class="o">.</span><span class="n">curated_faults</span><span class="p">):</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">adjust_footprint</span><span class="p">()</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;footprints/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp&quot;</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">boundary</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;footprints_lines/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
