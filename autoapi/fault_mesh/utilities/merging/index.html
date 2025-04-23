@@ -21,7 +21,7 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="fault_mesh.utilities.smoothing" href="../smoothing/index.html" />
+    <link rel="next" title="fault_mesh.utilities.meshing" href="../meshing/index.html" />
     <link rel="prev" title="fault_mesh.utilities.graph" href="../graph/index.html" /> 
 </head>
 
@@ -73,6 +73,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../../index.html">fault_mesh</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../../faults/index.html">fault_mesh.faults</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../io/index.html">fault_mesh.io</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../index.html">fault_mesh.utilities</a></li>
 </ul>
 </li>
@@ -111,7 +112,172 @@
              
   <section id="module-fault_mesh.utilities.merging">
 <span id="fault-mesh-utilities-merging"></span><h1>fault_mesh.utilities.merging<a class="headerlink" href="#module-fault_mesh.utilities.merging" title="Link to this heading"></a></h1>
-<p>Functions for merging segments that are nearly adjacent.</p>
+<p>Functions for merging segments that are nearly adjacent.
+This module provides functions to align and merge line segments that are close to each other.
+It includes functions to densify line segments, align two nearly adjacent segments, merge two nearly adjacent segments, and merge multiple nearly adjacent segments. The merging process is based on the distance between the segments and can be customized with a tolerance parameter.
+The functions are designed to work with Shapely LineString objects and can be used in geospatial applications where line segments need to be combined or aligned.</p>
+<dl class="simple">
+<dt>Functions:</dt><dd><ul class="simple">
+<li><p>densify_line: Densifies a LineString by adding interpolated points along the line.</p></li>
+<li><p>align_two_nearly_adjacent_segments: Aligns two nearly adjacent line segments by moving their closest endpoints to a common midpoint.</p></li>
+<li><p>merge_two_nearly_adjacent_segments: Merges two nearly adjacent line segments into a single line.</p></li>
+<li><p>merge_multiple_nearly_adjacent_segments: Merges multiple line segments that are nearly adjacent to each other.</p></li>
+<li><p>sorted_merge: Merges a list of LineString segments into a single LineString by iteratively combining the nearest segments.</p></li>
+</ul>
+</dd>
+</dl>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.merging.densify_line" title="fault_mesh.utilities.merging.densify_line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">densify_line</span></code></a>(line[, density])</p></td>
+<td><p>Densify a LineString by adding interpolated points along the line.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.utilities.merging.align_two_nearly_adjacent_segments" title="fault_mesh.utilities.merging.align_two_nearly_adjacent_segments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">align_two_nearly_adjacent_segments</span></code></a>(segment_list[, ...])</p></td>
+<td><p>Aligns two nearly adjacent line segments by moving their closest endpoints to a common midpoint.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.merging.merge_two_nearly_adjacent_segments" title="fault_mesh.utilities.merging.merge_two_nearly_adjacent_segments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_two_nearly_adjacent_segments</span></code></a>(segment_list[, ...])</p></td>
+<td><p>Merge two nearly adjacent line segments into a single line.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.utilities.merging.merge_multiple_nearly_adjacent_segments" title="fault_mesh.utilities.merging.merge_multiple_nearly_adjacent_segments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_multiple_nearly_adjacent_segments</span></code></a>(segment_list)</p></td>
+<td><p>Merge multiple line segments that are nearly adjacent to each other.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.merging.sorted_merge" title="fault_mesh.utilities.merging.sorted_merge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sorted_merge</span></code></a>(seg_list[, tolerance, densify])</p></td>
+<td><p>Merges a list of LineString segments into a single LineString by iteratively combining the nearest segments.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.merging.densify_line">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.merging.</span></span><span class="sig-name descname"><span class="pre">densify_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">density</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.merging.densify_line" title="Link to this definition"></a></dt>
+<dd><p>Densify a LineString by adding interpolated points along the line.
+This function takes a LineString and adds points at regular intervals
+determined by the density parameter. The original points are preserved,
+and the result is a LineString with a higher density of points.
+:param line: The input LineString to be densified
+:type line: LineString
+:param density: The interval between interpolated points along the line, defaults to 1.3
+:type density: float, optional
+:return: A new LineString with additional interpolated points
+:rtype: LineString</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line</strong> (<em>shapely.geometry.LineString</em>)</p></li>
+<li><p><strong>density</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.merging.align_two_nearly_adjacent_segments">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.merging.</span></span><span class="sig-name descname"><span class="pre">align_two_nearly_adjacent_segments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">segment_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">densify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.merging.align_two_nearly_adjacent_segments" title="Link to this definition"></a></dt>
+<dd><p>Aligns two nearly adjacent line segments by moving their closest endpoints to a common midpoint.
+This function takes two LineString objects that are within a specified distance tolerance of each other
+and aligns them by replacing their closest endpoints with a common midpoint. The function can optionally
+densify the line segments before alignment to improve the precision of the closest-point determination.
+:param segment_list: List containing exactly two LineString objects that need to be aligned
+:param tolerance: Maximum distance between segments to be considered for alignment, defaults to 200.
+:param densify: Distance between points when densifying the lines, defaults to 1.e3.</p>
+<blockquote>
+<div><p>If None, lines are not densified.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing two aligned LineString objects</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple(LineString, LineString)</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>AssertionError</strong> – If segment_list doesn’t contain exactly 2 LineStrings</p></li>
+<li><p><strong>AssertionError</strong> – If the distance between the two LineStrings exceeds the tolerance</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>segment_list</strong> (<em>List</em><em>[</em><em>shapely.geometry.LineString</em><em>]</em>)</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em>)</p></li>
+<li><p><strong>densify</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.merging.merge_two_nearly_adjacent_segments">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.merging.</span></span><span class="sig-name descname"><span class="pre">merge_two_nearly_adjacent_segments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">segment_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">densify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.merging.merge_two_nearly_adjacent_segments" title="Link to this definition"></a></dt>
+<dd><p>Merge two nearly adjacent line segments into a single line.
+This function takes two line segments that are close to each other (within a specified tolerance)
+and merges them into a single continuous LineString. It first aligns the segments using
+the align_two_nearly_adjacent_segments function, and then merges them.
+:param segment_list: List containing two LineString objects to be merged
+:param tolerance: Maximum distance between endpoints for segments to be considered adjacent, defaults to 200.
+:param densify: Distance between points when densifying lines for better alignment, defaults to 1.e3
+:return: A single merged LineString created from the two input segments
+:rtype: LineString</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>segment_list</strong> (<em>List</em><em>[</em><em>shapely.geometry.LineString</em><em>]</em>)</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em>)</p></li>
+<li><p><strong>densify</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.merging.merge_multiple_nearly_adjacent_segments">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.merging.</span></span><span class="sig-name descname"><span class="pre">merge_multiple_nearly_adjacent_segments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">segment_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">densify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.merging.merge_multiple_nearly_adjacent_segments" title="Link to this definition"></a></dt>
+<dd><p>Merge multiple line segments that are nearly adjacent to each other.
+This function takes a list of LineString objects and merges them into a single LineString
+if they are within the specified tolerance distance of each other. If there are only
+two segments, it uses merge_two_nearly_adjacent_segments; otherwise, it uses sorted_merge.
+:param segment_list: List of LineString objects to be merged
+:param tolerance: Maximum distance between segments to be considered for merging, defaults to 200.0
+:param densify: Distance between points when densifying the lines, set to None to skip densification, defaults to 1.0e3
+:return: A merged LineString containing all input segments
+:rtype: LineString</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>segment_list</strong> (<em>List</em><em>[</em><em>shapely.geometry.LineString</em><em>]</em>)</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em>)</p></li>
+<li><p><strong>densify</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>None</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.merging.sorted_merge">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.merging.</span></span><span class="sig-name descname"><span class="pre">sorted_merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seg_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">densify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.merging.sorted_merge" title="Link to this definition"></a></dt>
+<dd><p>Merges a list of LineString segments into a single LineString by iteratively combining the nearest segments.
+This function starts with the southernmost segment (minimum y-coordinate of centroid) and
+repeatedly merges it with the nearest remaining segment until all segments are included.
+:param seg_list: List of LineString segments to be merged
+:param tolerance: Maximum distance allowed between segments for merging, defaults to 200.
+:param densify: Distance between points when densifying segments for better merging results, defaults to 1.e3
+:return: A single LineString representing the merged segments
+:rtype: LineString</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seg_list</strong> (<em>List</em><em>[</em><em>shapely.geometry.LineString</em><em>]</em>)</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em>)</p></li>
+<li><p><strong>densify</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -119,7 +285,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../graph/index.html" class="btn btn-neutral float-left" title="fault_mesh.utilities.graph" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../smoothing/index.html" class="btn btn-neutral float-right" title="fault_mesh.utilities.smoothing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../meshing/index.html" class="btn btn-neutral float-right" title="fault_mesh.utilities.meshing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fault_mesh.utilities.graph &mdash; cfm-leapfrog 1.0.0 documentation</title>
+  <title>fault_mesh.utilities.cutting &mdash; cfm-leapfrog 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
@@ -21,8 +21,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="fault_mesh.utilities.merging" href="../merging/index.html" />
-    <link rel="prev" title="fault_mesh.utilities.cutting" href="../cutting/index.html" /> 
+    <link rel="next" title="fault_mesh.utilities.graph" href="../graph/index.html" />
+    <link rel="prev" title="fault_mesh.utilities.cubit" href="../cubit/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -100,9 +100,9 @@
           <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">fault_mesh</a></li>
           <li class="breadcrumb-item"><a href="../index.html">fault_mesh.utilities</a></li>
-      <li class="breadcrumb-item active">fault_mesh.utilities.graph</li>
+      <li class="breadcrumb-item active">fault_mesh.utilities.cutting</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../../_sources/autoapi/fault_mesh/utilities/graph/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../../_sources/autoapi/fault_mesh/utilities/cutting/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -110,29 +110,26 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-fault_mesh.utilities.graph">
-<span id="fault-mesh-utilities-graph"></span><h1>fault_mesh.utilities.graph<a class="headerlink" href="#module-fault_mesh.utilities.graph" title="Link to this heading"></a></h1>
-<p>Submodule that uses networkx to find connections between segments in a fault map</p>
-<dl class="simple">
-<dt>Functions:</dt><dd><ul class="simple">
-<li><p>to_graph: Converts a list of node lists into a graph</p></li>
-<li><p>connected_nodes: Finds all connected components in a graph created from node lists</p></li>
-<li><p>suggest_combined_name: Suggests a combined name for a set of connected nodes based on their names</p></li>
-</ul>
-</dd>
-</dl>
+  <section id="module-fault_mesh.utilities.cutting">
+<span id="fault-mesh-utilities-cutting"></span><h1>fault_mesh.utilities.cutting<a class="headerlink" href="#module-fault_mesh.utilities.cutting" title="Link to this heading"></a></h1>
+<p>Utilities for cutting Shapely LineString objects at specific points or distances.</p>
+<p>This module provides functions to cut LineString objects at specified points or distances,
+resulting in multiple LineString segments.</p>
 <section id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.graph.to_graph" title="fault_mesh.utilities.graph.to_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_graph</span></code></a>(node_list)</p></td>
-<td><p>Answer from <a class="reference external" href="https://stackoverflow.com/a/4843408">https://stackoverflow.com/a/4843408</a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.cutting.cut" title="fault_mesh.utilities.cutting.cut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cut</span></code></a>(line, distance)</p></td>
+<td><p>Cuts a line in two at a distance from its starting point</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.utilities.graph.connected_nodes" title="fault_mesh.utilities.graph.connected_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">connected_nodes</span></code></a>(node_list)</p></td>
-<td><p>Find all connected components in a graph created from node lists.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.utilities.cutting.cut_line_at_point" title="fault_mesh.utilities.cutting.cut_line_at_point"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cut_line_at_point</span></code></a>(line, point)</p></td>
+<td><p>Cuts a line in two at a specified point</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.graph.suggest_combined_name" title="fault_mesh.utilities.graph.suggest_combined_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">suggest_combined_name</span></code></a>(connected_node_set)</p></td>
-<td><p>Suggest a combined name for a set of connected nodes.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.cutting.cut_line_at_multiple_points" title="fault_mesh.utilities.cutting.cut_line_at_multiple_points"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cut_line_at_multiple_points</span></code></a>(line, points)</p></td>
+<td><p>Cuts a line at multiple points and returns all resulting segments.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.utilities.cutting.cut_line_between_two_points" title="fault_mesh.utilities.cutting.cut_line_between_two_points"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cut_line_between_two_points</span></code></a>(line, points)</p></td>
+<td><p>Cuts a line between two points and returns the segment between them.</p></td>
 </tr>
 </tbody>
 </table>
@@ -140,50 +137,81 @@
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="fault_mesh.utilities.graph.to_graph">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.graph.</span></span><span class="sig-name descname"><span class="pre">to_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.graph.to_graph" title="Link to this definition"></a></dt>
-<dd><p>Answer from <a class="reference external" href="https://stackoverflow.com/a/4843408">https://stackoverflow.com/a/4843408</a>
-:param node_list:
-:return:</p>
+<dt class="sig sig-object py" id="fault_mesh.utilities.cutting.cut">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.cutting.</span></span><span class="sig-name descname"><span class="pre">cut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.cutting.cut" title="Link to this definition"></a></dt>
+<dd><p>Cuts a line in two at a distance from its starting point</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>node_list</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line</strong> (<em>LineString</em>) – The line to cut</p></li>
+<li><p><strong>distance</strong> (<em>float</em>) – The distance along the line at which to cut</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Two LineString objects representing the portions of the line before and after the cut</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[LineString, LineString]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="fault_mesh.utilities.graph.connected_nodes">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.graph.</span></span><span class="sig-name descname"><span class="pre">connected_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.graph.connected_nodes" title="Link to this definition"></a></dt>
-<dd><p>Find all connected components in a graph created from node lists.</p>
+<dt class="sig sig-object py" id="fault_mesh.utilities.cutting.cut_line_at_point">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.cutting.</span></span><span class="sig-name descname"><span class="pre">cut_line_at_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.cutting.cut_line_at_point" title="Link to this definition"></a></dt>
+<dd><p>Cuts a line in two at a specified point</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>node_list</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Lists of nodes where each list represents a path or chain of connected nodes</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line</strong> (<em>LineString</em>) – The line to cut</p></li>
+<li><p><strong>point</strong> (<em>Point</em>) – The point at which to cut the line</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of sets, where each set contains nodes that are connected to each other</p>
+<dd class="field-even"><p>Two LineString objects representing the portions of the line before and after the cut</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list[set]</p>
+<dd class="field-odd"><p>tuple[LineString, LineString]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="fault_mesh.utilities.graph.suggest_combined_name">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.graph.</span></span><span class="sig-name descname"><span class="pre">suggest_combined_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connected_node_set</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.graph.suggest_combined_name" title="Link to this definition"></a></dt>
-<dd><p>Suggest a combined name for a set of connected nodes.</p>
-<p>This function analyzes a set of connected node names and attempts to find
-a meaningful combined name based on common elements or patterns in the names.</p>
+<dt class="sig sig-object py" id="fault_mesh.utilities.cutting.cut_line_at_multiple_points">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.cutting.</span></span><span class="sig-name descname"><span class="pre">cut_line_at_multiple_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.cutting.cut_line_at_multiple_points" title="Link to this definition"></a></dt>
+<dd><p>Cuts a line at multiple points and returns all resulting segments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>connected_node_set</strong> (<em>list</em>) – A set of node names that are connected in a graph</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line</strong> (<em>LineString</em>) – The line to cut</p></li>
+<li><p><strong>points</strong> (<em>List</em><em>[</em><em>Point</em><em>]</em>) – List of points at which to cut the line</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A suggested name for the combined nodes</p>
+<dd class="field-even"><p>List of LineString objects representing the segments of the cut line</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p>List[LineString]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.cutting.cut_line_between_two_points">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.cutting.</span></span><span class="sig-name descname"><span class="pre">cut_line_between_two_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.cutting.cut_line_between_two_points" title="Link to this definition"></a></dt>
+<dd><p>Cuts a line between two points and returns the segment between them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line</strong> (<em>LineString</em>) – The line to cut</p></li>
+<li><p><strong>points</strong> (<em>List</em><em>[</em><em>Point</em><em>]</em>) – List of two points at which to cut the line</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>LineString object representing the segment between the two points</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>LineString</p>
 </dd>
 </dl>
 </dd></dl>
@@ -195,8 +223,8 @@ a meaningful combined name based on common elements or patterns in the names.</p
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../cutting/index.html" class="btn btn-neutral float-left" title="fault_mesh.utilities.cutting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../merging/index.html" class="btn btn-neutral float-right" title="fault_mesh.utilities.merging" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../cubit/index.html" class="btn btn-neutral float-left" title="fault_mesh.utilities.cubit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../graph/index.html" class="btn btn-neutral float-right" title="fault_mesh.utilities.graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

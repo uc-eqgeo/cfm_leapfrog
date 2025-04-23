@@ -21,7 +21,7 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="fault_mesh.utilities.graph" href="../graph/index.html" />
+    <link rel="next" title="fault_mesh.utilities.cutting" href="../cutting/index.html" />
     <link rel="prev" title="fault_mesh.utilities" href="../index.html" /> 
 </head>
 
@@ -73,6 +73,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../../index.html">fault_mesh</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../../faults/index.html">fault_mesh.faults</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../io/index.html">fault_mesh.io</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../index.html">fault_mesh.utilities</a></li>
 </ul>
 </li>
@@ -111,7 +112,64 @@
              
   <section id="module-fault_mesh.utilities.cubit">
 <span id="fault-mesh-utilities-cubit"></span><h1>fault_mesh.utilities.cubit<a class="headerlink" href="#module-fault_mesh.utilities.cubit" title="Link to this heading"></a></h1>
-<p>Functions to make journal files for remeshing using cubit.</p>
+<p>Functions to make journal files for remeshing using cubit. A lot of these could be replaced using</p>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.cubit.make_journal_file_commands" title="fault_mesh.utilities.cubit.make_journal_file_commands"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_journal_file_commands</span></code></a>(line, outfile, outmesh[, ...])</p></td>
+<td><p>Make a journal file for cubit to create a mesh from a line.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.utilities.cubit.make_journal_file_polygon" title="fault_mesh.utilities.cubit.make_journal_file_polygon"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_journal_file_polygon</span></code></a>(polygon, outjou, outmesh[, ...])</p></td>
+<td><p>Make a journal file for cubit to create a mesh from a polygon.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.cubit.make_journal_file_commands">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.cubit.</span></span><span class="sig-name descname"><span class="pre">make_journal_file_commands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outmesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.cubit.make_journal_file_commands" title="Link to this definition"></a></dt>
+<dd><p>Make a journal file for cubit to create a mesh from a line.
+:param line: The line to mesh
+:param outfile: The name of the journal file to create
+:param outmesh: The name of the mesh file to create
+:param top_z: The z coordinate of the top of the mesh
+:param depth: The depth of the mesh
+:return: None</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line</strong> (<em>shapely.geometry.LineString</em>)</p></li>
+<li><p><strong>outmesh</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.cubit.make_journal_file_polygon">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.cubit.</span></span><span class="sig-name descname"><span class="pre">make_journal_file_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outjou</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outmesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.cubit.make_journal_file_polygon" title="Link to this definition"></a></dt>
+<dd><p>Make a journal file for cubit to create a mesh from a polygon.
+:param polygon: The polygon to mesh
+:param outjou: The name of the journal file to create
+:param outmesh: The name of the mesh file to create
+:param top_z: The z coordinate of the top of the mesh
+:param depth: The depth of the mesh
+:return: None</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>polygon</strong> (<em>shapely.geometry.Polygon</em>)</p></li>
+<li><p><strong>outjou</strong> (<em>str</em>)</p></li>
+<li><p><strong>outmesh</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -119,7 +177,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../index.html" class="btn btn-neutral float-left" title="fault_mesh.utilities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../graph/index.html" class="btn btn-neutral float-right" title="fault_mesh.utilities.graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../cutting/index.html" class="btn btn-neutral float-right" title="fault_mesh.utilities.cutting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

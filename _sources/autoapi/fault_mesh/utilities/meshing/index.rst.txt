@@ -1,0 +1,83 @@
+fault_mesh.utilities.meshing
+============================
+
+.. py:module:: fault_mesh.utilities.meshing
+
+.. autoapi-nested-parse::
+
+   Utilities for meshing from fault contours.
+   This module contains functions for triangulating contours and generating meshes from them.
+   Functions:
+       - get_strike_dip_from_normal: Calculate strike and dip from a normal vector
+       - fit_plane_to_points: Fit a plane to a set of 3D points using SVD
+       - triangulate_contours: Triangulate contours and write to a file
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   fault_mesh.utilities.meshing.get_strike_dip_from_normal
+   fault_mesh.utilities.meshing.fit_plane_to_points
+   fault_mesh.utilities.meshing.triangulate_contours
+
+
+Module Contents
+---------------
+
+.. py:function:: get_strike_dip_from_normal(normal_vector)
+
+   :param normal_vector: The normal vector to the plane [nx, ny, nz]
+   :type normal_vector: numpy.ndarray
+   :return: A tuple containing (strike, dip) in degrees. Strike is measured 0-360 degrees clockwise from North.
+            Dip is measured 0-90 degrees from horizontal.
+   :rtype: tuple(float, float)
+   :note: Uses the right-hand rule convention for strike/dip measurements
+   :example:
+       >>> normal = np.array([0, 0, 1])
+       >>> strike, dip = get_strike_dip_from_normal(normal)
+       >>> print(strike, dip)
+       0.0, 0.0
+
+
+.. py:function:: fit_plane_to_points(points, eps = 1e-05)
+
+   Find best-fit plane through a set of points using SVD.
+
+   This function fits a plane to a set of 3D points by computing the singular value decomposition (SVD)
+   of the moment matrix. The plane passes through the centroid of all points, which improves stability.
+
+   :param points: Array of 3D points with shape (n, 3) where n is the number of points.
+   :type points: numpy.ndarray
+   :param eps: Threshold to zero out very small components of the normal vector, default is 1.0e-5.
+   :type eps: float
+
+   :return: A tuple containing (plane_normal, plane_origin)
+            plane_normal is the unit normal vector to the fitted plane (A, B, C)
+            plane_origin is the centroid of the input points, used as the plane origin
+   :rtype: tuple(numpy.ndarray, numpy.ndarray)
+
+   :note: The function uses SVD on a 3x3 covariance matrix rather than on the full point array,
+          which is more computationally efficient. The returned normal vector is normalized and
+          oriented so that the z-component is positive (when not zero).
+
+
+.. py:function:: triangulate_contours(contours, mesh_name, mesh_format='vtk', check_mesh = False, check_strike_dip = True)
+
+   Triangulate the contours and write to a file
+   :param contours:
+       The contours to triangulate
+   :param mesh_name:
+       The name of the mesh file to write to
+   :param mesh_format:
+       The format of the mesh file to write to
+   :param check_mesh:
+       Whether to check the mesh and plot it
+   :param check_strike_dip:
+       Whether to check the strike and dip of the plane
+   :return:
+       None
+
+

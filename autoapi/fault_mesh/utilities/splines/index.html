@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fault_mesh.utilities.smoothing &mdash; cfm-leapfrog 1.0.0 documentation</title>
+  <title>fault_mesh.utilities.splines &mdash; cfm-leapfrog 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
@@ -21,8 +21,7 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="fault_mesh.utilities.splines" href="../splines/index.html" />
-    <link rel="prev" title="fault_mesh.utilities.meshing" href="../meshing/index.html" /> 
+    <link rel="prev" title="fault_mesh.utilities.smoothing" href="../smoothing/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -100,9 +99,9 @@
           <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
           <li class="breadcrumb-item"><a href="../../index.html">fault_mesh</a></li>
           <li class="breadcrumb-item"><a href="../index.html">fault_mesh.utilities</a></li>
-      <li class="breadcrumb-item active">fault_mesh.utilities.smoothing</li>
+      <li class="breadcrumb-item active">fault_mesh.utilities.splines</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../../../_sources/autoapi/fault_mesh/utilities/smoothing/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../../../_sources/autoapi/fault_mesh/utilities/splines/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -110,15 +109,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-fault_mesh.utilities.smoothing">
-<span id="fault-mesh-utilities-smoothing"></span><h1>fault_mesh.utilities.smoothing<a class="headerlink" href="#module-fault_mesh.utilities.smoothing" title="Link to this heading"></a></h1>
-<p>Currently not used, might be better to use splines now those are integrated</p>
+  <section id="module-fault_mesh.utilities.splines">
+<span id="fault-mesh-utilities-splines"></span><h1>fault_mesh.utilities.splines<a class="headerlink" href="#module-fault_mesh.utilities.splines" title="Link to this heading"></a></h1>
+<p>Utilities for working with splines and contour interpolation.
+This module provides functions for fitting splines to 2D contour data,
+creating linearly spaced arrays, and smoothing contour geometries.
+It is particularly useful for processing geological fault data and
+other linear features that require smoothing or regularization.
+Functions:</p>
+<blockquote>
+<div><p>fit_2d_line: Calculate dip angle by fitting a line to 2D data points
+linspace_with_spacing: Create evenly spaced points with a specified spacing
+spline_fit_contours: Fit smooth splines to contour geometries in a GeoDataFrame</p>
+</div></blockquote>
 <section id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.smoothing.chaikins_corner_cutting" title="fault_mesh.utilities.smoothing.chaikins_corner_cutting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chaikins_corner_cutting</span></code></a>(coords[, refinements])</p></td>
-<td><p>Chaikin's corner cutting algorithm for smoothing a line.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.splines.fit_2d_line" title="fault_mesh.utilities.splines.fit_2d_line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_2d_line</span></code></a>(x, y)</p></td>
+<td><p>Fit a 2D line to a set of points</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.utilities.splines.linspace_with_spacing" title="fault_mesh.utilities.splines.linspace_with_spacing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">linspace_with_spacing</span></code></a>(start, stop, spacing)</p></td>
+<td><p>Create a linearly spaced array with a given spacing</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.splines.spline_fit_contours" title="fault_mesh.utilities.splines.spline_fit_contours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spline_fit_contours</span></code></a>(contours[, point_spacing, ...])</p></td>
+<td><p>Fits a smooth spline to each contour in a GeoDataFrame.</p></td>
 </tr>
 </tbody>
 </table>
@@ -126,9 +141,68 @@
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="fault_mesh.utilities.smoothing.chaikins_corner_cutting">
-<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.smoothing.</span></span><span class="sig-name descname"><span class="pre">chaikins_corner_cutting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refinements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.smoothing.chaikins_corner_cutting" title="Link to this definition"></a></dt>
-<dd><p>Chaikin’s corner cutting algorithm for smoothing a line.</p>
+<dt class="sig sig-object py" id="fault_mesh.utilities.splines.fit_2d_line">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.splines.</span></span><span class="sig-name descname"><span class="pre">fit_2d_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.splines.fit_2d_line" title="Link to this definition"></a></dt>
+<dd><p>Fit a 2D line to a set of points
+:param x:
+:param y:
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>numpy.ndarray</em>)</p></li>
+<li><p><strong>y</strong> (<em>numpy.ndarray</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.splines.linspace_with_spacing">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.splines.</span></span><span class="sig-name descname"><span class="pre">linspace_with_spacing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.splines.linspace_with_spacing" title="Link to this definition"></a></dt>
+<dd><p>Create a linearly spaced array with a given spacing
+:param start:
+:param stop:
+:param spacing:
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<em>float</em>)</p></li>
+<li><p><strong>stop</strong> (<em>float</em>)</p></li>
+<li><p><strong>spacing</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.splines.spline_fit_contours">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.splines.</span></span><span class="sig-name descname"><span class="pre">spline_fit_contours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contours</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.splines.spline_fit_contours" title="Link to this definition"></a></dt>
+<dd><p>Fits a smooth spline to each contour in a GeoDataFrame.
+This function takes contour geometries, fits a spline through them, and returns a new set of smoothed contours
+with points at a regular spacing. The process involves segmenting each contour, transforming it to align with
+its principal direction (strike), fitting a spline in this transformed space, and then transforming back to
+the original coordinate system.
+:param contours: GeoDataFrame containing LineString geometries representing the contours to be smoothed.
+:param point_spacing: Distance between points when segmenting the original contour for spline fitting, defaults to 100.
+:param output_spacing: Distance between points in the resulting smoothed contour, defaults to 1000.
+:return: GeoDataFrame containing the smoothed contours as LineString geometries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contours</strong> (<em>geopandas.GeoDataFrame</em>)</p></li>
+<li><p><strong>point_spacing</strong> (<em>float</em>)</p></li>
+<li><p><strong>output_spacing</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>geopandas.GeoDataFrame</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -138,8 +212,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../meshing/index.html" class="btn btn-neutral float-left" title="fault_mesh.utilities.meshing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../splines/index.html" class="btn btn-neutral float-right" title="fault_mesh.utilities.splines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../smoothing/index.html" class="btn btn-neutral float-left" title="fault_mesh.utilities.smoothing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
