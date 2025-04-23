@@ -6,19 +6,17 @@ import meshio
 
 def get_strike_dip_from_normal(normal_vector):
     """
-    Calculate strike and dip from a plane normal vector using the right-hand rule.
-    
-    Parameters:
-    -----------
-    normal_vector : numpy.ndarray
-        The normal vector to the plane [nx, ny, nz]
-        
-    Returns:
-    --------
-    tuple
-        (strike, dip) in degrees
-        Strike: 0-360 degrees clockwise from North
-        Dip: 0-90 degrees from horizontal
+    :param normal_vector: The normal vector to the plane [nx, ny, nz]
+    :type normal_vector: numpy.ndarray
+    :return: A tuple containing (strike, dip) in degrees. Strike is measured 0-360 degrees clockwise from North. 
+             Dip is measured 0-90 degrees from horizontal.
+    :rtype: tuple(float, float)
+    :note: Uses the right-hand rule convention for strike/dip measurements
+    :example:
+        >>> normal = np.array([0, 0, 1])
+        >>> strike, dip = get_strike_dip_from_normal(normal) 
+        >>> print(strike, dip)
+        0.0, 0.0
     """
     nx, ny, nz = normal_vector
     
@@ -42,13 +40,24 @@ def get_strike_dip_from_normal(normal_vector):
 
 def fit_plane_to_points(points: np.ndarray, eps: float=1.0e-5):
     """
-    Find best-fit plane through a set of points, after first insuring the plane goes through
-    the mean (centroid) of all the points in the array. This is probably better than my
-    initial method, since the SVD is only over a 3x3 array (rather than the num_pointsxnum_points
-    array).
-    Returned values are:
-        plane_normal:  Normal vector to plane (A, B, C)
-        plane_origin:  Point on plane that may be considered as the plane origin
+    Find best-fit plane through a set of points using SVD.
+    
+    This function fits a plane to a set of 3D points by computing the singular value decomposition (SVD)
+    of the moment matrix. The plane passes through the centroid of all points, which improves stability.
+    
+    :param points: Array of 3D points with shape (n, 3) where n is the number of points.
+    :type points: numpy.ndarray
+    :param eps: Threshold to zero out very small components of the normal vector, default is 1.0e-5.
+    :type eps: float
+    
+    :return: A tuple containing (plane_normal, plane_origin)
+             plane_normal is the unit normal vector to the fitted plane (A, B, C)
+             plane_origin is the centroid of the input points, used as the plane origin
+    :rtype: tuple(numpy.ndarray, numpy.ndarray)
+    
+    :note: The function uses SVD on a 3x3 covariance matrix rather than on the full point array,
+           which is more computationally efficient. The returned normal vector is normalized and
+           oriented so that the z-component is positive (when not zero).
     """
     # Compute plane origin and subract it from the points array.
     plane_origin = np.mean(points, axis=0)
