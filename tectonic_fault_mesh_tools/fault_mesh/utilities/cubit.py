@@ -1,5 +1,5 @@
 """
-Functions to make journal files for remeshing using cubit.
+Functions to make journal files for remeshing using cubit. A lot of these could be replaced using 
 """
 import os
 import geopandas as gpd
@@ -7,6 +7,16 @@ from shapely.geometry import LineString, Polygon
 
 
 def make_journal_file_commands(line: LineString, outfile, outmesh: str, top_z=0., depth=2.e4):
+    """
+    Make a journal file for cubit to create a mesh from a line.
+    :param line: The line to mesh
+    :param outfile: The name of the journal file to create
+    :param outmesh: The name of the mesh file to create
+    :param top_z: The z coordinate of the top of the mesh
+    :param depth: The depth of the mesh
+    :return: None
+    """
+
     out_str = ""
     for coord in list(line.coords):
         x, y = coord[:2]
@@ -29,6 +39,15 @@ def make_journal_file_commands(line: LineString, outfile, outmesh: str, top_z=0.
 
 
 def make_journal_file_polygon(polygon: Polygon, outjou: str, outmesh: str, top_z=0., depth=2.e4):
+    """
+    Make a journal file for cubit to create a mesh from a polygon.
+    :param polygon: The polygon to mesh
+    :param outjou: The name of the journal file to create
+    :param outmesh: The name of the mesh file to create
+    :param top_z: The z coordinate of the top of the mesh
+    :param depth: The depth of the mesh
+    :return: None
+    """
     return make_journal_file_commands(polygon.exterior, outjou, outmesh, top_z, depth)
 
 

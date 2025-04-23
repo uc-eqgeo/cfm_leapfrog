@@ -17,13 +17,35 @@ from fault_mesh.utilities.cutting import cut_line_at_multiple_points, cut_line_a
 
 
 class ConnectedFaultSystem:
-    """
-    Class for a connected fault system
+    """_summary_
     """
     def __init__(self, overall_name: str, cfm_faults, segment_names: list = None,
                  search_patterns: Union[str, list] = None,
                  excluded_names: Union[str, list] = None, tolerance: float = 100.,
                  smooth_trace_refinements: int = 5, trimming_gradient: float = 1.):
+        """A class representing a connected fault system composed of multiple fault segments.
+        
+        This class handles the integration of individual fault segments into a connected system,
+        including segment alignment, boundary identification, and trace smoothing.
+
+        :param overall_name: Name identifier for the connected fault system
+        :type overall_name: str
+        :param cfm_faults: Collection of fault objects to extract segments from
+        :type cfm_faults: FaultCollection
+        :param segment_names: Explicit list of segment names to include, defaults to None
+        :type segment_names: list, optional
+        :param search_patterns: Pattern(s) to match segment names against, defaults to None
+        :type search_patterns: Union[str, list], optional
+        :param excluded_names: Segment names to explicitly exclude, defaults to None
+        :type excluded_names: Union[str, list], optional
+        :param tolerance: Maximum distance between segments to be considered connected in meters, defaults to 100.
+        :type tolerance: float, optional
+        :param smooth_trace_refinements: Number of iterations for trace smoothing algorithm, defaults to 5
+        :type smooth_trace_refinements: int, optional
+        :param trimming_gradient: Gradient used for trimming fault segments, defaults to 1.
+        :type trimming_gradient: float, optional
+        :raises ValueError: If fault segments are further apart than the specified tolerance
+        """
         self.name = overall_name
         self._overall_trace = None
         self._contours = None
@@ -35,56 +57,71 @@ class ConnectedFaultSystem:
 
         assert any([segment_names is not None, search_patterns is not None])
 
+        # Handle segment_names parameter
         if segment_names is not None:
             assert isinstance(segment_names, list)
-            assert len(segment_names)
+            assert len(segment_names)  # Ensure the list is not empty
             segment_names_list = segment_names
         else:
             segment_names_list = []
 
+        # Handle search_patterns parameter
         if search_patterns is not None:
             if isinstance(search_patterns, str):
-                search_pattern_list = [search_patterns]
+                search_pattern_list = [search_patterns]  # Convert single string pattern to list
             else:
                 assert isinstance(search_patterns, list)
-                assert len(search_patterns)
+                assert len(search_patterns)  # Ensure the list is not empty
                 search_pattern_list = search_patterns
 
+        # Handle excluded_names parameter
         if isinstance(excluded_names, str):
-            excluded_list = [excluded_names]
+            excluded_list = [excluded_names]  # Convert single string exclusion to list
         elif excluded_names is None:
-            excluded_list = []
+            excluded_list = []  # Initialize empty list if no exclusions
         else:
             assert isinstance(excluded_names, list)
-            assert len(excluded_names)
+            assert len(excluded_names)  # Ensure the list is not empty
             excluded_list = excluded_names
 
+        # Verify no overlap between segment_names and excluded_names
         if len(excluded_list):
             assert not any([x in segment_names_list for x in excluded_list])
 
+        # Collect fault segments based on search patterns and segment names
         for fault in cfm_faults.faults:
             name = fault.name
             if search_patterns is not None:
+            # Check if fault name matches any of the search patterns
                 if any([fnmatch.fnmatch(name, pattern) for pattern in search_pattern_list]):
+                    # Ensure fault name is not in the exclusion list
                     if not any([fnmatch.fnmatch(name, pattern) for pattern in excluded_list]):
                         segments.append(fault)
 
             if segment_names is not None:
+            # Add fault if its name matches any in the segment_names list
                 if any([fnmatch.fnmatch(name, pattern) for pattern in segment_names_list]):
                     segments.append(fault)
 
+        # Verify segment connectivity and store neighbor information
         for segment in segments:
+            # Create a MultiLineString of all other segments' traces
             other_segments = MultiLineString([other_seg.nztm_trace for other_seg in segments if other_seg != segment])
             closest_dist = segment.nztm_trace.distance(other_segments)
+            
+            # Check if segment is within tolerance distance of at least one other segment
             if closest_dist > tolerance:
                 raise ValueError(f"Fault traces >{tolerance} m apart: {segment.name}")
             else:
+            # Identify neighboring segments within tolerance distance
                 neighbour_list = []
                 for other_seg in segments:
                     if other_seg != segment:
                         if segment.nztm_trace.distance(other_seg.nztm_trace) < tolerance:
                             neighbour_list.append(other_seg)
                 segment.neighbouring_segments = neighbour_list
+                
+            # Set reference back to this connected fault system
             segment.parent_connected_fault = self
 
         # Order segments

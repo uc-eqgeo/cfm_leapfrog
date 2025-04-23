@@ -1,3 +1,11 @@
+"""
+Utilities for meshing from fault contours.
+This module contains functions for triangulating contours and generating meshes from them.
+Functions:
+    - get_strike_dip_from_normal: Calculate strike and dip from a normal vector
+    - fit_plane_to_points: Fit a plane to a set of 3D points using SVD
+    - triangulate_contours: Triangulate contours and write to a file
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import triangle as tr

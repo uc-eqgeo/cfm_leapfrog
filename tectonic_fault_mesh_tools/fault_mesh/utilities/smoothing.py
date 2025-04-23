@@ -1,7 +1,5 @@
 """
-A convenience script for running many combinations of chunk_sizes and numbers_of_cores
-for a small sub-set of a catchment to help with the selection of an appropiate
-chink_size and number_of_cores before processing an entire catchment.
+Currently not used, might be better to use splines now those are integrated
 """
 import numpy as np
 from typing import List

@@ -1,3 +1,13 @@
+"""Utilities for working with splines and contour interpolation.
+This module provides functions for fitting splines to 2D contour data,
+creating linearly spaced arrays, and smoothing contour geometries.
+It is particularly useful for processing geological fault data and
+other linear features that require smoothing or regularization.
+Functions:
+    fit_2d_line: Calculate dip angle by fitting a line to 2D data points
+    linspace_with_spacing: Create evenly spaced points with a specified spacing
+    spline_fit_contours: Fit smooth splines to contour geometries in a GeoDataFrame
+"""
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import LineString
@@ -48,11 +58,15 @@ def linspace_with_spacing(start: float, stop: float, spacing: float) -> np.ndarr
     return np.linspace(start, stop, num_points, endpoint=True)
 
 def spline_fit_contours(contours: gpd.GeoDataFrame, point_spacing: float = 100., output_spacing: float = 1000.) -> gpd.GeoDataFrame:
-    """
-    Fit a spline to the contours
-    :param contours:
-    :param point_spacing:
-    :return:
+    """Fits a smooth spline to each contour in a GeoDataFrame.
+    This function takes contour geometries, fits a spline through them, and returns a new set of smoothed contours
+    with points at a regular spacing. The process involves segmenting each contour, transforming it to align with 
+    its principal direction (strike), fitting a spline in this transformed space, and then transforming back to 
+    the original coordinate system.
+    :param contours: GeoDataFrame containing LineString geometries representing the contours to be smoothed.
+    :param point_spacing: Distance between points when segmenting the original contour for spline fitting, defaults to 100.
+    :param output_spacing: Distance between points in the resulting smoothed contour, defaults to 1000.
+    :return: GeoDataFrame containing the smoothed contours as LineString geometries.
     """
     # Create a list to store interpolated contours
     interpolated_contours = []
