@@ -30,10 +30,13 @@ def get_strike_dip_from_normal(normal_vector):
     if nz == 0:  # Vertical plane
         strike = np.degrees(np.arctan2(-nx, ny))
     else:
-        strike = np.degrees(np.arctan2(nx, ny)) + 90
+        strike = np.degrees(np.arctan2(nx, ny)) - 90
     
     # Adjust strike to 0-360 range
-    strike = (strike + 360) % 360
+    while strike < 0:
+        strike += 360
+    while strike >= 360:
+        strike -= 360
     
     return strike, dip
 
