@@ -130,6 +130,40 @@ def reverse_line(line: LineString):
         new_line = LineString([[xi, yi] for xi, yi in zip(x_back, y_back)])
     return new_line
 
+def calculate_strike_direction(x: np.ndarray, y: np.ndarray):
+    """
+    Calculate the strike of line in 2D, given x and y coordinates.
+    :param x: x coordinates of line
+    :param y: y coordinates of line
+    :return: strike direction in degrees
+    """
+    # Get coordinates
+    x, y = np.array(x), np.array(y)
+    # Calculate gradient of line in 2D
+    px = np.polyfit(x, y, 1, full=True)
+    gradient_x = px[0][0]
+
+    if len(px[1]):
+        res_x = px[1][0]
+    else:
+        res_x = 0
+
+    py = np.polyfit(y, x, 1, full=True)
+    gradient_y = py[0][0]
+    if len(py[1]):
+        res_y = py[1][0]
+    else:
+        res_y = 0
+
+    if res_x <= res_y:
+        # Gradient to bearing
+        bearing = 180 - np.degrees(np.arctan2(gradient_x, 1))
+    else:
+        bearing = 180 - np.degrees(np.arctan2(1/gradient_y, 1))
+
+    strike = normalize_bearing(bearing - 90.)
+    return strike
+
 
 def calculate_dip_direction(line: LineString):
     """
@@ -162,7 +196,6 @@ def calculate_dip_direction(line: LineString):
         bearing = 180 - np.degrees(np.arctan2(gradient_x, 1))
     else:
         bearing = 180 - np.degrees(np.arctan2(1/gradient_y, 1))
-    bearing_vector = np.array([np.sin(np.radians(bearing)), np.cos(np.radians(bearing))])
 
     strike = normalize_bearing(bearing - 90.)
     strike_vector = np.array([np.sin(np.radians(strike)), np.cos(np.radians(strike))])
@@ -747,6 +780,35 @@ class GenericFault:
                 print("{}: sr_max ({:.2f}) is lower than {} ({:.2f})".format(self.name, slip_rate, key, sr_value))
         self._sr_max = slip_rate
 
+    @rake_best.setter
+    def rake_best(self, rake: Union[float, int]):
+        assert isinstance(rake, (float, int))
+        if self.rake_min is not None:
+            if rake < self.rake_min:
+                print("{}: rake_best ({}) lower than rake_min ({})".format(self.name, rake, self.rake_min))
+        if self.rake_max is not None:
+            if rake > self.rake_max:
+                print("{}: rake_best ({}) greater than rake_max ({})".format(self.name, rake, self.rake_max))
+        self._rake_best = rake
+
+    @rake_max.setter
+    def rake_max(self, rake: Union[float, int]):
+        assert isinstance(rake, (float, int))
+        for key, rake_value in zip(["rake_min", "rake_best"], [self.rake_min, self.rake_best]):
+            if rake_value is not None and bearing_leq(rake, rake_value):
+                print("{}: rake_max ({}) is lower than {} ({})".format(self.name, rake, key, rake_value))
+                self.logger.warning("rake_max is lower than rake min or rake best")
+        self._rake_max = rake
+    
+    @rake_min.setter
+    def rake_min(self, rake: Union[float, int]):
+        assert isinstance(rake, (float, int))
+        for key, rake_value in zip(["rake_max", "rake_best"], [self.rake_max, self.rake_best]):
+            if rake_value is not None and bearing_geq(rake, rake_value):
+                print("{}: rake_min ({}) is higher than {} ({})".format(self.name, rake, key, rake_value))
+                self.logger.warning("rake_min is higher than rake max or rake best")
+        self._rake_min = rake
+
     @staticmethod
     def validate_sr(slip_rate: Union[float, int]):
         assert isinstance(slip_rate, (float, int))
@@ -825,6 +887,12 @@ class GenericFault:
 
             if all([a in series.index for a in ["SR_min", "SR_max"]]):
                 fault.sr_min, fault.sr_max = series["SR_min"], series["SR_max"]
+
+        if "Rake_pref" in series.index:
+            fault.rake_best = series["Rake_pref"]
+
+            if all([a in series.index for a in ["Rake_min", "Rake_max"]]):
+                fault.rake_min, fault.rake_max = series["Rake_min"], series["Rake_max"]
 
         if "Depth_pref" in series.index:
             fault.depth_best = series["Depth_pref"]

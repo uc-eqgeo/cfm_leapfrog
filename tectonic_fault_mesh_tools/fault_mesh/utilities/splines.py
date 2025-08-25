@@ -11,7 +11,7 @@ Functions:
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import LineString
-from scipy.interpolate import make_interp_spline
+from scipy.interpolate import make_interp_spline, UnivariateSpline
 
 def fit_2d_line(x: np.ndarray, y: np.ndarray):
     """
@@ -76,7 +76,11 @@ def spline_fit_contours(contours: gpd.GeoDataFrame, point_spacing: float = 100.,
         # Segmentize the contour
         segmentized_contour = contour.segmentize(point_spacing)
         # Convert the segmentized contour to a numpy array
-        segmentized_contour = np.vstack([np.array(segment.coords) for segment in segmentized_contour.geoms])
+        try:
+            segmentized_contour = np.vstack([np.array(segment.coords) for segment in segmentized_contour.geoms])
+        except AttributeError:
+            # If the contour is not a MultiLineString, convert it directly
+            segmentized_contour = np.array(segmentized_contour.coords)
         # Find the overall strike of the contour
         strike = 90 - fit_2d_line(segmentized_contour[:, 0], segmentized_contour[:, 1])
         # Create a strike vector
@@ -95,6 +99,11 @@ def spline_fit_contours(contours: gpd.GeoDataFrame, point_spacing: float = 100.,
         rotated_contour = np.vstack([rotated_contour_x, rotated_contour_y]).T
         # sort the contour by the rotated x coordinate
         rotated_contour = rotated_contour[np.argsort(rotated_contour[:, 0])]
+
+        # Remove duplicate points before spline fitting
+        unique_mask = np.concatenate(([True], np.any(np.diff(rotated_contour, axis=0) != 0, axis=1)))
+        rotated_contour = rotated_contour[unique_mask]
+
         # Create a spline for the rotated contour
         spline = make_interp_spline(rotated_contour[:, 0], rotated_contour[:, 1], k=2)
         # Append the spline to the list
@@ -115,4 +124,40 @@ def spline_fit_contours(contours: gpd.GeoDataFrame, point_spacing: float = 100.,
     return interpolated_contours_gdf
 
 
+def fault_edge_spline(max_slip: float, distance_width: float, total_width: float, min_slip_fraction: float = 0., line_stop_fraction: float = 0.5, gradient_change: float = 1.2,
+                      spline_k: int = 3, spline_s: float = 0.0, resolution: float = 10.):
+    """
+    Create a spline that can be used to create a slip distribution along the edge of a fault.
+    @param max_slip:
+    @param distance_width:
+    @param min_slip_fraction:
+    @param line_stop_fraction:
+    @param gradient_change:
+    @param spline_k:
+    @param spline_s:
+    @param resolution:
+    @return:
+    """
+
+    x_points = np.hstack([np.arange(0., distance_width * line_stop_fraction + resolution, resolution),
+                            np.arange(distance_width, total_width + resolution, resolution)])
+
+    x_for_interp = np.array([0., distance_width * line_stop_fraction, distance_width, total_width])
+    y_for_interp = np.array([max_slip * min_slip_fraction, gradient_change *
+                             (max_slip * min_slip_fraction + line_stop_fraction * max_slip * (1 - min_slip_fraction)),
+                             max_slip, max_slip])
+
+    interpolated_y = np.interp(x_points, x_for_interp, y_for_interp)
+    out_spline = UnivariateSpline(x_points, interpolated_y, k=spline_k, s=spline_s)
+    return out_spline
+
+def fault_depth_spline(gradient_change_x: float, after_change_fract: float, resolution: float = 0.01,
+                       after_change_gradient: float = 1.2, spline_k: int = 3, spline_s: float = 0.0):
+    x_points = np.hstack([np.arange(0., gradient_change_x + resolution, resolution),
+                            np.arange(1 - (1. - gradient_change_x) * after_change_fract, 1. + resolution, resolution)])
+    x_for_interp = np.array([0., gradient_change_x, 1. - (1. - gradient_change_x) * after_change_fract, 1.])
+    y_for_interp = np.array([1., 1., after_change_gradient * after_change_fract, 0.])
+    interpolated_y = np.interp(x_points, x_for_interp, y_for_interp)
+    out_spline = UnivariateSpline(x_points, interpolated_y, k=spline_k, s=spline_s)
+    return out_spline
 

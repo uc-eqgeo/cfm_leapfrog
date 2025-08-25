@@ -5,15 +5,24 @@ from typing import Union, List
 import fnmatch
 from itertools import chain
 
+from build.lib.fault_mesh.utilities import smoothing
 import numpy as np
 from shapely.geometry import MultiLineString, LineString, Point, Polygon
 from shapely.ops import linemerge, unary_union
+from shapely import get_point
+from shapely.affinity import translate
 import geopandas as gpd
+import matplotlib.pyplot as plt
+import triangle as tr
+import meshio
+from scipy.interpolate import RBFInterpolator
 
-from fault_mesh.faults.generic import smallest_difference
+from fault_mesh.faults.generic import smallest_difference, calculate_dip_direction, reverse_bearing, dip_direction_ranges, reverse_line
 from fault_mesh.utilities.smoothing import smooth_trace
 from fault_mesh.utilities.merging import merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
 from fault_mesh.utilities.cutting import cut_line_at_multiple_points, cut_line_at_point
+from fault_mesh.utilities.meshing import get_strike_dip_from_normal, fit_plane_to_points, weighted_circular_mean, most_common_or_first
+from fault_mesh.utilities.splines import spline_fit_contours
 
 
 class ConnectedFaultSystem:
@@ -53,6 +62,7 @@ class ConnectedFaultSystem:
         self._segment_distance_tolerance = tolerance
         self._trimming_gradient = trimming_gradient
         self._smooth_trace_refinements = smooth_trace_refinements
+        self._dip_dir = None
         segments = []
 
         assert any([segment_names is not None, search_patterns is not None])
@@ -207,6 +217,10 @@ class ConnectedFaultSystem:
     @property
     def smoothed_trace(self):
         return self.smoothed_overall_trace
+    
+    @property
+    def dip_dir(self):
+        return self._dip_dir
 
     def depth_contour(self, depth: float, smoothing: bool = True, damping: int = None, km: bool = False):
         contours = [segment.depth_contour(depth, smoothing) for segment in self.segments]
@@ -224,6 +238,134 @@ class ConnectedFaultSystem:
         else:
             self.contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours)
 
+    def generate_simple_contours(self, depths: Union[np.ndarray, List[float]], km: bool = False):
+        contours = [self.depth_contour(depth) for depth in depths]
+        seg_lengths = [seg.nztm_trace.length for seg in self.segments]
+        seg_dips = [seg.dip_best for seg in self.segments]
+        average_dip = weighted_circular_mean(seg_dips, seg_lengths)
+        self.calculate_overall_dip_direction()
+
+        if self.dip_dir is None:
+            # Assume vertical
+            dd_vec = np.array([0., 0., -1])
+        else:
+            z = np.sin(np.radians(average_dip))
+            x, y = np.cos(np.radians(average_dip)) * np.array([np.sin(np.radians(self.dip_dir)),
+                                                                np.cos(np.radians(self.dip_dir))])
+            dd_vec = np.array([x, y, -z])
+
+        contours = []
+        for depth in depths:
+            if depth <= 0:
+                shift = depth / dd_vec[-1]
+            else:
+                shift = (-1 * depth) / dd_vec[-1]
+            if km:
+                shift *= 1000.
+
+            xo, yo, zo = shift * dd_vec
+
+            shifted_contour = translate(self.nztm_trace, xo, yo, zo)
+            contours.append(shifted_contour)
+
+        if max(depths) > 0:
+            depths *= -1
+        if self.parent.epsg is not None:
+            simple_contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours, crs=self.parent.epsg)
+        else:
+            simple_contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours)
+
+        return simple_contours
+
+    def calculate_overall_dip_direction(self, tolerance: float = 10.):
+        """
+        Compares dip direction string (e.g. NW) with
+        :return:
+        """
+        dip_dir_strings = [seg.dip_dir_str for seg in self.segments if seg.dip_dir_str is not None]
+        dd_str = most_common_or_first(dip_dir_strings)
+        if any([a is None for a in [dd_str, self.nztm_trace]]):
+            print("Insufficient information to validate dip direction")
+            if self.nztm_trace is not None and dd_str is None:
+                dd_from_trace = calculate_dip_direction(self.nztm_trace)
+            self._dip_dir = dd_from_trace
+        else:
+            # Trace and dip direction
+
+            dd_from_trace = calculate_dip_direction(self.nztm_trace)
+            if dd_str != "SUBVERTICAL AND VARIABLE":
+                min_dd_range, max_dd_range = dip_direction_ranges[dd_str]
+                if dd_str != "N":
+                    if not all([min_dd_range - tolerance <= dd_from_trace, dd_from_trace <= max_dd_range + tolerance]):
+                        reversed_dd = reverse_bearing(dd_from_trace)
+                        if all([min_dd_range - tolerance <= reversed_dd, reversed_dd <= max_dd_range + tolerance]):
+                            self._nztm_trace = reverse_line(self.nztm_trace)
+                            self._dip_dir = reversed_dd
+                        else:
+                            print("{}: Supplied trace and dip direction {} are inconsistent: expect either {:.1f}"
+                                  "or {:.1f} dip azimuth. Please check...".format(self.name, self.dip_dir_str,
+                                                                                  dd_from_trace, reversed_dd))
+
+                    else:
+                        self._dip_dir = dd_from_trace
+                else:
+                    reversed_dd = reverse_bearing(dd_from_trace)
+                    if any([315. - tolerance <= dds for dds in [dd_from_trace, reversed_dd]]):
+                        self._dip_dir = max([dd_from_trace, reversed_dd])
+                    elif any([dds <= 45. + tolerance for dds in [dd_from_trace, reversed_dd]]):
+                        self._dip_dir = min([dd_from_trace, reversed_dd])
+                    else:
+                        print("{}: Supplied trace and dip direction {} are inconsistent: expect either {:.1f} or {:.1f}"
+                              " dip azimuth. Please check...".format(self.name, self.dip_dir_str,
+                                                                     dd_from_trace, reversed_dd))
+                        self.logger.warning("Supplied trace and dip direction are inconsistent")
+
+                        self._dip_dir = dd_from_trace
+    
+    def generate_sr_rake_points(self, depths: Union[np.ndarray, List[float]], smoothing: bool = True,
+                                km: bool = False):
+        
+        """
+        Generate strike and rake points for the fault system at specified depths.
+        
+        :param depths: Depths at which to generate strike and rake points
+        :type depths: Union[np.ndarray, List[float]]
+        :param smoothing: Whether to apply smoothing to the traces, defaults to True
+        :type smoothing: bool, optional
+        :param km: Whether depths are in kilometers, defaults to False
+        :type km: bool, optional
+        """
+        point_geoms = []
+        point_depths = []
+        point_srs = []
+        point_rakes = []
+        for depth in depths:
+            if km:
+                depth *= 1000.
+            for segment in self.segments:
+                contour = segment.depth_contour(depth, smoothing=smoothing, km=km)
+                if contour is not None:
+                    for point_i in [0, -1]:
+                        end_point = get_point(contour, point_i)
+                        point_geoms.append(end_point)
+                        point_depths.append(depth)
+                        point_srs.append(segment.sr_best)
+                        point_rakes.append(segment.rake_best)
+        if self.parent.epsg is not None:
+            sr_rake_points = gpd.GeoDataFrame({
+                "depth": point_depths,
+                "slip_rate": point_srs,
+                "rake": point_rakes
+            }, geometry=point_geoms, crs=self.parent.epsg)  
+        else:
+            sr_rake_points = gpd.GeoDataFrame({
+                "depth": point_depths,
+                "slip_rate": point_srs,
+                "rake": point_rakes
+            }, geometry=point_geoms)
+
+        return sr_rake_points
+
     @property
     def contours(self):
         return self._contours
@@ -231,6 +373,24 @@ class ConnectedFaultSystem:
     @contours.setter
     def contours(self, contours: gpd.GeoDataFrame):
         self._contours = contours
+
+    @property
+    def sampled_dip(self):
+        """
+        Dip value sampled from the fault trace. Used for calculating dip in depth contours.
+        :return:
+        """
+        return self._sampled_dip
+    
+    @sampled_dip.setter
+    def sampled_dip(self, dip: float):
+        """
+        Set the sampled dip value.
+        :param dip: Dip value in degrees.
+        """
+        assert isinstance(dip, (int, float))
+        assert 0 <= dip <= 1, "Dip must be between 0 and 1"
+        self._sampled_dip = dip
 
 
 
@@ -374,7 +534,130 @@ class ConnectedFaultSystem:
 
                         nearest_seg_this_fault.extend_footprint(nearest_end, other_end, closest_seg)
 
+    def adjust_trace(self, extend_distance: float = 20.e3, fit_distance: float = 5.e3, resolution: float = 1.e3):
+        if self.parent.smoothing_n is not None:
+            end1 = Point(self.smoothed_overall_trace.coords[0])
+            end2 = Point(self.smoothed_overall_trace.coords[-1])
+        else:
+            end1 = Point(self.trace.coords[0])
+            end2 = Point(self.trace.coords[-1])
+        terms = list(set(chain(*self.find_terminations())))
+        if terms:
+            cutting_faults = [self.parent.curated_fault_dict[name] for name in terms if name is not self.name]
+            for fault in cutting_faults:
+                for nearest_end, other_end in zip([end1, end2], [end2, end1]):
+                    if nearest_end.distance(fault.nztm_trace) < 1.e3:
+                        nearest_seg_this_fault = min(self.segments, key=lambda x: x.nztm_trace.distance(nearest_end))
+                        nearest_seg_this_fault.extend_trace(nearest_end, other_end, fit_distance=fit_distance, extend_distance=extend_distance, resolution=resolution)
+
+        if self._smooth_trace_refinements is None:
+            self.overall_trace = merge_multiple_nearly_adjacent_segments([seg.nztm_trace for seg in self.segments],
+                                                                         densify=None)
+        else:
+            self.overall_trace = merge_multiple_nearly_adjacent_segments([seg.nztm_trace for seg in self.segments])
 
 
+    def mesh_fault_surface(self, resolution: float = 1000., spline_resolution: float = 100., plane_fitting_eps: float = 1.0e-5, check_mesh: bool = False, check_strike_dip: bool = False):
+        spline_contours = spline_fit_contours(self.contours, point_spacing=spline_resolution, output_spacing=resolution)
+        segmentized = spline_contours.segmentize(resolution)
+        spline_contour_list = [np.array(contour.coords) for contour in segmentized.geometry.values]
+        spline_contour_points = np.vstack(spline_contour_list)
+        spline_contour_dict = {tuple(point): i for (i,point) in enumerate(spline_contour_points)}
+
+        spline_contour_boundary = np.vstack([spline_contour_list[0], 
+                                    np.vstack([spline_contour_list[i][-1] for i in range(1, len(spline_contour_list) -1)]),
+                                    spline_contour_list[-1][::-1],
+                                    np.vstack([spline_contour_list[i][0] for i in range(len(spline_contour_list) -1, 0, -1)])])
+
+        contours_list = []
+        for contour in self.contours.geometry.values:
+            if isinstance(contour, LineString):
+                contours_list.append(np.array(contour.coords))
+            else:
+                assert isinstance(contour, MultiLineString)
+                contours_list.append(np.vstack([np.array(line.coords) for line in contour.geoms]))
 
 
+        all_contour_points = np.vstack(contours_list)
+        plane_normal, plane_origin = fit_plane_to_points(all_contour_points, eps=plane_fitting_eps)
+
+        # Calculate strike and dip from normal
+        strike, dip = get_strike_dip_from_normal(plane_normal)
+        if check_strike_dip:
+            print(f"Plane strike: {strike:.1f}°, dip: {dip:.1f}°")
+
+        # Calculate in-plane x vector (along strike)
+        strike_rad = np.radians(strike)
+        in_plane_x_vector = np.array([np.sin(strike_rad), np.cos(strike_rad), 0])
+        in_plane_x_vector = in_plane_x_vector - np.dot(in_plane_x_vector, plane_normal) * plane_normal
+        in_plane_x_vector = in_plane_x_vector / np.linalg.norm(in_plane_x_vector)
+
+        # Calculate in-plane y vector (down dip)
+        in_plane_y_vector = np.cross(plane_normal, in_plane_x_vector)
+        in_plane_y_vector = in_plane_y_vector / np.linalg.norm(in_plane_y_vector)
+
+
+        # resolve each contour in the list into the plane
+        resolved_contours = []
+        for contour in contours_list:
+            # Translate the contour to the origin
+            contour -= plane_origin
+            # Rotate the contour to align with the in-plane x vector
+            rotated_contour_x = np.dot(contour, in_plane_x_vector)
+            rotated_contour_y = np.dot(contour, in_plane_y_vector)
+            rotated_contour_z = np.dot(contour, plane_normal)
+
+            # Create a new contour with the rotated coordinates
+            resolved_contours.append(np.vstack([rotated_contour_x, rotated_contour_y, rotated_contour_z]).T)
+
+        all_resolved_points = np.vstack(resolved_contours)
+        np.savetxt("all_resolved_points.txt", all_resolved_points)
+
+        # resolve the contour boundary into the plane
+        resolved_boundary_x = np.dot(spline_contour_boundary, in_plane_x_vector)
+        resolved_boundary_y = np.dot(spline_contour_boundary, in_plane_y_vector)
+        resolved_boundary = np.vstack([resolved_boundary_x, resolved_boundary_y]).T
+
+        resolved_spline_contours = []
+        for contour in spline_contour_list:
+            # Translate the contour to the origin
+            contour -= plane_origin
+
+            # Rotate the contour to align with the in-plane x vector
+            rotated_contour_x = np.dot(contour, in_plane_x_vector)
+            rotated_contour_y = np.dot(contour, in_plane_y_vector)
+
+            # Create a new contour with the rotated coordinates
+            resolved_spline_contours.append(np.vstack([rotated_contour_x, rotated_contour_y]).T)
+
+        all_resolved_spline_points = np.vstack(resolved_spline_contours)
+
+        interpolator = RBFInterpolator(all_resolved_points[:, :2], all_resolved_points[:, 2], kernel='thin_plate_spline')
+
+        interpolated = interpolator(all_resolved_spline_points)
+
+        # Turn back into contour coordinates
+        interpolated_xyz = plane_origin + all_resolved_spline_points[:, 0][:, np.newaxis] * np.repeat([in_plane_x_vector], interpolated.shape[0], axis=0) + all_resolved_spline_points[:, 1][:, np.newaxis] * np.repeat([in_plane_y_vector], interpolated.shape[0], axis=0) + interpolated[:, np.newaxis] * np.repeat([plane_normal], interpolated.shape[0], axis=0)
+
+        if check_mesh:
+            plt.close("all")
+            fig, ax = plt.subplots()
+            ax.plot(resolved_boundary[:, 0], resolved_boundary[:, 1], color="blue", label="Resolved boundary")
+            ax.scatter(resolved_boundary[:, 0], resolved_boundary[:, 1], color="blue", s=1, label="Resolved boundary points")
+            plt.show(block=True)
+
+        boundary_segments = np.array([[spline_contour_dict[tuple(spline_contour_boundary[i])], spline_contour_dict[tuple(spline_contour_boundary[i + 1])]] for i in range(len(spline_contour_boundary) - 1)])
+        boundary_segments = np.vstack([boundary_segments, [spline_contour_dict[tuple(spline_contour_boundary[-1])], spline_contour_dict[tuple(spline_contour_boundary[0])]]])
+        A = dict(vertices=all_resolved_spline_points, segments=boundary_segments)
+        B = tr.triangulate(A, 'p')
+
+        if check_mesh:
+            plt.close("all")
+            tr.compare(plt, A, B)
+            plt.show(block=True)
+
+        # write the mesh to a file
+        mesh = meshio.Mesh(points=interpolated_xyz, cells={"triangle": B['triangles']})
+        mesh.write("alpine_rbf.vtk", file_format="vtk")
+
+        return mesh

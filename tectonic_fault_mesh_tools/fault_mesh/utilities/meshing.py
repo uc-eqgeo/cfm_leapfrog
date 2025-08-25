@@ -11,6 +11,56 @@ import matplotlib.pyplot as plt
 import triangle as tr
 import geopandas as gpd
 import meshio
+from collections import Counter
+
+def weighted_circular_mean(azimuths: np.ndarray, weights: np.ndarray):
+    """Calculate the weighted circular mean of azimuth angles.
+
+    :param azimuths: Array of azimuth angles in degrees.
+    :type azimuths: np.ndarray
+    :param weights: Array of weights corresponding to each azimuth angle (usually segment lengths).
+    :type weights: np.ndarray
+    :return: The weighted circular mean of the azimuth angles.
+    :rtype: float
+    """
+    mean_sin = np.average(np.sin(np.radians(azimuths)), weights=weights)
+    mean_cos = np.average(np.cos(np.radians(azimuths)), weights=weights)
+    mean_az = np.degrees(np.arctan2(mean_sin, mean_cos))
+    return mean_az
+
+
+def most_common_or_first(string_list):
+    """
+    Get the most common string in a list, otherwise return the first entry.
+    
+    Parameters:
+    -----------
+    string_list : list
+        List of strings
+        
+    Returns:
+    --------
+    str
+        Most common string, or first entry if tied/empty
+    """
+    if not string_list:
+        return None
+    
+    # Count occurrences
+    counter = Counter(string_list)
+    
+    # Get the most common string and its count
+    most_common_str, most_common_count = counter.most_common(1)[0]
+    
+    # Check if there are ties for the most common
+    tied_strings = [string for string, count in counter.items() if count == most_common_count]
+    
+    # If there's a clear winner (no ties), return it
+    if len(tied_strings) == 1:
+        return most_common_str
+    
+    # If there are ties, return the first entry
+    return string_list[0]
 
 def get_strike_dip_from_normal(normal_vector):
     """

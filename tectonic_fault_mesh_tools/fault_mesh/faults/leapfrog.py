@@ -6,19 +6,28 @@ import os
 from typing import List, Union
 from itertools import product, chain
 
+import xml.etree.ElementTree as ElemTree
+from xml.dom import minidom
+
 import numpy as np
 import geopandas as gpd
 import pandas as pd
+import meshio
+import pyvista as pv
 
 from shapely.affinity import translate
 from shapely.ops import unary_union
 from shapely.geometry import LineString, MultiLineString, Point, Polygon, MultiPoint
 
-from fault_mesh.faults.generic import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference
+from fault_mesh.faults.generic import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference, calculate_strike_direction
 from fault_mesh.utilities.smoothing import smooth_trace
 from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
 from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
 from fault_mesh.faults.connected import ConnectedFaultSystem
+
+from fault_mesh.utilities.meshing import triangulate_contours
+from fault_mesh.utilities.splines import spline_fit_contours
+from fault_mesh.utilities.opensha import fault_trace_xml, fault_polygon_xml
 
 
 class LeapfrogMultiFault(GenericMultiFault):
@@ -49,6 +58,7 @@ class LeapfrogMultiFault(GenericMultiFault):
         self._epsg = epsg
         self._dip_multiplier = dip_multiplier
         self._strike_multiplier = strike_multiplier
+        self._sampled_dip = None
 
     def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False,
                   tolerance: float = 100.):
@@ -175,6 +185,10 @@ class LeapfrogMultiFault(GenericMultiFault):
     @property
     def names(self):
         return [fault.name for fault in self.curated_faults]
+    
+    @property
+    def name_dict(self):
+        return {fault.name: fault for fault in self.curated_faults}
 
     def find_connections(self, verbose: bool = True):
         """
@@ -210,13 +224,13 @@ class LeapfrogMultiFault(GenericMultiFault):
     @property
     def connections(self):
         if self._connections is None:
-            self.find_connections()
+            self.find_connections(verbose=False)
         return self._connections
 
     @property
     def neighbour_connections(self):
         if self._neighbour_connections is None:
-            self.find_connections()
+            self.find_connections(verbose=False)
         return self._neighbour_connections
 
     def suggest_fault_systems(self, out_prefix: str):
@@ -268,7 +282,7 @@ class LeapfrogMultiFault(GenericMultiFault):
                         exclude_region_min_sr: float = 1.8, include_names: list = None, exclude_aus: bool = True,
                         exclude_zero: bool = True, sort_sr: bool = False, remove_colons: bool = False,
                         smoothing_n: Union[int, None] = 5, dip_choice: str = "pref", epsg: int = None,
-                        trimming_gradient: float = 1., dip_multiplier: float = 1., strike_multiplier: float = 0.5,
+                        trimming_gradient: float = 1.0, dip_multiplier: float = 1., strike_multiplier: float = 0.5,
                         check_optional_fields: bool = True):
 
         trimmed_fault_gdf = cls.gdf_from_nz_cfm_shp(filename=filename, exclude_region_polygons=exclude_region_polygons,
@@ -353,14 +367,75 @@ class LeapfrogMultiFault(GenericMultiFault):
 
         return terminations
 
+    def adjust_traces_for_terminations(self, fit_distance: float = 5.e3, extend_distance: float = 20.e3, resolution: float = 1.e3):
+        for fault in self.curated_faults:
+            fault.adjust_trace(extend_distance=extend_distance, fit_distance=fit_distance, resolution=resolution)
+
+
+    def to_opensha_xml(self, exclude_subduction: bool = True, buffer_width: float = 5000.,
+                       write_buffers: bool = True, subduction_names: tuple = ("hikurangi", "puysegur")):
+        """
+        Write out XML in OpenSHA format
+        :param exclude_subduction: Do not include subduction zones from CFM
+        :return:
+        """
+        assert self.faults
+        assert isinstance(exclude_subduction, bool)
+        # Base XML element
+        opensha_element = ElemTree.Element("OpenSHA")
+        # Fault model sub element
+        fm_element = ElemTree.Element("FaultModel")
+        opensha_element.append(fm_element)
+
+        i = 0
+        for fault in self.faults:
+            # Identify subduction zone sources to include (only if exclude_subduction is True)
+            exclude_condition = all([exclude_subduction, any([name in fault.name.lower()
+                                                              for name in subduction_names])])
+            # Add XML for fault
+            if not exclude_condition:
+                fm_element.append(fault.to_xml(section_id=i, buffer_width=buffer_width, write_buffers=write_buffers))
+                i += 1
+
+        # Awkward way of getting the xml file to be written in a way that's easy to read.
+        # elmstr = ElemTree.tostring(opensha_element, encoding="UTF-8", xml_declaration=True)
+        elmstr = ElemTree.tostring(opensha_element, encoding="UTF-8")
+        xml_dom = minidom.parseString(elmstr)
+        pretty_xml_str = xml_dom.toprettyxml(indent="  ", encoding="utf-8")
+
+        return pretty_xml_str
+    
+    def to_quads_mesh(self, sampled_dip: bool = True, depth_multiplier: float = 0.8, file_name: str = None):
+        """
+        Generate a mesh of quads from the fault traces.
+        :param sampled_dip: If True, use the sampled dip value for the fault.
+        :param depth_multiplier: Multiplier for the depth to control the spacing of the mesh.
+        :return: Meshio mesh object.
+        """
+        assert self.faults, "No faults to generate mesh from"
+        
+        meshes = []
+        for fault in self.faults:
+            vertices, quads = fault.to_quads(sampled=sampled_dip, depth_multiplier=depth_multiplier)
+            mesh = meshio.Mesh(points=vertices, cells={"quad": quads})
+            
+            meshes.append(mesh)
+
+        merged_meshes = pv.merge([pv.from_meshio(m) for m in meshes])
+        if file_name is not None:
+            if not file_name.endswith(".vtk"):
+                file_name += ".vtk"
+            merged_meshes.save(file_name)
+
+        return merged_meshes
+
 
 class LeapfrogFault(GenericFault):
     """
     Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly
     """
     def __init__(self, parent_multifault: LeapfrogMultiFault = None, smoothing: int = 5,
-                 trimming_gradient: float = 1.0, segment_distance_tolerance: float = 100.,
-                 parent_connected=None):
+                 trimming_gradient: float = 1.0, segment_distance_tolerance: float = 100.):
         self._end1 = None
         self._end2 = None
         self._neighbouring_segments = None
@@ -379,6 +454,7 @@ class LeapfrogFault(GenericFault):
         self._contours = None
         self._smoothed_trace = None
         self._footprint = None
+        self._sampled_dip = None
 
     @property
     def is_segment(self):
@@ -479,8 +555,54 @@ class LeapfrogFault(GenericFault):
         :return:
         """
         return self._parent
+    
+    @property
+    def sampled_dip(self):
+        """
+        Dip value sampled from the fault trace. Used for calculating dip in depth contours.
+        :return:
+        """
+        if self._sampled_dip is None:
+            self.generate_sampled_dip(from_parent=False)
+        return self._sampled_dip
+    
+    @sampled_dip.setter
+    def sampled_dip(self, dip: float):
+        """
+        Set the sampled dip value.
+        :param dip: Dip value in degrees.
+        """
+        assert isinstance(dip, (int, float))
+        assert 0. <= dip <= 180., "Dip must be between 0 and 180 degrees"
+        self._sampled_dip = dip
 
-    def depth_contour(self, depth: float, smoothing: bool = True, km=False):
+    def generate_sampled_dip(self, from_parent = True):
+        """
+        Generate a sampled dip value from the min and max dip
+        :param from_parent: If True, use the parent multi-fault's sampled dip value.
+        :return:
+        """
+        if from_parent and self.parent is not None:
+            self.sampled_dip = self.dip_min + (self.dip_max - self.dip_min) * self.parent.sampled_dip
+        else:
+            self.sampled_dip = self.dip_min + (self.dip_max - self.dip_min) * np.random.rand()
+
+    @property
+    def down_dip_vector_sampled(self):
+        """
+        Calculated from dip and dip direction
+        """
+        assert self.sampled_dip is not None
+        if self.dip_dir is None:
+            # Assume vertical
+            return np.array([0., 0., -1])
+        else:
+            z = np.sin(np.radians(self.sampled_dip))
+            x, y = np.cos(np.radians(self.sampled_dip)) * np.array([np.sin(np.radians(self.dip_dir)),
+                                                                np.cos(np.radians(self.dip_dir))])
+        return np.array([x, y, -z])
+
+    def depth_contour(self, depth: float, smoothing: bool = True, km=False, sr_and_rake: bool = False):
         """
         Generate contour of fault surface at depth below surface
         :param depth: In metres, upwards is positive
@@ -585,12 +707,22 @@ class LeapfrogFault(GenericFault):
 
         else:
             trimmed_contour = shifted_contour
-
-        return trimmed_contour
+        if sr_and_rake:
+            sr = self.sr_best
+            rake = self.rake_best
+            if trimmed_contour is not None:
+                return trimmed_contour, sr, rake
+            else:
+                return None, None, None
+        else:
+            return trimmed_contour
 
     def generate_depth_contours(self, depths: Union[np.ndarray, List[float]], smoothing: bool = False,
-                       km: bool = False):
-        contours = [self.depth_contour(depth, smoothing, km) for depth in depths]
+                       km: bool = False, trace: bool = False):
+        if trace:
+            contours = [self.nztm_trace] + [self.depth_contour(depth, smoothing, km) for depth in depths]
+        else:
+            contours = [self.depth_contour(depth, smoothing, km) for depth in depths]
 
         if max(depths) > 0:
             depths *= -1
@@ -599,10 +731,48 @@ class LeapfrogFault(GenericFault):
             self.contours =  gpd.GeoDataFrame({"depth": depths}, geometry=contours,crs=self.parent.epsg)
         else:
             self.contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours)
+    
+    def depth_contour_mesh(self, depths: Union[np.ndarray, List[float]], smoothing: bool = False,
+                               km: bool = False, trace: bool = False, point_spacing: float = 1000., output_spacing: float = 1000.,
+                               mesh_name: Union[str, None] = None, mesh_format: str = "vtk", check_mesh: bool = False,
+                               check_strike_dip: bool = True):
+        if trace:
+            contours = [self.nztm_trace] + [self.depth_contour(depth, smoothing, km) for depth in depths]
+        else:
+            contours = [self.depth_contour(depth, smoothing, km) for depth in depths]
+
+        if max(depths) > 0:
+            depths *= -1
+
+        if self.parent.epsg is not None:
+            self.contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours, crs=self.parent.epsg)
+        else:
+            self.contours = gpd.GeoDataFrame({"depth": depths}, geometry=contours)
+
+        contour_spline = spline_fit_contours(self.contours, point_spacing=point_spacing, output_spacing=output_spacing)
+
+        if mesh_name is None:
+            mesh = triangulate_contours(contour_spline, mesh_format=mesh_format, check_mesh=check_mesh,
+                                        check_strike_dip=check_strike_dip)
+        else:
+            mesh = triangulate_contours(contour_spline, mesh_name=mesh_name, mesh_format=mesh_format,
+                                        check_mesh=check_mesh, check_strike_dip=check_strike_dip)
+
+
+        return mesh
+
 
     @property
     def nztm_trace(self):
         return self._nztm_trace
+    
+    @property
+    def nztm_trace_coords(self):
+        """
+        Return the coordinates of the nztm trace as a numpy array.
+        :return: numpy array of coordinates
+        """
+        return np.array(self.nztm_trace.coords)
 
     @nztm_trace.setter
     def nztm_trace(self, trace: LineString):
@@ -824,3 +994,98 @@ class LeapfrogFault(GenericFault):
                 self._footprint = new_boundary
 
             return
+        
+    def extend_trace(self, end_i: Point, other_end: Point,
+                     fit_distance: float = 5.e3, extend_distance: float = 20.3, resolution: float = 1.e3):
+        end_arr = np.array(end_i.coords)[0]
+        other_end_arr = np.array(other_end.coords)[0]
+        line_dists = np.linalg.norm(self.nztm_trace_coords - end_arr, axis=1)
+        coords_to_fit = self.nztm_trace_coords[line_dists <= fit_distance]
+        local_strike_direction = calculate_strike_direction(coords_to_fit[:, 0], coords_to_fit[:, 1])
+        local_strike_vector = np.array([np.sin(np.radians(local_strike_direction)), np.cos(np.radians(local_strike_direction)), 0.])
+        extend_dists = np.arange(0, extend_distance + resolution, resolution)
+
+        if np.dot(other_end_arr - end_arr, local_strike_vector) < 0:
+            # Extend the trace in the direction of the local strike vector
+            extra_coords = end_arr + extend_dists[:, np.newaxis] * local_strike_vector
+        else:
+            # Extend the trace in the opposite direction
+            extra_coords = end_arr - extend_dists[:, np.newaxis] * local_strike_vector
+
+        original_nztm = self.nztm_trace_coords.copy()
+        if np.allclose(end_arr, original_nztm[0]):
+            new_nztm_coords = np.vstack([extra_coords[-1::-1], original_nztm])
+        else:
+            assert np.allclose(end_arr, original_nztm[-1])
+            new_nztm_coords = np.vstack([original_nztm, extra_coords])
+
+        self.nztm_trace = LineString(new_nztm_coords)
+
+    def adjust_trace(self, extend_distance: float = 20.e3, fit_distance: float = 5.e3, resolution: float = 1.e3):
+        # Adjust the trace by extending and fitting it
+        terms = list(set(chain(*self.find_terminations())))
+        if terms:
+            cutting_faults = [self.parent.curated_fault_dict[name] for name in terms if name is not self.name]
+            for fault in cutting_faults:
+                for nearest_end, other_end in zip([self.end1, self.end2], [self.end2, self.end1]):
+                    if nearest_end.distance(fault.nztm_trace) < 1.e3:
+                        self.extend_trace(nearest_end, other_end, fit_distance=fit_distance, extend_distance=extend_distance, resolution=resolution)
+
+    def to_xml(self, section_id: int, buffer_width: float = 5000., write_buffers: bool = True):
+        # Unique fault identifier
+        tag_name = "i{:d}".format(section_id)
+        # Metadata
+        attribute_dic = {"sectionId": "{:d}".format(section_id),
+                         "sectionName": self.name,
+                         "aveLongTermSlipRate": "{:.2f}".format(self.sr_best),
+                         "slipRateStdDev": "{:.2f}".format(self.sr_sigma),
+                         "aveDip": "{:.1f}".format(self.dip_best),
+                         "aveRake": "{:.1f}".format(self.rake_to_opensha(self.rake_best)),
+                         "aveUpperDepth": "0.0",
+                         "aveLowerDepth": "{:.1f}".format(self.depth_best),
+                         "aseismicSlipFactor": "0.0",
+                         "couplingCoeff": "1.0",
+                         "dipDirection": "{:.1f}".format(self.dip_dir),
+                         "parentSectionId": "-1",
+                         "connector": "false",
+                         "domainNo": f"{self.dom_num:d}",
+                         "domainName": f"{self.dom_name}"
+                         }
+
+        # Initialize XML element
+        fault_element = ElemTree.Element(tag_name, attrib=attribute_dic)
+        # Add sub element for fault trace
+        trace_element = fault_trace_xml(self.wgs_trace, self.name)
+        fault_element.append(trace_element)
+        if write_buffers:
+            # Add sub element for FZ buffer
+            polygon_element = fault_polygon_xml(self.combined_buffer_polygon(buffer_width), self.name)
+            fault_element.append(polygon_element)
+
+    def to_quads(self, sampled: bool = True, depth_multiplier: float = 0.8) -> dict:
+        """
+        Extract quads and vertices for writing using meshio.
+        :param sampled: If True, use the sampled dip vector.
+        :param depth_multiplier: Multiplier for the depth to scale the bottom trace.
+        :return: vertices and quads as numpy arrays.
+        """
+        top_trace = np.array(self.nztm_trace.coords)
+        if sampled:
+            bottom_trace = top_trace + self.down_dip_vector_sampled * depth_multiplier * self.depth_best * 1000. * -1./ self.down_dip_vector_sampled[-1]
+        else:
+            bottom_trace = top_trace + self.down_dip_vector * depth_multiplier * self.depth_best * 1000. * -1./ self.down_dip_vector[-1]
+
+        vertices = np.vstack([top_trace, bottom_trace])
+
+        quad_list = []
+        for (top_i, bottom_i) in zip(range(len(top_trace)-1), range(len(bottom_trace)-1)):
+            quad_list.append([top_i, top_i + 1, len(top_trace) + bottom_i + 1, len(top_trace) + bottom_i])
+
+        quad_array = np.array(quad_list, dtype=int)
+
+        return vertices, quad_array
+
+
+            
+
+
