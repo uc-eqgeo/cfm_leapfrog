@@ -19,6 +19,8 @@ Functions
 
 .. autoapisummary::
 
+   fault_mesh.utilities.meshing.weighted_circular_mean
+   fault_mesh.utilities.meshing.most_common_or_first
    fault_mesh.utilities.meshing.get_strike_dip_from_normal
    fault_mesh.utilities.meshing.fit_plane_to_points
    fault_mesh.utilities.meshing.triangulate_contours
@@ -26,6 +28,33 @@ Functions
 
 Module Contents
 ---------------
+
+.. py:function:: weighted_circular_mean(azimuths, weights)
+
+   Calculate the weighted circular mean of azimuth angles.
+
+   :param azimuths: Array of azimuth angles in degrees.
+   :type azimuths: np.ndarray
+   :param weights: Array of weights corresponding to each azimuth angle (usually segment lengths).
+   :type weights: np.ndarray
+   :return: The weighted circular mean of the azimuth angles.
+   :rtype: float
+
+
+.. py:function:: most_common_or_first(string_list)
+
+   Get the most common string in a list, otherwise return the first entry.
+
+   Parameters:
+   -----------
+   string_list : list
+       List of strings
+
+   Returns:
+   --------
+   str
+       Most common string, or first entry if tied/empty
+
 
 .. py:function:: get_strike_dip_from_normal(normal_vector)
 

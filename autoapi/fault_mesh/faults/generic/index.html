@@ -145,10 +145,13 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.reverse_line" title="fault_mesh.faults.generic.reverse_line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reverse_line</span></code></a>(line)</p></td>
 <td><p>Change the order that points in a LineString object are presented.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.calculate_dip_direction" title="fault_mesh.faults.generic.calculate_dip_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_dip_direction</span></code></a>(line)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.calculate_strike_direction" title="fault_mesh.faults.generic.calculate_strike_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_strike_direction</span></code></a>(x, y)</p></td>
+<td><p>Calculate the strike of line in 2D, given x and y coordinates.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.calculate_dip_direction" title="fault_mesh.faults.generic.calculate_dip_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_dip_direction</span></code></a>(line)</p></td>
 <td><p>Calculate the strike of a shapely linestring object with coordinates in NZTM,</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.root_mean_square" title="fault_mesh.faults.generic.root_mean_square"><code class="xref py py-obj docutils literal notranslate"><span class="pre">root_mean_square</span></code></a>(value_array)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.root_mean_square" title="fault_mesh.faults.generic.root_mean_square"><code class="xref py py-obj docutils literal notranslate"><span class="pre">root_mean_square</span></code></a>(value_array)</p></td>
 <td><p>Helper function to turn max and min to stdev for inclusion in XML.</p></td>
 </tr>
 </tbody>
@@ -240,6 +243,23 @@ Important for OpenSHA, I think
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>line</strong> (<em>shapely.geometry.LineString</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.calculate_strike_direction">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">calculate_strike_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.calculate_strike_direction" title="Link to this definition"></a></dt>
+<dd><p>Calculate the strike of line in 2D, given x and y coordinates.
+:param x: x coordinates of line
+:param y: y coordinates of line
+:return: strike direction in degrees</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>numpy.ndarray</em>)</p></li>
+<li><p><strong>y</strong> (<em>numpy.ndarray</em>)</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

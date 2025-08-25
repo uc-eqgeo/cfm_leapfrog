@@ -126,6 +126,12 @@ Functions:</p>
 <h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.meshing.weighted_circular_mean" title="fault_mesh.utilities.meshing.weighted_circular_mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weighted_circular_mean</span></code></a>(azimuths, weights)</p></td>
+<td><p>Calculate the weighted circular mean of azimuth angles.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.utilities.meshing.most_common_or_first" title="fault_mesh.utilities.meshing.most_common_or_first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">most_common_or_first</span></code></a>(string_list)</p></td>
+<td><p>Get the most common string in a list, otherwise return the first entry.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.utilities.meshing.get_strike_dip_from_normal" title="fault_mesh.utilities.meshing.get_strike_dip_from_normal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_strike_dip_from_normal</span></code></a>(normal_vector)</p></td>
 <td><p></p></td>
 </tr>
@@ -140,6 +146,46 @@ Functions:</p>
 </section>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.meshing.weighted_circular_mean">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.meshing.</span></span><span class="sig-name descname"><span class="pre">weighted_circular_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azimuths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.meshing.weighted_circular_mean" title="Link to this definition"></a></dt>
+<dd><p>Calculate the weighted circular mean of azimuth angles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>azimuths</strong> (<em>np.ndarray</em>) – Array of azimuth angles in degrees.</p></li>
+<li><p><strong>weights</strong> (<em>np.ndarray</em>) – Array of weights corresponding to each azimuth angle (usually segment lengths).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The weighted circular mean of the azimuth angles.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.utilities.meshing.most_common_or_first">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.meshing.</span></span><span class="sig-name descname"><span class="pre">most_common_or_first</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.meshing.most_common_or_first" title="Link to this definition"></a></dt>
+<dd><p>Get the most common string in a list, otherwise return the first entry.</p>
+<section id="parameters">
+<h3>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>string_list<span class="classifier">list</span></dt><dd><p>List of strings</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns:<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>str</dt><dd><p>Most common string, or first entry if tied/empty</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="fault_mesh.utilities.meshing.get_strike_dip_from_normal">
 <span class="sig-prename descclassname"><span class="pre">fault_mesh.utilities.meshing.</span></span><span class="sig-name descname"><span class="pre">get_strike_dip_from_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normal_vector</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.utilities.meshing.get_strike_dip_from_normal" title="Link to this definition"></a></dt>

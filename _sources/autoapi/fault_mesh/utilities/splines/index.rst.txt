@@ -25,6 +25,7 @@ Functions
    fault_mesh.utilities.splines.fit_2d_line
    fault_mesh.utilities.splines.linspace_with_spacing
    fault_mesh.utilities.splines.spline_fit_contours
+   fault_mesh.utilities.splines.fault_edge_spline
 
 
 Module Contents
@@ -58,5 +59,19 @@ Module Contents
    :param point_spacing: Distance between points when segmenting the original contour for spline fitting, defaults to 100.
    :param output_spacing: Distance between points in the resulting smoothed contour, defaults to 1000.
    :return: GeoDataFrame containing the smoothed contours as LineString geometries.
+
+
+.. py:function:: fault_edge_spline(max_slip, distance_width, total_width, min_slip_fraction = 0.0, line_stop_fraction = 0.5, gradient_change = 1.2, spline_k = 3, spline_s = 0.0, resolution = 10.0)
+
+   Create a spline that can be used to create a slip distribution along the edge of a fault.
+   @param max_slip:
+   @param distance_width:
+   @param min_slip_fraction:
+   @param line_stop_fraction:
+   @param gradient_change:
+   @param spline_k:
+   @param spline_s:
+   @param resolution:
+   @return:
 
 

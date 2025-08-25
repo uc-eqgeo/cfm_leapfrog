@@ -26,3 +26,29 @@ Module Contents
 
 
 
+   .. py:method:: calculate_overall_dip_direction(tolerance = 10.0)
+
+      Compares dip direction string (e.g. NW) with
+      :return:
+
+
+
+   .. py:method:: generate_sr_rake_points(depths, smoothing = True, km = False)
+
+      Generate strike and rake points for the fault system at specified depths.
+
+      :param depths: Depths at which to generate strike and rake points
+      :type depths: Union[np.ndarray, List[float]]
+      :param smoothing: Whether to apply smoothing to the traces, defaults to True
+      :type smoothing: bool, optional
+      :param km: Whether depths are in kilometers, defaults to False
+      :type km: bool, optional
+
+
+
+   .. py:property:: sampled_dip
+
+      Dip value sampled from the fault trace. Used for calculating dip in depth contours.
+      :return:
+
+

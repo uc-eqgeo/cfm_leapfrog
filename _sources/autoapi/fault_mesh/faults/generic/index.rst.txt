@@ -28,6 +28,7 @@ Functions
    fault_mesh.faults.generic.bearing_geq
    fault_mesh.faults.generic.reverse_bearing
    fault_mesh.faults.generic.reverse_line
+   fault_mesh.faults.generic.calculate_strike_direction
    fault_mesh.faults.generic.calculate_dip_direction
    fault_mesh.faults.generic.root_mean_square
 
@@ -82,6 +83,14 @@ Module Contents
    Important for OpenSHA, I think
    :param line:
    :return:
+
+
+.. py:function:: calculate_strike_direction(x, y)
+
+   Calculate the strike of line in 2D, given x and y coordinates.
+   :param x: x coordinates of line
+   :param y: y coordinates of line
+   :return: strike direction in degrees
 
 
 .. py:function:: calculate_dip_direction(line)

@@ -142,6 +142,40 @@
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.connected.ConnectedFaultSystem.calculate_overall_dip_direction">
+<span class="sig-name descname"><span class="pre">calculate_overall_dip_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.connected.ConnectedFaultSystem.calculate_overall_dip_direction" title="Link to this definition"></a></dt>
+<dd><p>Compares dip direction string (e.g. NW) with
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tolerance</strong> (<em>float</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.connected.ConnectedFaultSystem.generate_sr_rake_points">
+<span class="sig-name descname"><span class="pre">generate_sr_rake_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">km</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.connected.ConnectedFaultSystem.generate_sr_rake_points" title="Link to this definition"></a></dt>
+<dd><p>Generate strike and rake points for the fault system at specified depths.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>depths</strong> (<em>Union</em><em>[</em><em>np.ndarray</em><em>, </em><em>List</em><em>[</em><em>float</em><em>]</em><em>]</em>) – Depths at which to generate strike and rake points</p></li>
+<li><p><strong>smoothing</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to apply smoothing to the traces, defaults to True</p></li>
+<li><p><strong>km</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether depths are in kilometers, defaults to False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fault_mesh.faults.connected.ConnectedFaultSystem.sampled_dip">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampled_dip</span></span><a class="headerlink" href="#fault_mesh.faults.connected.ConnectedFaultSystem.sampled_dip" title="Link to this definition"></a></dt>
+<dd><p>Dip value sampled from the fault trace. Used for calculating dip in depth contours.
+:return:</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>

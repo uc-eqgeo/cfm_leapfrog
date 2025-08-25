@@ -37,7 +37,24 @@ Module Contents
 
 
 
-.. py:class:: LeapfrogFault(parent_multifault = None, smoothing = 5, trimming_gradient = 1.0, segment_distance_tolerance = 100.0, parent_connected=None)
+   .. py:method:: to_opensha_xml(exclude_subduction = True, buffer_width = 5000.0, write_buffers = True, subduction_names = ('hikurangi', 'puysegur'))
+
+      Write out XML in OpenSHA format
+      :param exclude_subduction: Do not include subduction zones from CFM
+      :return:
+
+
+
+   .. py:method:: to_quads_mesh(sampled_dip = True, depth_multiplier = 0.8, file_name = None)
+
+      Generate a mesh of quads from the fault traces.
+      :param sampled_dip: If True, use the sampled dip value for the fault.
+      :param depth_multiplier: Multiplier for the depth to control the spacing of the mesh.
+      :return: Meshio mesh object.
+
+
+
+.. py:class:: LeapfrogFault(parent_multifault = None, smoothing = 5, trimming_gradient = 1.0, segment_distance_tolerance = 100.0)
 
    Bases: :py:obj:`fault_mesh.faults.generic.GenericFault`
 
@@ -70,7 +87,26 @@ Module Contents
       :return:
 
 
-   .. py:method:: depth_contour(depth, smoothing = True, km=False)
+   .. py:property:: sampled_dip
+
+      Dip value sampled from the fault trace. Used for calculating dip in depth contours.
+      :return:
+
+
+   .. py:method:: generate_sampled_dip(from_parent=True)
+
+      Generate a sampled dip value from the min and max dip
+      :param from_parent: If True, use the parent multi-fault's sampled dip value.
+      :return:
+
+
+
+   .. py:property:: down_dip_vector_sampled
+
+      Calculated from dip and dip direction
+
+
+   .. py:method:: depth_contour(depth, smoothing = True, km=False, sr_and_rake = False)
 
       Generate contour of fault surface at depth below surface
       :param depth: In metres, upwards is positive
@@ -78,6 +114,12 @@ Module Contents
       :param km: If True, divide depth by 1000
       :return: LineString or MultiLineString representing contour
 
+
+
+   .. py:property:: nztm_trace_coords
+
+      Return the coordinates of the nztm trace as a numpy array.
+      :return: numpy array of coordinates
 
 
    .. py:method:: extend_footprint(end_i, other_end, other_segment, deepest_contour_depth = 30000.0, search_line_length = 150000.0, buffer_size = 5000.0, fall_back_distance = 40.3)
@@ -90,6 +132,15 @@ Module Contents
       :param buffer_size:
       :param fall_back_distance:
       :return:
+
+
+
+   .. py:method:: to_quads(sampled = True, depth_multiplier = 0.8)
+
+      Extract quads and vertices for writing using meshio.
+      :param sampled: If True, use the sampled dip vector.
+      :param depth_multiplier: Multiplier for the depth to scale the bottom trace.
+      :return: vertices and quads as numpy arrays.
 
 
 
