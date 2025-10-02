@@ -21,7 +21,7 @@ from fault_mesh.faults.generic import smallest_difference, calculate_dip_directi
 from fault_mesh.utilities.smoothing import smooth_trace
 from fault_mesh.utilities.merging import merge_multiple_nearly_adjacent_segments, align_two_nearly_adjacent_segments
 from fault_mesh.utilities.cutting import cut_line_at_multiple_points, cut_line_at_point
-from fault_mesh.utilities.meshing import get_strike_dip_from_normal, fit_plane_to_points, weighted_circular_mean, most_common_or_first
+from fault_mesh.utilities.meshing import get_strike_dip_from_normal, fit_plane_to_points, weighted_circular_mean, most_common_or_first, triangulate_contours
 from fault_mesh.utilities.splines import spline_fit_contours
 
 
@@ -558,9 +558,31 @@ class ConnectedFaultSystem:
 
 
     def mesh_fault_surface(self, resolution: float = 1000., spline_resolution: float = 100., plane_fitting_eps: float = 1.0e-5, check_mesh: bool = False, check_strike_dip: bool = False):
-        spline_contours = spline_fit_contours(self.contours, point_spacing=spline_resolution, output_spacing=resolution)
-        segmentized = spline_contours.segmentize(resolution)
-        spline_contour_list = [np.array(contour.coords) for contour in segmentized.geometry.values]
+        """Generate a triangular mesh representing the fault surface.
+        
+        This method creates a 3D triangular mesh of the fault surface by:
+        1. Fitting splines to depth contours
+        2. Fitting a plane to all contour points
+        3. Projecting contours onto the plane
+        4. Interpolating between contours using thin plate spline
+        5. Triangulating the resulting surface
+        
+        :param resolution: Target spatial resolution of the mesh in meters, defaults to 1000.
+        :type resolution: float, optional
+        :param spline_resolution: Point spacing for spline fitting in meters, defaults to 100.
+        :type spline_resolution: float, optional
+        :param plane_fitting_eps: Tolerance for plane fitting algorithm, defaults to 1.0e-5
+        :type plane_fitting_eps: float, optional
+        :param check_mesh: Whether to display visualization of the mesh for debugging, defaults to False
+        :type check_mesh: bool, optional
+        :param check_strike_dip: Whether to print strike and dip information for debugging, defaults to False
+        :type check_strike_dip: bool, optional
+        :return: Triangular mesh representing the fault surface
+        :rtype: meshio.Mesh
+        """
+        spline_contours = self.generate_simple_contours(self.contours.depth.values, km=False)
+        spline_contour_list = [np.array(contour.coords) for contour in spline_contours.geometry.values]
+
         spline_contour_points = np.vstack(spline_contour_list)
         spline_contour_dict = {tuple(point): i for (i,point) in enumerate(spline_contour_points)}
 
@@ -592,9 +614,16 @@ class ConnectedFaultSystem:
         in_plane_x_vector = in_plane_x_vector - np.dot(in_plane_x_vector, plane_normal) * plane_normal
         in_plane_x_vector = in_plane_x_vector / np.linalg.norm(in_plane_x_vector)
 
-        # Calculate in-plane y vector (down dip)
-        in_plane_y_vector = np.cross(plane_normal, in_plane_x_vector)
-        in_plane_y_vector = in_plane_y_vector / np.linalg.norm(in_plane_y_vector)
+        # # Calculate in-plane y vector (down dip)
+        # in_plane_y_vector = np.cross(plane_normal, in_plane_x_vector)
+        # in_plane_y_vector = in_plane_y_vector / np.linalg.norm(in_plane_y_vector)
+
+        # set in-plane y vector to be straight down
+        in_plane_y_vector = np.array([0., 0., -1.])
+
+        # get in-plane z vector
+        plane_normal = np.cross(in_plane_x_vector, in_plane_y_vector)
+        plane_normal = plane_normal / np.linalg.norm(plane_normal)
 
 
         # resolve each contour in the list into the plane
@@ -611,7 +640,7 @@ class ConnectedFaultSystem:
             resolved_contours.append(np.vstack([rotated_contour_x, rotated_contour_y, rotated_contour_z]).T)
 
         all_resolved_points = np.vstack(resolved_contours)
-        np.savetxt("all_resolved_points.txt", all_resolved_points)
+        all_resolved_points = np.unique(all_resolved_points, axis=0)
 
         # resolve the contour boundary into the plane
         resolved_boundary_x = np.dot(spline_contour_boundary, in_plane_x_vector)
@@ -630,15 +659,70 @@ class ConnectedFaultSystem:
             # Create a new contour with the rotated coordinates
             resolved_spline_contours.append(np.vstack([rotated_contour_x, rotated_contour_y]).T)
 
-        all_resolved_spline_points = np.vstack(resolved_spline_contours)
+            # refine end of spline contours by to match ends of fit contours
+        
+        refined_spline_contour_list = []
+        for spline_contour, fit_contour in zip(resolved_spline_contours, resolved_contours):
+            # sort by in_plane x coordinate
+            spline_contour = spline_contour[np.argsort(spline_contour[:, 0])]   
+            fit_contour = fit_contour[np.argsort(fit_contour[:, 0])]
+
+
+            min_resolved_x_spline = min(spline_contour[:, 0])
+            max_resolved_x_spline = max(spline_contour[:, 0])
+            min_resolved_x_fit = min(fit_contour[:, 0])
+            max_resolved_x_fit = max(fit_contour[:, 0])
+
+            if min_resolved_x_spline < min_resolved_x_fit:
+                # trim the spline contour
+                spline_contour = spline_contour[spline_contour[:, 0] >= min_resolved_x_fit]
+            if max_resolved_x_spline > max_resolved_x_fit:
+                spline_contour = spline_contour[spline_contour[:, 0] <= max_resolved_x_fit]
+
+            # Update the min and max resolved x values
+            min_resolved_x_spline = min(spline_contour[:, 0])
+            max_resolved_x_spline = max(spline_contour[:, 0])
+
+            if min_resolved_x_spline > min_resolved_x_fit:
+                new_start = fit_contour[fit_contour[:, 0] <= min_resolved_x_spline][:, :2]
+                spline_contour = np.vstack([new_start, spline_contour])
+            if max_resolved_x_spline < max_resolved_x_fit:
+                new_end = fit_contour[fit_contour[:, 0] >= max_resolved_x_spline][:, :2]
+                spline_contour = np.vstack([spline_contour, new_end])
+
+            spline_contour = np.unique(spline_contour, axis=0)
+            
+            refined_spline_contour_list.append(spline_contour)
+
+        all_resolved_spline_points = np.vstack(refined_spline_contour_list)
 
         interpolator = RBFInterpolator(all_resolved_points[:, :2], all_resolved_points[:, 2], kernel='thin_plate_spline')
 
         interpolated = interpolator(all_resolved_spline_points)
 
+        reprojected_contours = []
+        for contour in refined_spline_contour_list:
+            interp_z = interpolator(contour)
+            to_reproject = np.vstack([contour.T, interp_z]).T
+            after_reprojection = plane_origin + to_reproject[:, 0][:, np.newaxis] * np.repeat([in_plane_x_vector], to_reproject.shape[0], axis=0) + to_reproject[:, 1][:, np.newaxis] * np.repeat([in_plane_y_vector], to_reproject.shape[0], axis=0) + to_reproject[:, 2][:, np.newaxis] * np.repeat([plane_normal], to_reproject.shape[0], axis=0)
+            reprojected_contours.append(after_reprojection)
+        reprojected_points = np.vstack(reprojected_contours)
+
+        reprojected_contour_dict = {tuple(point): i for (i,point) in enumerate(reprojected_points)}
+
+        reprojected_contour_boundary = np.vstack([reprojected_contours[0], 
+                                    np.vstack([reprojected_contours[i][-1] for i in range(1, len(reprojected_contours) -1)]),
+                                    reprojected_contours[-1][::-1],
+                                    np.vstack([reprojected_contours[i][0] for i in range(len(reprojected_contours) -1, 0, -1)])])
+        
+
+                # resolve the contour boundary into the plane
+        resolved_boundary_x = np.dot(reprojected_contour_boundary, in_plane_x_vector)
+        resolved_boundary_y = np.dot(reprojected_contour_boundary, in_plane_y_vector)
+        resolved_boundary = np.vstack([resolved_boundary_x, resolved_boundary_y]).T
+
         # Turn back into contour coordinates
         interpolated_xyz = plane_origin + all_resolved_spline_points[:, 0][:, np.newaxis] * np.repeat([in_plane_x_vector], interpolated.shape[0], axis=0) + all_resolved_spline_points[:, 1][:, np.newaxis] * np.repeat([in_plane_y_vector], interpolated.shape[0], axis=0) + interpolated[:, np.newaxis] * np.repeat([plane_normal], interpolated.shape[0], axis=0)
-
         if check_mesh:
             plt.close("all")
             fig, ax = plt.subplots()
@@ -646,8 +730,8 @@ class ConnectedFaultSystem:
             ax.scatter(resolved_boundary[:, 0], resolved_boundary[:, 1], color="blue", s=1, label="Resolved boundary points")
             plt.show(block=True)
 
-        boundary_segments = np.array([[spline_contour_dict[tuple(spline_contour_boundary[i])], spline_contour_dict[tuple(spline_contour_boundary[i + 1])]] for i in range(len(spline_contour_boundary) - 1)])
-        boundary_segments = np.vstack([boundary_segments, [spline_contour_dict[tuple(spline_contour_boundary[-1])], spline_contour_dict[tuple(spline_contour_boundary[0])]]])
+        boundary_segments = np.array([[reprojected_contour_dict[tuple(reprojected_contour_boundary[i])], reprojected_contour_dict[tuple(reprojected_contour_boundary[i + 1])]] for i in range(len(reprojected_contour_boundary) - 1)])
+        boundary_segments = np.vstack([boundary_segments, [reprojected_contour_dict[tuple(reprojected_contour_boundary[-1])], reprojected_contour_dict[tuple(reprojected_contour_boundary[0])]]])
         A = dict(vertices=all_resolved_spline_points, segments=boundary_segments)
         B = tr.triangulate(A, 'p')
 
@@ -658,6 +742,32 @@ class ConnectedFaultSystem:
 
         # write the mesh to a file
         mesh = meshio.Mesh(points=interpolated_xyz, cells={"triangle": B['triangles']})
-        mesh.write("alpine_rbf.vtk", file_format="vtk")
+
+        return mesh
+
+    def mesh_simple_contours(self, depths: Union[np.ndarray, List[float]], mesh_name: str = None, mesh_format="vtk", check_mesh: bool=False, check_strike_dip: bool=True, km: bool = False):
+        """
+        Create a mesh from simple contours.
+
+        :param depths: Array of depths for each contour
+        :type depths: Union[np.ndarray, List[float]]
+        :param km: Whether the depths are in kilometers, defaults to False
+        :type km: bool
+        :param mesh_name: Name of the output mesh file
+        :type mesh_name: str, optional
+        :param mesh_format: Format of the output mesh file
+        :type mesh_format: str, optional
+        :param check_mesh: Whether to display visualization of the mesh for debugging, defaults to False
+        :type check_mesh: bool, optional
+        :param check_strike_dip: Whether to print strike and dip information for debugging, defaults to False
+        :type check_strike_dip: bool, optional
+        :return: Triangular mesh representing the fault surface
+        :rtype: meshio.Mesh
+        """
+
+        contours = self.generate_simple_contours(depths, km=km)
+
+        # Create a mesh from the contours
+        mesh = triangulate_contours(contours, mesh_name=mesh_name, mesh_format=mesh_format, check_mesh=check_mesh, check_strike_dip=check_strike_dip)
 
         return mesh

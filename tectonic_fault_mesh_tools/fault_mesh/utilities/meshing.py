@@ -134,7 +134,7 @@ def fit_plane_to_points(points: np.ndarray, eps: float=1.0e-5):
 
     return plane_normal, plane_origin
 
-def triangulate_contours(contours: gpd.GeoDataFrame, mesh_name: str, mesh_format="vtk", check_mesh: bool=False, check_strike_dip: bool=True):
+def triangulate_contours(contours: gpd.GeoDataFrame, mesh_name: str = None, mesh_format="vtk", check_mesh: bool=False, check_strike_dip: bool=True):
     """
     Triangulate the contours and write to a file
     :param contours:
@@ -211,4 +211,7 @@ def triangulate_contours(contours: gpd.GeoDataFrame, mesh_name: str, mesh_format
 
     # write the mesh to a file
     mesh = meshio.Mesh(points=all_contour_points, cells={"triangle": B['triangles']})
-    mesh.write(mesh_name, file_format=mesh_format)
+    if mesh_name is not None:
+        mesh.write(mesh_name, file_format=mesh_format)
+
+    return mesh

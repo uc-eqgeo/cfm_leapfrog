@@ -760,7 +760,17 @@ class LeapfrogFault(GenericFault):
 
 
         return mesh
+    
+    def mesh_fault_surface(self, resolution: float = 1000., spline_resolution: float = 100., plane_fitting_eps: float = 1.0e-5, check_mesh: bool = False, check_strike_dip: bool = False):
+        if self.contours is None:
+            raise ValueError("No contours to mesh. Please run generate_depth_contours() first.")
 
+        contour_spline = spline_fit_contours(self.contours, point_spacing=spline_resolution, output_spacing=resolution)
+
+        mesh = triangulate_contours(contour_spline, mesh_format="vtk", check_mesh=check_mesh,
+                                    check_strike_dip=check_strike_dip)
+        return mesh
+        
 
     @property
     def nztm_trace(self):
