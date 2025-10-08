@@ -8,8 +8,9 @@ from matplotlib import pyplot as plt
 import triangle as tr
 import meshio
 
-# contours = gpd.read_file("C:\\Users\\arh128\\PycharmProjects\\cfm_leapfrog\\scratch\\cfm_no_leapfrog\\NZ_CFM_v1_0_rs1km_modified_GDM_Final\\depth_contours\\Alpine George - Wairau combined_contours.shp")
-contours = gpd.read_file("C:\\Users\\arh128\\PycharmProjects\\cfm_leapfrog\\scratch\\cfm_no_leapfrog\\NZ_CFM_v1_0_rs1km_modified_GDM_Final\\depth_contours\\Wellington Hutt Valley combined_contours.shp")
+contours = gpd.read_file("C:\\Users\\arh128\\PycharmProjects\\cfm_leapfrog\\scratch\\cfm_no_leapfrog\\NZ_CFM_v1_0_rs1km_modified_GDM_Final\\depth_contours\\Alpine George - Wairau combined_contours.shp")
+# contours = gpd.read_file("C:\\Users\\arh128\\PycharmProjects\\cfm_leapfrog\\scratch\\cfm_no_leapfrog\\NZ_CFM_v1_0_rs1km_modified_GDM_Final\\depth_contours\\Jordan - Kekerengu - Needles combined_contours.shp")
+contours = gpd.read_file("C:\\Users\\arh128\\PycharmProjects\\cfm_leapfrog\\scratch\\cfm_no_leapfrog\\NZ_CFM_v1_0_rs1km_modified_GDM_Final\\depth_contours\\Wellington - Whakatane combined_contours.shp")
 spline_contours = spline_fit_contours(contours, point_spacing=100., output_spacing=1000.)
 segmentized = spline_contours.segmentize(1000.)
 spline_contour_list = [np.array(contour.coords) for contour in segmentized.geometry.values]
