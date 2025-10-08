@@ -55,19 +55,16 @@ fault_data = LeapfrogMultiFault.from_nz_cfm_shp("tutorial_gis/cfm_gt_1_5.gpkg", 
 [32m      3[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mos[39;00m
 [32m      4[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mnumpy[39;00m[38;5;250m [39m[38;5;28;01mas[39;00m[38;5;250m [39m[34;01mnp[39;00m
 
-[36mFile [39m[32m~/miniconda3/envs/leapfrog-fault-models/lib/python3.12/site-packages/fault_mesh/faults/leapfrog.py:26[39m
-[32m     24[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[34;01m.[39;00m[34;01mcutting[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m cut_line_between_two_points, cut_line_at_point
-[32m     25[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[34;01m.[39;00m[34;01mgraph[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m connected_nodes, suggest_combined_name
-[32m---> [39m[32m26[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mfaults[39;00m[34;01m.[39;00m[34;01mconnected[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m ConnectedFaultSystem
+[36mFile [39m[32m~/miniconda3/envs/leapfrog-fault-models/lib/python3.12/site-packages/fault_mesh/faults/leapfrog.py:30[39m
 [32m     28[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[34;01m.[39;00m[34;01mmeshing[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m triangulate_contours
 [32m     29[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[34;01m.[39;00m[34;01msplines[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m spline_fit_contours
+[32m---> [39m[32m30[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[34;01m.[39;00m[34;01mopensha[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m fault_trace_xml, fault_polygon_xml
+[32m     33[39m [38;5;28;01mclass[39;00m[38;5;250m [39m[34;01mLeapfrogMultiFault[39;00m(GenericMultiFault):
+[32m     34[39m     [38;5;28;01mdef[39;00m[38;5;250m [39m[34m__init__[39m([38;5;28mself[39m, fault_geodataframe: gpd.GeoDataFrame, sort_sr: [38;5;28mbool[39m = [38;5;28;01mFalse[39;00m,
+[32m     35[39m                  segment_distance_tolerance: [38;5;28mfloat[39m = [32m100.[39m, smoothing_n: [38;5;28mint[39m = [38;5;28;01mNone[39;00m,
+[32m     36[39m                  remove_colons: [38;5;28mbool[39m = [38;5;28;01mTrue[39;00m, dip_choice: [38;5;28mstr[39m = [33m"[39m[33mpref[39m[33m"[39m,
+[32m     37[39m                  trimming_gradient: [38;5;28mfloat[39m = [32m1.[39m, epsg: [38;5;28mint[39m = [38;5;28;01mNone[39;00m, dip_multiplier: [38;5;28mfloat[39m = [32m1.[39m,
+[32m     38[39m                  strike_multiplier: [38;5;28mfloat[39m = [32m0.5[39m, check_optional_fields: [38;5;28mbool[39m = [38;5;28;01mTrue[39;00m):
 
-[36mFile [39m[32m~/miniconda3/envs/leapfrog-fault-models/lib/python3.12/site-packages/fault_mesh/faults/connected.py:8[39m
-[32m      5[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mfnmatch[39;00m
-[32m      6[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mitertools[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m chain
-[32m----> [39m[32m8[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mbuild[39;00m[34;01m.[39;00m[34;01mlib[39;00m[34;01m.[39;00m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m smoothing
-[32m      9[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mnumpy[39;00m[38;5;250m [39m[38;5;28;01mas[39;00m[38;5;250m [39m[34;01mnp[39;00m
-[32m     10[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mshapely[39;00m[34;01m.[39;00m[34;01mgeometry[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m MultiLineString, LineString, Point, Polygon
-
-[31mModuleNotFoundError[39m: No module named 'build'
+[31mModuleNotFoundError[39m: No module named 'fault_mesh.utilities.opensha'
 
