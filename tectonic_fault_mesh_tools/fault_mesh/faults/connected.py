@@ -5,7 +5,6 @@ from typing import Union, List
 import fnmatch
 from itertools import chain
 
-from build.lib.fault_mesh.utilities import smoothing
 import numpy as np
 from shapely.geometry import MultiLineString, LineString, Point, Polygon
 from shapely.ops import linemerge, unary_union

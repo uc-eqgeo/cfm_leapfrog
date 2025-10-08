@@ -3,6 +3,7 @@ import numpy as np
 import os
 from fault_mesh.utilities.meshing import fit_plane_to_points, get_strike_dip_from_normal
 from itertools import combinations
+import pyvista as pv
 
 class FaultMesh:
     """
@@ -21,6 +22,7 @@ class FaultMesh:
             vertices (list, optional): A list of vertices. Defaults to an empty list.
             faces (list, optional): A list of faces. Defaults to an empty list.
         """
+        self.mesh = None
         self.vertices = None
         self.triangles = None
         self.tri_dict = None
@@ -56,6 +58,7 @@ class FaultMesh:
 
         mesh = meshio.read(file_path)
         fault_mesh = cls()
+        fault_mesh.mesh = mesh
         fault_mesh.vertices = mesh.points
         fault_mesh.triangles = mesh.cells_dict["triangle"]
         fault_mesh.tri_dict = {i: tri for i, tri in enumerate(fault_mesh.triangles)}
@@ -309,3 +312,23 @@ class FaultMesh:
         right_tris = np.where(np.isin(self.triangles, right_vertices).any(axis=1))[0]
 
         return top_tris, bottom_tris, left_tris, right_tris
+    
+    def check_intersection(self, other_mesh):
+        """
+        Checks if this mesh intersects with another mesh.
+
+        Args:
+            other_mesh (FaultMesh): Another FaultMesh instance to check for intersection.
+        Returns:
+            bool: True if the meshes intersect, False otherwise.
+        """
+        assert isinstance(other_mesh, FaultMesh), "other_mesh must be an instance of FaultMesh."
+        assert self.mesh is not None, "This mesh is not defined."
+        assert other_mesh.mesh is not None, "Other mesh is not defined."
+
+        pv_self = pv.PolyData(self.vertices, np.hstack([np.full((len(self.triangles), 1), 3), self.triangles]).astype(np.int64))
+        pv_other = pv.PolyData(other_mesh.vertices, np.hstack([np.full((len(other_mesh.triangles), 1), 3), other_mesh.triangles]).astype(np.int64))
+
+        intersection = pv_self.boolean_intersection(pv_other, tolerance=1.0e-5)
+
+        return intersection.n_points > 0
