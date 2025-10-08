@@ -12,11 +12,16 @@ dependencies:
   - rasterio >= 1.1.5
   - pip
   - git >= 2.21.1
+  - gdal
   - sphinx
   - sphinx-autoapi
   - myst-nb
   - notebook
+  - rasterio
+  - rioxarray
+  - pyvista
   - pip:
     - ./tectonic_fault_mesh_tools
     - meshio
     - sphinx-rtd-theme
+    - triangle
