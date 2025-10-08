@@ -83,10 +83,6 @@
 <li class="toctree-l1"><a class="reference internal" href="define_connected_japanese.html#id6">切断階層の定義</a></li>
 <li class="toctree-l1"><a class="reference internal" href="define_connected_japanese.html#id9">メッシュ作成のためのシェープファイルの作成</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
-</ul>
 
         </div>
       </div>
@@ -135,14 +131,21 @@
 <span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="g g-Whitespace">      </span><span class="mi">4</span> <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="n">File</span> <span class="o">~/</span><span class="n">miniconda3</span><span class="o">/</span><span class="n">envs</span><span class="o">/</span><span class="n">leapfrog</span><span class="o">-</span><span class="n">fault</span><span class="o">-</span><span class="n">models</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="mf">.12</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">fault_mesh</span><span class="o">/</span><span class="n">faults</span><span class="o">/</span><span class="n">leapfrog</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">16</span>
-<span class="g g-Whitespace">     </span><span class="mi">14</span> <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="g g-Whitespace">     </span><span class="mi">15</span> <span class="kn">import</span><span class="w"> </span><span class="nn">meshio</span>
-<span class="ne">---&gt; </span><span class="mi">16</span> <span class="kn">import</span><span class="w"> </span><span class="nn">pyvista</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pv</span>
-<span class="g g-Whitespace">     </span><span class="mi">18</span> <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.affinity</span><span class="w"> </span><span class="kn">import</span> <span class="n">translate</span>
-<span class="g g-Whitespace">     </span><span class="mi">19</span> <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">unary_union</span>
+<span class="n">File</span> <span class="o">~/</span><span class="n">miniconda3</span><span class="o">/</span><span class="n">envs</span><span class="o">/</span><span class="n">leapfrog</span><span class="o">-</span><span class="n">fault</span><span class="o">-</span><span class="n">models</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="mf">.12</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">fault_mesh</span><span class="o">/</span><span class="n">faults</span><span class="o">/</span><span class="n">leapfrog</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">26</span>
+<span class="g g-Whitespace">     </span><span class="mi">24</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fault_mesh.utilities.cutting</span><span class="w"> </span><span class="kn">import</span> <span class="n">cut_line_between_two_points</span><span class="p">,</span> <span class="n">cut_line_at_point</span>
+<span class="g g-Whitespace">     </span><span class="mi">25</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fault_mesh.utilities.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">connected_nodes</span><span class="p">,</span> <span class="n">suggest_combined_name</span>
+<span class="ne">---&gt; </span><span class="mi">26</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fault_mesh.faults.connected</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConnectedFaultSystem</span>
+<span class="g g-Whitespace">     </span><span class="mi">28</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fault_mesh.utilities.meshing</span><span class="w"> </span><span class="kn">import</span> <span class="n">triangulate_contours</span>
+<span class="g g-Whitespace">     </span><span class="mi">29</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fault_mesh.utilities.splines</span><span class="w"> </span><span class="kn">import</span> <span class="n">spline_fit_contours</span>
 
-<span class="ne">ModuleNotFoundError</span>: No module named &#39;pyvista&#39;
+<span class="n">File</span> <span class="o">~/</span><span class="n">miniconda3</span><span class="o">/</span><span class="n">envs</span><span class="o">/</span><span class="n">leapfrog</span><span class="o">-</span><span class="n">fault</span><span class="o">-</span><span class="n">models</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="mf">.12</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">fault_mesh</span><span class="o">/</span><span class="n">faults</span><span class="o">/</span><span class="n">connected</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">8</span>
+<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="kn">import</span><span class="w"> </span><span class="nn">fnmatch</span>
+<span class="g g-Whitespace">      </span><span class="mi">6</span> <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
+<span class="ne">----&gt; </span><span class="mi">8</span> <span class="kn">from</span><span class="w"> </span><span class="nn">build.lib.fault_mesh.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">smoothing</span>
+<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiLineString</span><span class="p">,</span> <span class="n">LineString</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Polygon</span>
+
+<span class="ne">ModuleNotFoundError</span>: No module named &#39;build&#39;
 </pre></div>
 </div>
 </div>

@@ -55,12 +55,19 @@ fault_data = LeapfrogMultiFault.from_nz_cfm_shp("tutorial_gis/cfm_gt_1_5.gpkg", 
 [32m      3[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mos[39;00m
 [32m      4[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mnumpy[39;00m[38;5;250m [39m[38;5;28;01mas[39;00m[38;5;250m [39m[34;01mnp[39;00m
 
-[36mFile [39m[32m~/miniconda3/envs/leapfrog-fault-models/lib/python3.12/site-packages/fault_mesh/faults/leapfrog.py:16[39m
-[32m     14[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mpandas[39;00m[38;5;250m [39m[38;5;28;01mas[39;00m[38;5;250m [39m[34;01mpd[39;00m
-[32m     15[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mmeshio[39;00m
-[32m---> [39m[32m16[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mpyvista[39;00m[38;5;250m [39m[38;5;28;01mas[39;00m[38;5;250m [39m[34;01mpv[39;00m
-[32m     18[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mshapely[39;00m[34;01m.[39;00m[34;01maffinity[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m translate
-[32m     19[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mshapely[39;00m[34;01m.[39;00m[34;01mops[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m unary_union
+[36mFile [39m[32m~/miniconda3/envs/leapfrog-fault-models/lib/python3.12/site-packages/fault_mesh/faults/leapfrog.py:26[39m
+[32m     24[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[34;01m.[39;00m[34;01mcutting[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m cut_line_between_two_points, cut_line_at_point
+[32m     25[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[34;01m.[39;00m[34;01mgraph[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m connected_nodes, suggest_combined_name
+[32m---> [39m[32m26[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mfaults[39;00m[34;01m.[39;00m[34;01mconnected[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m ConnectedFaultSystem
+[32m     28[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[34;01m.[39;00m[34;01mmeshing[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m triangulate_contours
+[32m     29[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[34;01m.[39;00m[34;01msplines[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m spline_fit_contours
 
-[31mModuleNotFoundError[39m: No module named 'pyvista'
+[36mFile [39m[32m~/miniconda3/envs/leapfrog-fault-models/lib/python3.12/site-packages/fault_mesh/faults/connected.py:8[39m
+[32m      5[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mfnmatch[39;00m
+[32m      6[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mitertools[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m chain
+[32m----> [39m[32m8[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mbuild[39;00m[34;01m.[39;00m[34;01mlib[39;00m[34;01m.[39;00m[34;01mfault_mesh[39;00m[34;01m.[39;00m[34;01mutilities[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m smoothing
+[32m      9[39m [38;5;28;01mimport[39;00m[38;5;250m [39m[34;01mnumpy[39;00m[38;5;250m [39m[38;5;28;01mas[39;00m[38;5;250m [39m[34;01mnp[39;00m
+[32m     10[39m [38;5;28;01mfrom[39;00m[38;5;250m [39m[34;01mshapely[39;00m[34;01m.[39;00m[34;01mgeometry[39;00m[38;5;250m [39m[38;5;28;01mimport[39;00m MultiLineString, LineString, Point, Polygon
+
+[31mModuleNotFoundError[39m: No module named 'build'
 
