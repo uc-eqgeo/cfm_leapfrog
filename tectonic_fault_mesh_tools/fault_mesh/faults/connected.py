@@ -22,6 +22,7 @@ from fault_mesh.utilities.merging import merge_multiple_nearly_adjacent_segments
 from fault_mesh.utilities.cutting import cut_line_at_multiple_points, cut_line_at_point
 from fault_mesh.utilities.meshing import get_strike_dip_from_normal, fit_plane_to_points, weighted_circular_mean, most_common_or_first, triangulate_contours
 from fault_mesh.utilities.splines import spline_fit_contours
+from fault_mesh.faults.mesh import FaultMesh
 
 
 class ConnectedFaultSystem:
@@ -62,6 +63,7 @@ class ConnectedFaultSystem:
         self._trimming_gradient = trimming_gradient
         self._smooth_trace_refinements = smooth_trace_refinements
         self._dip_dir = None
+        self._mesh = None
         segments = []
 
         assert any([segment_names is not None, search_patterns is not None])
@@ -212,6 +214,10 @@ class ConnectedFaultSystem:
             return gpd.GeoSeries(self.nztm_trace, crs=self.parent.epsg)
         else:
             return gpd.GeoSeries(self.nztm_trace)
+        
+    @property
+    def nztm_trace_array(self):
+        return np.array(self.nztm_trace.coords)
 
     @property
     def smoothed_trace(self):
@@ -220,6 +226,15 @@ class ConnectedFaultSystem:
     @property
     def dip_dir(self):
         return self._dip_dir
+    
+    @property
+    def mesh(self):
+        return self._mesh
+    
+    @mesh.setter
+    def mesh(self, mesh: FaultMesh):
+        assert isinstance(mesh, FaultMesh)
+        self._mesh = mesh
 
     def depth_contour(self, depth: float, smoothing: bool = True, damping: int = None, km: bool = False):
         contours = [segment.depth_contour(depth, smoothing) for segment in self.segments]

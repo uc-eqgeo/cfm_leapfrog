@@ -28,6 +28,7 @@ from fault_mesh.faults.connected import ConnectedFaultSystem
 from fault_mesh.utilities.meshing import triangulate_contours
 from fault_mesh.utilities.splines import spline_fit_contours
 from fault_mesh.utilities.opensha import fault_trace_xml, fault_polygon_xml
+from fault_mesh.faults.mesh import FaultMesh
 
 
 class LeapfrogMultiFault(GenericMultiFault):
@@ -805,6 +806,10 @@ class LeapfrogFault(GenericFault):
             return gpd.GeoSeries(self.nztm_trace, crs=self.parent.epsg)
         else:
             return gpd.GeoSeries(self.nztm_trace)
+        
+    @property
+    def nztm_trace_array(self):
+        return np.array(self.nztm_trace.coords)
 
 
     @property
@@ -1094,6 +1099,15 @@ class LeapfrogFault(GenericFault):
         quad_array = np.array(quad_list, dtype=int)
 
         return vertices, quad_array
+    
+    @property
+    def mesh(self):
+        return self._mesh
+    
+    @mesh.setter
+    def mesh(self, mesh: FaultMesh):
+        assert isinstance(mesh, FaultMesh)
+        self._mesh = mesh
 
 
             
