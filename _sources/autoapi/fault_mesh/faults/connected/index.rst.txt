@@ -1,0 +1,101 @@
+fault_mesh.faults.connected
+===========================
+
+.. py:module:: fault_mesh.faults.connected
+
+.. autoapi-nested-parse::
+
+   Module for connecting segments into a connected fault system
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   fault_mesh.faults.connected.ConnectedFaultSystem
+
+
+Module Contents
+---------------
+
+.. py:class:: ConnectedFaultSystem(overall_name, cfm_faults, segment_names = None, search_patterns = None, excluded_names = None, tolerance = 100.0, smooth_trace_refinements = 5, trimming_gradient = 1.0)
+
+   _summary_
+
+
+
+   .. py:method:: calculate_overall_dip_direction(tolerance = 10.0)
+
+      Compares dip direction string (e.g. NW) with
+      :return:
+
+
+
+   .. py:method:: generate_sr_rake_points(depths, smoothing = True, km = False)
+
+      Generate strike and rake points for the fault system at specified depths.
+
+      :param depths: Depths at which to generate strike and rake points
+      :type depths: Union[np.ndarray, List[float]]
+      :param smoothing: Whether to apply smoothing to the traces, defaults to True
+      :type smoothing: bool, optional
+      :param km: Whether depths are in kilometers, defaults to False
+      :type km: bool, optional
+
+
+
+   .. py:property:: sampled_dip
+
+      Dip value sampled from the fault trace. Used for calculating dip in depth contours.
+      :return:
+
+
+   .. py:method:: mesh_fault_surface(resolution = 1000.0, spline_resolution = 100.0, plane_fitting_eps = 1e-05, check_mesh = False, check_strike_dip = False)
+
+      Generate a triangular mesh representing the fault surface.
+
+      This method creates a 3D triangular mesh of the fault surface by:
+      1. Fitting splines to depth contours
+      2. Fitting a plane to all contour points
+      3. Projecting contours onto the plane
+      4. Interpolating between contours using thin plate spline
+      5. Triangulating the resulting surface
+
+      :param resolution: Target spatial resolution of the mesh in meters, defaults to 1000.
+      :type resolution: float, optional
+      :param spline_resolution: Point spacing for spline fitting in meters, defaults to 100.
+      :type spline_resolution: float, optional
+      :param plane_fitting_eps: Tolerance for plane fitting algorithm, defaults to 1.0e-5
+      :type plane_fitting_eps: float, optional
+      :param check_mesh: Whether to display visualization of the mesh for debugging, defaults to False
+      :type check_mesh: bool, optional
+      :param check_strike_dip: Whether to print strike and dip information for debugging, defaults to False
+      :type check_strike_dip: bool, optional
+      :return: Triangular mesh representing the fault surface
+      :rtype: meshio.Mesh
+
+
+
+   .. py:method:: mesh_simple_contours(depths, mesh_name = None, mesh_format='vtk', check_mesh = False, check_strike_dip = True, km = False)
+
+      Create a mesh from simple contours.
+
+      :param depths: Array of depths for each contour
+      :type depths: Union[np.ndarray, List[float]]
+      :param km: Whether the depths are in kilometers, defaults to False
+      :type km: bool
+      :param mesh_name: Name of the output mesh file
+      :type mesh_name: str, optional
+      :param mesh_format: Format of the output mesh file
+      :type mesh_format: str, optional
+      :param check_mesh: Whether to display visualization of the mesh for debugging, defaults to False
+      :type check_mesh: bool, optional
+      :param check_strike_dip: Whether to print strike and dip information for debugging, defaults to False
+      :type check_strike_dip: bool, optional
+      :return: Triangular mesh representing the fault surface
+      :rtype: meshio.Mesh
+
+
+

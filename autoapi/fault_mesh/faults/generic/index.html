@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fault_mesh.faults.generic &mdash; cfm-leapfrog 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="fault_mesh.faults.leapfrog" href="../leapfrog/index.html" />
+    <link rel="prev" title="fault_mesh.faults.connected" href="../connected/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            cfm-leapfrog
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction and Setup:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../help/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../help/preparation.html">Preparing inputs for use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../help/install.html">Installation instructions and updates to code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../help/running_examples.html">Running tutorial examples using Jupyter</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/define_connected.html">Defining connected fault systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/define_connected.html#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/define_connected.html#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../help/camilla.html">Leapfrog 3D mesh generation and fault cutting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Examples (Japanese):</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/define_connected_japanese.html">接続された断層システムの定義</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/define_connected_japanese.html#id6">切断階層の定義</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/define_connected_japanese.html#id9">メッシュ作成のためのシェープファイルの作成</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">fault_mesh</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html">fault_mesh.faults</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../io/index.html">fault_mesh.io</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utilities/index.html">fault_mesh.utilities</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">cfm-leapfrog</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">fault_mesh</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">fault_mesh.faults</a></li>
+      <li class="breadcrumb-item active">fault_mesh.faults.generic</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/fault_mesh/faults/generic/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-fault_mesh.faults.generic">
+<span id="fault-mesh-faults-generic"></span><h1>fault_mesh.faults.generic<a class="headerlink" href="#module-fault_mesh.faults.generic" title="Link to this heading"></a></h1>
+<p>Classes to act as a general/multifault. Leapfrog classes inherit from these.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.GenericMultiFault" title="fault_mesh.faults.generic.GenericMultiFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GenericMultiFault</span></code></a></p></td>
+<td><p>Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.smallest_difference" title="fault_mesh.faults.generic.smallest_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">smallest_difference</span></code></a>(value1, value2)</p></td>
+<td><p>Finds smallest angle between two bearings</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.normalize_bearing" title="fault_mesh.faults.generic.normalize_bearing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize_bearing</span></code></a>(bearing)</p></td>
+<td><p>change a bearing (in degrees) so that it is an azimuth between 0 and 360.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.bearing_leq" title="fault_mesh.faults.generic.bearing_leq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bearing_leq</span></code></a>(value, benchmark[, tolerance])</p></td>
+<td><p>Check whether a bearing (value) is anticlockwise of another bearing (benchmark)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.bearing_geq" title="fault_mesh.faults.generic.bearing_geq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bearing_geq</span></code></a>(value, benchmark[, tolerance])</p></td>
+<td><p>Check whether a bearing (value) is clockwise of another bearing (benchmark)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.reverse_bearing" title="fault_mesh.faults.generic.reverse_bearing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reverse_bearing</span></code></a>(bearing)</p></td>
+<td><p>180 degrees from supplied bearing</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.reverse_line" title="fault_mesh.faults.generic.reverse_line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reverse_line</span></code></a>(line)</p></td>
+<td><p>Change the order that points in a LineString object are presented.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.calculate_strike_direction" title="fault_mesh.faults.generic.calculate_strike_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_strike_direction</span></code></a>(x, y)</p></td>
+<td><p>Calculate the strike of line in 2D, given x and y coordinates.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.calculate_dip_direction" title="fault_mesh.faults.generic.calculate_dip_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_dip_direction</span></code></a>(line)</p></td>
+<td><p>Calculate the strike of a shapely linestring object with coordinates in NZTM,</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.generic.root_mean_square" title="fault_mesh.faults.generic.root_mean_square"><code class="xref py py-obj docutils literal notranslate"><span class="pre">root_mean_square</span></code></a>(value_array)</p></td>
+<td><p>Helper function to turn max and min to stdev for inclusion in XML.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.smallest_difference">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">smallest_difference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.smallest_difference" title="Link to this definition"></a></dt>
+<dd><p>Finds smallest angle between two bearings
+:param value1:
+:param value2:
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.normalize_bearing">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">normalize_bearing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bearing</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.normalize_bearing" title="Link to this definition"></a></dt>
+<dd><p>change a bearing (in degrees) so that it is an azimuth between 0 and 360.
+:param bearing:
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bearing</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>int</em><em>]</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.bearing_leq">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">bearing_leq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benchmark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.bearing_leq" title="Link to this definition"></a></dt>
+<dd><p>Check whether a bearing (value) is anticlockwise of another bearing (benchmark)
+:param value:
+:param benchmark:
+:param tolerance: to account for rounding errors etc
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>benchmark</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>tolerance</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.bearing_geq">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">bearing_geq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benchmark</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.bearing_geq" title="Link to this definition"></a></dt>
+<dd><p>Check whether a bearing (value) is clockwise of another bearing (benchmark)
+:param value:
+:param benchmark:
+:param tolerance: to account for rounding errors etc
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>benchmark</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
+<li><p><strong>tolerance</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.reverse_bearing">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">reverse_bearing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bearing</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.reverse_bearing" title="Link to this definition"></a></dt>
+<dd><p>180 degrees from supplied bearing
+:param bearing:
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bearing</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.reverse_line">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">reverse_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.reverse_line" title="Link to this definition"></a></dt>
+<dd><p>Change the order that points in a LineString object are presented.
+Updated to work with 3d lines (has_z), September 2021
+Important for OpenSHA, I think
+:param line:
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>line</strong> (<em>shapely.geometry.LineString</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.calculate_strike_direction">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">calculate_strike_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.calculate_strike_direction" title="Link to this definition"></a></dt>
+<dd><p>Calculate the strike of line in 2D, given x and y coordinates.
+:param x: x coordinates of line
+:param y: y coordinates of line
+:return: strike direction in degrees</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>numpy.ndarray</em>)</p></li>
+<li><p><strong>y</strong> (<em>numpy.ndarray</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.calculate_dip_direction">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">calculate_dip_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.calculate_dip_direction" title="Link to this definition"></a></dt>
+<dd><p>Calculate the strike of a shapely linestring object with coordinates in NZTM,
+then adds 90 to get dip direction. Dip direction is always 90 clockwise from strike of line.
+:param line: Linestring object
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>line</strong> (<em>shapely.geometry.LineString</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.root_mean_square">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">root_mean_square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.root_mean_square" title="Link to this definition"></a></dt>
+<dd><p>Helper function to turn max and min to stdev for inclusion in XML.
+:param value_array: Differences of values (e.g. sr_min and sr_max) from mean.
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value_array</strong> (<em>Union</em><em>[</em><em>numpy.ndarray</em><em>, </em><em>list</em><em>, </em><em>tuple</em><em>]</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.GenericMultiFault">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.generic.</span></span><span class="sig-name descname"><span class="pre">GenericMultiFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_geodataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_colons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_choice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pref'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_optional_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.GenericMultiFault" title="Link to this definition"></a></dt>
+<dd><p>Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fault_geodataframe</strong> (<em>geopandas.GeoDataFrame</em>)</p></li>
+<li><p><strong>sort_sr</strong> (<em>bool</em>)</p></li>
+<li><p><strong>remove_colons</strong> (<em>bool</em>)</p></li>
+<li><p><strong>dip_choice</strong> (<em>str</em>)</p></li>
+<li><p><strong>check_optional_fields</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.generic.GenericMultiFault.gdf_from_nz_cfm_shp">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gdf_from_nz_cfm_shp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_region_polygons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_region_min_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_aus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.generic.GenericMultiFault.gdf_from_nz_cfm_shp" title="Link to this definition"></a></dt>
+<dd><p>Read CFM shapefile</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>)</p></li>
+<li><p><strong>exclude_region_polygons</strong> (<em>List</em><em>[</em><em>shapely.geometry.Polygon</em><em>]</em>)</p></li>
+<li><p><strong>depth_type</strong> (<em>str</em>)</p></li>
+<li><p><strong>exclude_region_min_sr</strong> (<em>float</em>)</p></li>
+<li><p><strong>include_names</strong> (<em>list</em>)</p></li>
+<li><p><strong>exclude_aus</strong> (<em>bool</em>)</p></li>
+<li><p><strong>exclude_zero</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../connected/index.html" class="btn btn-neutral float-left" title="fault_mesh.faults.connected" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../leapfrog/index.html" class="btn btn-neutral float-right" title="fault_mesh.faults.leapfrog" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Andy Howell and Camilla Penney.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

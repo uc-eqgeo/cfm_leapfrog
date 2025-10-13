@@ -1,0 +1,59 @@
+fault_mesh.utilities.graph
+==========================
+
+.. py:module:: fault_mesh.utilities.graph
+
+.. autoapi-nested-parse::
+
+   Submodule that uses networkx to find connections between segments in a fault map
+
+   Functions:
+       - to_graph: Converts a list of node lists into a graph
+       - connected_nodes: Finds all connected components in a graph created from node lists
+       - suggest_combined_name: Suggests a combined name for a set of connected nodes based on their names
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   fault_mesh.utilities.graph.to_graph
+   fault_mesh.utilities.graph.connected_nodes
+   fault_mesh.utilities.graph.suggest_combined_name
+
+
+Module Contents
+---------------
+
+.. py:function:: to_graph(node_list)
+
+   Answer from https://stackoverflow.com/a/4843408
+   :param node_list:
+   :return:
+
+
+.. py:function:: connected_nodes(node_list)
+
+   Find all connected components in a graph created from node lists.
+
+   :param node_list: Lists of nodes where each list represents a path or chain of connected nodes
+   :type node_list: List[List[str]]
+   :return: List of sets, where each set contains nodes that are connected to each other
+   :rtype: list[set]
+
+
+.. py:function:: suggest_combined_name(connected_node_set)
+
+   Suggest a combined name for a set of connected nodes.
+
+   This function analyzes a set of connected node names and attempts to find
+   a meaningful combined name based on common elements or patterns in the names.
+
+   :param connected_node_set: A set of node names that are connected in a graph
+   :type connected_node_set: list
+   :return: A suggested name for the combined nodes
+   :rtype: str
+
+

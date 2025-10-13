@@ -1,0 +1,26 @@
+fault_mesh.utilities
+====================
+
+.. py:module:: fault_mesh.utilities
+
+.. autoapi-nested-parse::
+
+   Test
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/fault_mesh/utilities/cubit/index
+   /autoapi/fault_mesh/utilities/cutting/index
+   /autoapi/fault_mesh/utilities/graph/index
+   /autoapi/fault_mesh/utilities/merging/index
+   /autoapi/fault_mesh/utilities/meshing/index
+   /autoapi/fault_mesh/utilities/smoothing/index
+   /autoapi/fault_mesh/utilities/splines/index
+
+

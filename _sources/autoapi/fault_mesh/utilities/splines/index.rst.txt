@@ -1,0 +1,77 @@
+fault_mesh.utilities.splines
+============================
+
+.. py:module:: fault_mesh.utilities.splines
+
+.. autoapi-nested-parse::
+
+   Utilities for working with splines and contour interpolation.
+   This module provides functions for fitting splines to 2D contour data,
+   creating linearly spaced arrays, and smoothing contour geometries.
+   It is particularly useful for processing geological fault data and
+   other linear features that require smoothing or regularization.
+   Functions:
+       fit_2d_line: Calculate dip angle by fitting a line to 2D data points
+       linspace_with_spacing: Create evenly spaced points with a specified spacing
+       spline_fit_contours: Fit smooth splines to contour geometries in a GeoDataFrame
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   fault_mesh.utilities.splines.fit_2d_line
+   fault_mesh.utilities.splines.linspace_with_spacing
+   fault_mesh.utilities.splines.spline_fit_contours
+   fault_mesh.utilities.splines.fault_edge_spline
+
+
+Module Contents
+---------------
+
+.. py:function:: fit_2d_line(x, y)
+
+   Fit a 2D line to a set of points
+   :param x:
+   :param y:
+   :return:
+
+
+.. py:function:: linspace_with_spacing(start, stop, spacing)
+
+   Create a linearly spaced array with a given spacing
+   :param start:
+   :param stop:
+   :param spacing:
+   :return:
+
+
+.. py:function:: spline_fit_contours(contours, point_spacing = 100.0, output_spacing = 1000.0)
+
+   Fits a smooth spline to each contour in a GeoDataFrame.
+   This function takes contour geometries, fits a spline through them, and returns a new set of smoothed contours
+   with points at a regular spacing. The process involves segmenting each contour, transforming it to align with
+   its principal direction (strike), fitting a spline in this transformed space, and then transforming back to
+   the original coordinate system.
+   :param contours: GeoDataFrame containing LineString geometries representing the contours to be smoothed.
+   :param point_spacing: Distance between points when segmenting the original contour for spline fitting, defaults to 100.
+   :param output_spacing: Distance between points in the resulting smoothed contour, defaults to 1000.
+   :return: GeoDataFrame containing the smoothed contours as LineString geometries.
+
+
+.. py:function:: fault_edge_spline(max_slip, distance_width, total_width, min_slip_fraction = 0.0, line_stop_fraction = 0.5, gradient_change = 1.2, spline_k = 3, spline_s = 0.0, resolution = 10.0)
+
+   Create a spline that can be used to create a slip distribution along the edge of a fault.
+   @param max_slip:
+   @param distance_width:
+   @param min_slip_fraction:
+   @param line_stop_fraction:
+   @param gradient_change:
+   @param spline_k:
+   @param spline_s:
+   @param resolution:
+   @return:
+
+
