@@ -176,6 +176,8 @@ class FaultMesh:
         self._tri_centre_dict = None
         self.pv_triangles = None
         self.pv_tri_dict = None
+        self.pv_vertices = None
+        self.pv_vertex_dict = None
         self.vertex_dict = None
         self.plane = None
         self._plane_normal = None
@@ -217,10 +219,12 @@ class FaultMesh:
         pv_mesh = pv.from_meshio(mesh).extract_surface()
         fault_mesh.pv_triangles = pv_mesh.faces.reshape(-1, 4)[:, 1:]
         fault_mesh.vertices = mesh.points
+        fault_mesh.pv_vertices = pv_mesh.points
         fault_mesh.triangles = mesh.cells_dict["triangle"]
         fault_mesh.tri_dict = {i: tri for i, tri in enumerate(fault_mesh.triangles)}
-        fault_mesh.pv_tri_dict = {i: tri for i, tri in enumerate(fault_mesh.pv_triangles)}
         fault_mesh.vertex_dict = {i: vertex for i, vertex in enumerate(fault_mesh.vertices)}
+        fault_mesh.pv_tri_dict = {i: tri for i, tri in enumerate(fault_mesh.pv_triangles)}
+        fault_mesh.pv_vertex_dict = {i: vertex for i, vertex in enumerate(pv_mesh.points)}
         fault_mesh.name = os.path.splitext(os.path.basename(file_path))[0]
         fault_mesh.xmin = np.min(fault_mesh.vertices[:, 0])
         fault_mesh.xmax = np.max(fault_mesh.vertices[:, 0])
@@ -336,11 +340,11 @@ class FaultMesh:
 
     def find_all_outside_vertices(self):
         outside_vertex_indices = self.find_all_outside_vertex_indices()
-        return self.vertices[outside_vertex_indices]
+        return self.pv_vertices[outside_vertex_indices]
     
     def find_vertex_indices_constant_depth(self, bottom_value: float, tolerance=10.0):
         outside_vertex_indices = self.find_all_outside_vertex_indices()
-        bottom_vertex_indices = np.where(np.abs(self.vertices[:, -1][outside_vertex_indices] - bottom_value) <= tolerance)[0]
+        bottom_vertex_indices = np.where(np.abs(self.pv_vertices[:, -1][outside_vertex_indices] - bottom_value) <= tolerance)[0]
         return outside_vertex_indices[bottom_vertex_indices]
 
     def find_edge_triangles(self, edge):
@@ -480,10 +484,10 @@ class FaultMesh:
         left_vertices = np.unique(left_edges.flatten())
         right_vertices = np.unique(right_edges.flatten())
 
-        top_tris = np.where(np.isin(self.triangles, top_vertices).any(axis=1))[0]
-        bottom_tris = np.where(np.isin(self.triangles, bottom_vertices).any(axis=1))[0]
-        left_tris = np.where(np.isin(self.triangles, left_vertices).any(axis=1))[0]
-        right_tris = np.where(np.isin(self.triangles, right_vertices).any(axis=1))[0]
+        top_tris = np.where(np.isin(self.pv_triangles, top_vertices).any(axis=1))[0]
+        bottom_tris = np.where(np.isin(self.pv_triangles, bottom_vertices).any(axis=1))[0]
+        left_tris = np.where(np.isin(self.pv_triangles, left_vertices).any(axis=1))[0]
+        right_tris = np.where(np.isin(self.pv_triangles, right_vertices).any(axis=1))[0]
 
         return top_tris, bottom_tris, left_tris, right_tris
     
@@ -560,10 +564,9 @@ class FaultMesh:
         pv_self = pv.from_meshio(self.mesh).extract_surface()
         pv_other = pv.from_meshio(other_mesh.mesh).extract_surface()
 
-        self_pv_triangles = pv_self.faces.reshape(-1, 4)[:, 1:]
 
         implicit_distances = np.array(pv_self.compute_implicit_distance(pv_other)["implicit_distance"])
-        triangle_distances = implicit_distances[self_pv_triangles]
+        triangle_distances = implicit_distances[self.pv_triangles]
         all_positive = np.all(triangle_distances >= 0, axis=1)
         all_negative = np.all(triangle_distances < 0, axis=1)
         to_keep = ~(all_positive | all_negative)
@@ -575,6 +578,8 @@ class FaultMesh:
         intersecting_triangles = self.get_intersecting_triangles(other_mesh)
         if len(intersecting_triangles) == 0:
             return False
+        
+
         
         top_tris, bottom_tris, left_tris, right_tris = self.find_top_bottom_left_right_triangles()
         edge_conditions = {
@@ -679,12 +684,20 @@ class FaultMesh:
         pv_other = pv.from_meshio(other_mesh.mesh).extract_surface()
 
         clipped1 = pv_self.clip_surface(pv_other, invert=False)
+        clipped1_surface_points = clipped1.points[clipped1.points[:, 2] == 0.]
         clipped2 = pv_self.clip_surface(pv_other, invert=True)
+        clipped2_surface_points = clipped2.points[clipped2.points[:, 2] == 0.]
 
-        trace_tree = KDTree(fault_trace)
-        dist1, _ = trace_tree.query(clipped1.points, k=1)
-        dist2, _ = trace_tree.query(clipped2.points, k=1)
-        if np.mean(dist1) < np.mean(dist2):
+        mean_clipped1 = np.mean(clipped1_surface_points, axis=0)
+        mean_clipped2 = np.mean(clipped2_surface_points, axis=0)
+        mean_trace = np.mean(fault_trace, axis=0)
+        print(mean_clipped1, mean_clipped2, mean_trace)
+
+        dist1 = np.abs(np.linalg.norm(mean_clipped1 - mean_trace, axis=1))
+        dist2 = np.abs(np.linalg.norm(mean_clipped2 - mean_trace, axis=1))
+
+        print(dist1, dist2)
+        if dist1 < dist2:
             clipped = clipped1
         else:
             clipped = clipped2
@@ -698,6 +711,8 @@ class FaultMesh:
         new_fault_mesh.vertices = new_fault_mesh.mesh.points
         new_fault_mesh.triangles = new_fault_mesh.mesh.cells_dict["triangle"]
         new_fault_mesh.tri_dict = {i: tri for i, tri in enumerate(new_fault_mesh.triangles)}
+        new_fault_mesh.pv_triangles = clipped.faces.reshape(-1, 4)[:, 1:]
+        new_fault_mesh.pv_tri_dict = {i: tri for i, tri in enumerate(new_fault_mesh.pv_triangles)}
         new_fault_mesh.vertex_dict = {i: vertex for i, vertex in enumerate(new_fault_mesh.vertices)}
         new_fault_mesh.name = f"{self.name}"
         new_fault_mesh.xmin = np.min(new_fault_mesh.vertices[:, 0])
