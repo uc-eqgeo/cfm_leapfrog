@@ -20,6 +20,7 @@ dependencies:
   - rasterio
   - rioxarray
   - pyvista
+  - numba
   - pip:
     - ./tectonic_fault_mesh_tools
     - meshio
