@@ -358,7 +358,7 @@ class CfmMultiFault:
         if exclude_aus:
             trimmed_fault_gdf = trimmed_fault_gdf[trimmed_fault_gdf.Fault_stat != "A-US"]
 
-        if depth_type is not "D90":
+        if depth_type != "D90":
             assert min_dfc >= 0.
             trimmed_fault_gdf = trimmed_fault_gdf[trimmed_fault_gdf.Depth_Dfc >= min_dfc]
 
