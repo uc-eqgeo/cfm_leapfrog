@@ -169,6 +169,7 @@
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dist_tolerance</span> <span class="o">=</span> <span class="mf">200.</span>
+<span class="n">fault_data</span><span class="o">.</span><span class="n">segment_distance_tolerance</span> <span class="o">=</span> <span class="n">dist_tolerance</span>
 </pre></div>
 </div>
 </div>
@@ -181,7 +182,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found 156 connections
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found 158 connections
 Found 142 connections between segment ends
 </pre></div>
 </div>
@@ -279,6 +280,13 @@ Although it is possible to construct these triangular surfaces in multiple softw
     <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;footprints/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp&quot;</span><span class="p">)</span>
     <span class="c1"># Write fault footprints as lines (necessary for newer Leapfrog Geo betas)</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">boundary</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;footprints_lines/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault</span><span class="o">.</span><span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dip_max</span>
 </pre></div>
 </div>
 </div>

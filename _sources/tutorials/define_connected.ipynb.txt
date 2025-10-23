@@ -14,7 +14,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 1,
+   "execution_count": 12,
    "id": "f42e46ec",
    "metadata": {
     "ExecuteTime": {
@@ -71,7 +71,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 3,
+   "execution_count": 13,
    "id": "e77fe10b-189f-49e3-a13a-8d1083f64a12",
    "metadata": {},
    "outputs": [],
@@ -92,7 +92,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 4,
+   "execution_count": null,
    "id": "7b431aa1",
    "metadata": {
     "ExecuteTime": {
@@ -102,7 +102,8 @@
    },
    "outputs": [],
    "source": [
-    "dist_tolerance = 200."
+    "dist_tolerance = 200.\n",
+    "fault_data.segment_distance_tolerance = dist_tolerance"
    ]
   },
   {
@@ -120,7 +121,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 5,
+   "execution_count": 14,
    "id": "f340fb5c4614aeb3",
    "metadata": {
     "ExecuteTime": {
@@ -161,7 +162,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 6,
+   "execution_count": 15,
    "id": "352706d562d17779",
    "metadata": {
     "ExecuteTime": {
@@ -204,7 +205,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 7,
+   "execution_count": 16,
    "id": "7a7e1102cf1a2c2d",
    "metadata": {
     "ExecuteTime": {
@@ -240,7 +241,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 8,
+   "execution_count": 17,
    "id": "8aa91cf663cf7172",
    "metadata": {
     "collapsed": false,
@@ -277,7 +278,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 9,
+   "execution_count": 18,
    "id": "504ea2826059a9a0",
    "metadata": {
     "collapsed": false,
@@ -310,7 +311,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 10,
+   "execution_count": 19,
    "id": "dd1885097c3687f4",
    "metadata": {
     "collapsed": false,
@@ -340,20 +341,22 @@
   },
   {
    "cell_type": "code",
+   "execution_count": 20,
    "id": "6d74561b6ae9388",
    "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-03-07T02:07:02.400081Z",
+     "start_time": "2025-03-07T02:07:02.050586Z"
+    },
     "collapsed": false,
     "jupyter": {
      "outputs_hidden": false
     },
     "pycharm": {
      "is_executing": true
-    },
-    "ExecuteTime": {
-     "end_time": "2025-03-07T02:07:02.400081Z",
-     "start_time": "2025-03-07T02:07:02.050586Z"
     }
    },
+   "outputs": [],
    "source": [
     "for fault in fault_data.curated_faults:\n",
     "    # Generate depth contours\n",
@@ -369,26 +372,22 @@
     "    fault.footprint_geoseries.to_file(f\"footprints/{fault.name}_footprint.shp\")\n",
     "    # Write fault footprints as lines (necessary for newer Leapfrog Geo betas)\n",
     "    fault.footprint_geoseries.boundary.to_file(f\"footprints_lines/{fault.name}_footprint.shp\")"
-   ],
-   "outputs": [
-    {
-     "ename": "NameError",
-     "evalue": "name 'fault_data' is not defined",
-     "output_type": "error",
-     "traceback": [
-      "\u001B[1;31m---------------------------------------------------------------------------\u001B[0m",
-      "\u001B[1;31mNameError\u001B[0m                                 Traceback (most recent call last)",
-      "Cell \u001B[1;32mIn[1], line 1\u001B[0m\n\u001B[1;32m----> 1\u001B[0m \u001B[38;5;28;01mfor\u001B[39;00m fault \u001B[38;5;129;01min\u001B[39;00m \u001B[43mfault_data\u001B[49m\u001B[38;5;241m.\u001B[39mcurated_faults:\n\u001B[0;32m      2\u001B[0m     \u001B[38;5;66;03m# Generate depth contours\u001B[39;00m\n\u001B[0;32m      3\u001B[0m     fault\u001B[38;5;241m.\u001B[39mgenerate_depth_contours(np\u001B[38;5;241m.\u001B[39marange(\u001B[38;5;241m2000\u001B[39m, \u001B[38;5;241m32000.\u001B[39m, \u001B[38;5;241m2000.\u001B[39m), smoothing\u001B[38;5;241m=\u001B[39m\u001B[38;5;28;01mFalse\u001B[39;00m)\n\u001B[0;32m      4\u001B[0m     \u001B[38;5;66;03m# Write contours to files\u001B[39;00m\n",
-      "\u001B[1;31mNameError\u001B[0m: name 'fault_data' is not defined"
-     ]
-    }
-   ],
-   "execution_count": 1
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "a6f2ce1f-8d29-407b-8f67-63bd03669d6e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fault.segments[0].dip_max\n"
+   ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
-   "id": "a6f2ce1f-8d29-407b-8f67-63bd03669d6e",
+   "id": "e9f53a8e",
    "metadata": {},
    "outputs": [],
    "source": []
@@ -396,7 +395,7 @@
  ],
  "metadata": {
   "kernelspec": {
-   "display_name": "Python 3 (ipykernel)",
+   "display_name": "leapfrog-fault-models",
    "language": "python",
    "name": "python3"
   },
@@ -410,7 +409,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.10.15"
+   "version": "3.12.10"
   }
  },
  "nbformat": 4,
