@@ -6,7 +6,7 @@
 Welcome to cfm-leapfrog's documentation!
 ========================================
 This module is designed to help create 3D models of complex fault systems, and works by projecting surface traces to depth.
-Leapfrog software should be used for mesh cutting operations.
+Leapfrog software should be used for mesh cutting operations. For source code, please visit https://github.com/uc-eqgeo/cfm_leapfrog/.
 
 .. image:: help/images/fault_model.png
    :width: 400
