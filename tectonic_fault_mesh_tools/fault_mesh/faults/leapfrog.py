@@ -254,6 +254,7 @@ class LeapfrogMultiFault(GenericMultiFault):
                 name = name.replace(":", "")
                 segs = [element.strip() for element in elements[1:]]
                 if any([seg in self.names for seg in segs]):
+                    print(f"Creating connected fault system: {name} with segments: {[seg for seg in segs if seg]}")
                     cfault = ConnectedFaultSystem(overall_name=name, cfm_faults=self, segment_names=segs,
                                                   tolerance=self.segment_distance_tolerance,
                                                   trimming_gradient=trimming_gradient,
@@ -810,7 +811,26 @@ class LeapfrogFault(GenericFault):
     @property
     def nztm_trace_array(self):
         return np.array(self.nztm_trace.coords)
+    
+    @property
+    def original_nztm_trace(self):
+        return self._original_nztm_trace
+    
+    @original_nztm_trace.setter
+    def original_nztm_trace(self, trace: LineString):
+        assert isinstance(trace, (LineString, MultiLineString))
+        if isinstance(trace, MultiLineString):
+            trace = list(trace.geoms)[0]
 
+        if trace.has_z:
+            new_trace = LineString([(xi, yi, 0.) for xi, yi, _ in trace.coords])
+        else:
+            new_trace = LineString([(xi, yi, 0.) for xi, yi in trace.coords])
+        self._original_nztm_trace = new_trace
+
+    @property
+    def original_nztm_trace_array(self):
+        return np.array(self.original_nztm_trace.coords)
 
     @property
     def end1(self):

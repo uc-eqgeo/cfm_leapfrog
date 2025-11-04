@@ -60,10 +60,10 @@ valid_rake_range = [0, 360]
 valid_sr_range = [0, 60]
 
 # These fields aren't crucial but are in some versions of the relevant files
-expected_fields = ['D90', 'Depth_max', 'Depth_min', 'Dip_pref',
+expected_fields = ['Depth_D90', 'Dip_pref',
                    'Dip_dir', 'Dip_max', 'Dip_min', 'Name',
-                   'Qual_Code', 'Rake_pref', 'Rake_plus', 'Rake_minus', 'Dom_sense',
-                   'Sub_sense', 'Source1_1', 'Source2', 'SR_pref', 'SR_Max', 'SR_Min',
+                   'QualCode', 'Rake_pref', 'Rake_plus', 'Rake_minus', 'Dom_sense',
+                   'Sub_sense',  'SR_pref', 'SR_max', 'SR_min',
                    'geometry']
 
 # There will be a mess if these fields don't exist
@@ -338,10 +338,10 @@ class CfmMultiFault:
                 elif include_names is not None:
                     if row["Name"] in include_names:
                         trimmed_fault_ls.append(row)
-                    else:
-                        print(row["Name"])
-                else:
-                    print(row["Name"])
+                #     else:
+                #         print(row["Name"])
+                # else:
+                #     print(row["Name"])
             trimmed_fault_gdf = gpd.GeoDataFrame(trimmed_fault_ls)
 
         else:
@@ -415,7 +415,7 @@ class CfmMultiFault:
         return multi_fault
 
     def to_opensha_xml(self, exclude_subduction: bool = True, buffer_width: float = 5000.,
-                       write_buffers: bool = True):
+                       write_buffers: bool = True, dip_value: str = "pref"):
         """
         Write out XML in OpenSHA format
         :param exclude_subduction: Do not include subduction zones from CFM
@@ -423,6 +423,8 @@ class CfmMultiFault:
         """
         assert self.faults
         assert isinstance(exclude_subduction, bool)
+        assert isinstance(dip_value, str)
+        assert dip_value in ["pref", "min", "max"]
         # Base XML element
         opensha_element = ElemTree.Element("OpenSHA")
         # Fault model sub element
@@ -436,7 +438,7 @@ class CfmMultiFault:
                                                               for name in subduction_names])])
             # Add XML for fault
             if not exclude_condition:
-                fm_element.append(fault.to_xml(section_id=i, buffer_width=buffer_width, write_buffers=write_buffers))
+                fm_element.append(fault.to_xml(section_id=i, buffer_width=buffer_width, write_buffers=write_buffers, dip_value=dip_value))
                 i += 1
 
         # Awkward way of getting the xml file to be written in a way that's easy to read.
@@ -1087,15 +1089,23 @@ class CfmFault:
             "Depth_Max"]
         return fault
 
-    def to_xml(self, section_id: int, buffer_width: float = 5000., write_buffers: bool = True):
+    def to_xml(self, section_id: int, buffer_width: float = 5000., write_buffers: bool = True, dip_value: str = "pref"):
         # Unique fault identifier
         tag_name = "i{:d}".format(section_id)
         # Metadata
+        assert dip_value in ["pref", "min", "max"]
+        if dip_value == "pref":
+            dip_used = self.dip_best
+        elif dip_value == "min":
+            dip_used = self.dip_min
+        else:
+            dip_used = self.dip_max
+            
         attribute_dic = {"sectionId": "{:d}".format(section_id),
                          "sectionName": self.name,
                          "aveLongTermSlipRate": "{:.2f}".format(self.sr_best),
                          "slipRateStdDev": "{:.2f}".format(self.sr_sigma),
-                         "aveDip": "{:.1f}".format(self.dip_best),
+                         "aveDip": "{:.1f}".format(dip_used),
                          "aveRake": "{:.1f}".format(self.rake_to_opensha(self.rake_best)),
                          "aveUpperDepth": "0.0",
                          "aveLowerDepth": "{:.1f}".format(self.depth_best),

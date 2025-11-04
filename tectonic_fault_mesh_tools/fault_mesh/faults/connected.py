@@ -64,6 +64,7 @@ class ConnectedFaultSystem:
         self._smooth_trace_refinements = smooth_trace_refinements
         self._dip_dir = None
         self._mesh = None
+        self._original_nztm_trace = None
         segments = []
 
         assert any([segment_names is not None, search_patterns is not None])
@@ -149,17 +150,23 @@ class ConnectedFaultSystem:
         first_segment = sorted_segments_s_to_n[0]
 
         ordered_segments = [first_segment]
-        while len(ordered_segments) < len(segments):
+        max_iterations = 1000
+        while len(ordered_segments) < len(segments) and max_iterations > 0:
+            max_iterations -= 1
             for segment in segments:
                 if segment not in ordered_segments:
                     if segment.nztm_trace.distance(ordered_segments[-1].nztm_trace) <= tolerance:
                         ordered_segments.append(segment)
+        if max_iterations == 0:
+            raise ValueError(f"Could not order segments for connected fault {overall_name}")
         self.segments = ordered_segments
         if self._smooth_trace_refinements is None:
-            self.overall_trace = merge_multiple_nearly_adjacent_segments([seg.nztm_trace for seg in self.segments],
+            overall_trace = merge_multiple_nearly_adjacent_segments([seg.nztm_trace for seg in self.segments],
                                                                          densify=None)
         else:
-            self.overall_trace = merge_multiple_nearly_adjacent_segments([seg.nztm_trace for seg in self.segments])
+            overall_trace = merge_multiple_nearly_adjacent_segments([seg.nztm_trace for seg in self.segments])
+        self.overall_trace = overall_trace
+        self._original_nztm_trace = overall_trace
 
         # boundaries = [l1.nztm_trace.intersection(l2.nztm_trace) for l1, l2 in zip(self.segments, self.segments[1:])]
         boundaries = []
@@ -207,6 +214,10 @@ class ConnectedFaultSystem:
     @property
     def nztm_trace(self):
         return self.overall_trace
+    
+    @property
+    def original_nztm_trace(self):
+        return self._original_nztm_trace
 
     @property
     def nztm_trace_geoseries(self):
@@ -215,9 +226,14 @@ class ConnectedFaultSystem:
         else:
             return gpd.GeoSeries(self.nztm_trace)
         
+        
     @property
     def nztm_trace_array(self):
         return np.array(self.nztm_trace.coords)
+    
+    @property
+    def original_nztm_trace_array(self):
+        return np.array(self.original_nztm_trace.coords)
 
     @property
     def smoothed_trace(self):

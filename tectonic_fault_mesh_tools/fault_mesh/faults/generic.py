@@ -418,6 +418,7 @@ class GenericFault:
         self._sr_best, self._sr_max, self._sr_min = (None,) * 3
         self._nztm_trace = None
         self._segment_distance_tolerance = tolerance
+        self._original_nztm_trace = None
 
         # Attributes required for OpenSHA XML
         self._section_id, self._section_name = (None,) * 2
@@ -710,6 +711,18 @@ class GenericFault:
             self._nztm_trace = list(trace.geoms)[0]
 
     @property
+    def original_nztm_trace(self):
+        return self._original_nztm_trace
+    
+    @original_nztm_trace.setter
+    def original_nztm_trace(self, trace: LineString):
+        if isinstance(trace, LineString):
+            self._original_nztm_trace = trace
+        else:
+            assert isinstance(trace, MultiLineString)
+            self._original_nztm_trace = list(trace.geoms)[0]
+
+    @property
     def wgs_trace(self):
         if self.nztm_trace is not None:
             nztm_x, nztm_y = [np.array([a]).flatten() for a in self.nztm_trace.xy]
@@ -880,6 +893,7 @@ class GenericFault:
             fault.dip_min, fault.dip_max = series["Dip_min"], series["Dip_max"]
 
         fault.nztm_trace = series["geometry"]
+        fault.original_nztm_trace = series["geometry"]
         fault.dip_dir_str = series["Dip_dir"]
 
         if "SR_pref" in series.index:

@@ -422,7 +422,9 @@ class FaultMesh:
         biggest_gap = np.max(np.diff(sorted_side_vertex_x))
         if biggest_gap < min_separation:
             print(f"No significant gap found in side vertices: {self.name}")
-            return None, None, None, None
+            all_vertex_indices = self.find_all_outside_vertex_indices()
+            bottom_vertex_indices = all_vertex_indices[~np.isin(all_vertex_indices, top_vertex_indices)]
+            return top_vertex_indices, bottom_vertex_indices, None, None
         gap_index = np.argmax(np.diff(sorted_side_vertex_x))
         left_indices = sorted_side_vertex_indices[:gap_index + 1]
         right_indices = sorted_side_vertex_indices[gap_index + 1:]
@@ -442,25 +444,35 @@ class FaultMesh:
         """
 
         top_vertex_indices, bottom_vertex_indices, left_vertex_indices, right_vertex_indices = self.find_top_bottom_left_right_vertices(top_depth=top_depth, bottom_depth=bottom_depth, tolerance=tolerance, min_separation=min_separation)
-        if top_vertex_indices is None or bottom_vertex_indices is None or left_vertex_indices is None or right_vertex_indices is None:
-            return None, None, None, None
+        # if top_vertex_indices is None or bottom_vertex_indices is None or left_vertex_indices is None or right_vertex_indices is None:
+        #     return None, None, None, None
         all_edges = self.find_all_outside_edges()
         top_edges = []
         bottom_edges = []
-        left_edges = []
-        right_edges = []
+        if left_vertex_indices is None or right_vertex_indices is None:
+            left_edges = None
+            right_edges = None 
+        else:
+            left_edges = []
+            right_edges = []
 
         for edge in all_edges:
             if edge[0] in top_vertex_indices and edge[1] in top_vertex_indices:
                 top_edges.append(edge)
             elif edge[0] in bottom_vertex_indices and edge[1] in bottom_vertex_indices:
                 bottom_edges.append(edge)
-            if any([vert_i in left_vertex_indices for vert_i in edge]):
-                    left_edges.append(edge)
-            elif any([vert_i in right_vertex_indices for vert_i in edge]):
-                    right_edges.append(edge)
+            if left_edges is not None and right_edges is not None:
+                if any([vert_i in left_vertex_indices for vert_i in edge]):
+                        left_edges.append(edge)
+                elif any([vert_i in right_vertex_indices for vert_i in edge]):
+                        right_edges.append(edge)
 
-        return np.array(top_edges), np.array(bottom_edges), np.array(left_edges), np.array(right_edges)
+        if left_edges is not None:
+            left_edges = np.array(left_edges)
+        if right_edges is not None:
+            right_edges = np.array(right_edges)
+
+        return np.array(top_edges), np.array(bottom_edges), left_edges, right_edges
     
     def find_top_bottom_left_right_triangles(self, top_depth: float = 0., bottom_depth: float = -30000., tolerance: float = 10., min_separation=5.e3):
         """Finds the top, bottom, left, and right triangles of the mesh at a given depth range.
@@ -476,18 +488,23 @@ class FaultMesh:
         """
 
         top_edges, bottom_edges, left_edges, right_edges = self.find_top_bottom_left_right_edges(top_depth=top_depth, bottom_depth=bottom_depth, tolerance=tolerance, min_separation=min_separation)
-        if top_edges is None or bottom_edges is None or left_edges is None or right_edges is None:
+        if top_edges is None or bottom_edges is None:
             return None, None, None, None
         
         top_vertices = np.unique(top_edges.flatten())
         bottom_vertices = np.unique(bottom_edges.flatten())
-        left_vertices = np.unique(left_edges.flatten())
-        right_vertices = np.unique(right_edges.flatten())
 
         top_tris = np.where(np.isin(self.pv_triangles, top_vertices).any(axis=1))[0]
         bottom_tris = np.where(np.isin(self.pv_triangles, bottom_vertices).any(axis=1))[0]
-        left_tris = np.where(np.isin(self.pv_triangles, left_vertices).any(axis=1))[0]
-        right_tris = np.where(np.isin(self.pv_triangles, right_vertices).any(axis=1))[0]
+
+        if left_edges is None or right_edges is None:
+            left_tris = None
+            right_tris = None
+        else:
+            left_vertices = np.unique(left_edges.flatten())
+            right_vertices = np.unique(right_edges.flatten())
+            left_tris = np.where(np.isin(self.pv_triangles, left_vertices).any(axis=1))[0]
+            right_tris = np.where(np.isin(self.pv_triangles, right_vertices).any(axis=1))[0]
 
         return top_tris, bottom_tris, left_tris, right_tris
     
@@ -582,20 +599,25 @@ class FaultMesh:
 
         
         top_tris, bottom_tris, left_tris, right_tris = self.find_top_bottom_left_right_triangles()
+        print(top_tris, bottom_tris, left_tris, right_tris)
         edge_conditions = {
             'top': len(np.intersect1d(intersecting_triangles, top_tris)) > 0,
             'bottom': len(np.intersect1d(intersecting_triangles, bottom_tris)) > 0,
-            'left': len(np.intersect1d(intersecting_triangles, left_tris)) > 0,
-            'right': len(np.intersect1d(intersecting_triangles, right_tris)) > 0,
         }
+        if left_tris is not None and right_tris is not None:
+            edge_conditions['left'] = len(np.intersect1d(intersecting_triangles, left_tris)) > 0
+            edge_conditions['right'] = len(np.intersect1d(intersecting_triangles, right_tris)) > 0
         if sum(edge_conditions.values()) >= 2:
             return True
         
         
         top_vertex_indices, bottom_vertex_indices, left_vertex_indices, right_vertex_indices = self.find_top_bottom_left_right_vertices()
         top_vertex_points, bottom_vertex_points = self.vertices[top_vertex_indices], self.vertices[bottom_vertex_indices]
-        left_vertex_points, right_vertex_points = self.vertices[left_vertex_indices], self.vertices[right_vertex_indices]
-        
+        if left_vertex_indices is None or right_vertex_indices is None:
+            left_vertex_points, right_vertex_points = None, None
+        else:
+            left_vertex_points, right_vertex_points = self.vertices[left_vertex_indices], self.vertices[right_vertex_indices]
+
         vertex_point_dict = {
             'top': top_vertex_points, 
             'bottom': bottom_vertex_points,
@@ -620,15 +642,17 @@ class FaultMesh:
         centre1_nearest_edge = {
             'top': np.min(np.linalg.norm(top_vertex_points[:, :2] - centre1[:2], axis=1)),
             'bottom': np.min(np.linalg.norm(bottom_vertex_points[:, :2] - centre1[:2], axis=1)),
-            'left': np.min(np.linalg.norm(left_vertex_points[:, :2] - centre1[:2], axis=1)),
-            'right': np.min(np.linalg.norm(right_vertex_points[:, :2] - centre1[:2], axis=1)),
         }
+        if left_vertex_points is not None and right_vertex_points is not None:
+            centre1_nearest_edge['left'] = np.min(np.linalg.norm(left_vertex_points[:, :2] - centre1[:2], axis=1))
+            centre1_nearest_edge['right'] = np.min(np.linalg.norm(right_vertex_points[:, :2] - centre1[:2], axis=1))
         centre2_nearest_edge = {
             'top': np.min(np.linalg.norm(top_vertex_points[:, :2] - centre2[:2], axis=1)),
             'bottom': np.min(np.linalg.norm(bottom_vertex_points[:, :2] - centre2[:2], axis=1)),
-            'left': np.min(np.linalg.norm(left_vertex_points[:, :2] - centre2[:2], axis=1)),
-            'right': np.min(np.linalg.norm(right_vertex_points[:, :2] - centre2[:2], axis=1)),
         }
+        if left_vertex_points is not None and right_vertex_points is not None:
+            centre2_nearest_edge['left'] = np.min(np.linalg.norm(left_vertex_points[:, :2] - centre2[:2], axis=1))
+            centre2_nearest_edge['right'] = np.min(np.linalg.norm(right_vertex_points[:, :2] - centre2[:2], axis=1))
         centre1_closest_edge = min(centre1_nearest_edge, key=centre1_nearest_edge.get)
         centre2_closest_edge = min(centre2_nearest_edge, key=centre2_nearest_edge.get)
 
@@ -661,7 +685,7 @@ class FaultMesh:
                 else:
                     return False
                 
-    def cut_mesh(self, other_mesh, fault_trace: np.ndarray):
+    def cut_mesh(self, other_mesh, fault_trace: np.ndarray, surface_tolerance = 1.0):
         """
         Cuts this mesh using another mesh.
 
@@ -684,23 +708,31 @@ class FaultMesh:
         pv_other = pv.from_meshio(other_mesh.mesh).extract_surface()
 
         clipped1 = pv_self.clip_surface(pv_other, invert=False)
-        clipped1_surface_points = clipped1.points[clipped1.points[:, 2] == 0.]
+        clipped1_surface_points = clipped1.points[clipped1.points[:, 2] >= -surface_tolerance]
         clipped2 = pv_self.clip_surface(pv_other, invert=True)
-        clipped2_surface_points = clipped2.points[clipped2.points[:, 2] == 0.]
+        clipped2_surface_points = clipped2.points[clipped2.points[:, 2] >= -surface_tolerance]
 
-        mean_clipped1 = np.mean(clipped1_surface_points, axis=0)
-        mean_clipped2 = np.mean(clipped2_surface_points, axis=0)
-        mean_trace = np.mean(fault_trace, axis=0)
-        print(mean_clipped1, mean_clipped2, mean_trace)
-
-        dist1 = np.abs(np.linalg.norm(mean_clipped1 - mean_trace, axis=1))
-        dist2 = np.abs(np.linalg.norm(mean_clipped2 - mean_trace, axis=1))
-
-        print(dist1, dist2)
-        if dist1 < dist2:
-            clipped = clipped1
-        else:
+        if clipped1_surface_points.shape[0] == 0:
+            print(f"Clipped1 resulted in no surface points for {self.name} after cutting with {other_mesh.name}. Returning clipped2.")
             clipped = clipped2
+        if clipped2_surface_points.shape[0] == 0:
+            print(f"Clipped2 resulted in no surface points for {self.name} after cutting with {other_mesh.name}. Returning clipped1.")
+            clipped = clipped1
+
+        else:
+            trace_kdtree = KDTree(fault_trace)
+            clipped_1_dist, _ = trace_kdtree.query(clipped1_surface_points)
+            clipped_2_dist, _ = trace_kdtree.query(clipped2_surface_points)
+
+            dist1 = np.mean(clipped_1_dist)
+            dist2 = np.mean(clipped_2_dist)
+
+            print(self.name, other_mesh.name)
+            print(dist1, dist2)
+            if dist1 < dist2:
+                clipped = clipped1
+            else:
+                clipped = clipped2
 
         if clipped.n_points < 3 or clipped.n_cells < 1:
             print(f"Cutting resulted in too few points or cells for {self.name} after cutting with {other_mesh.name}. Returning original mesh.")
@@ -708,12 +740,14 @@ class FaultMesh:
 
         new_fault_mesh = FaultMesh()
         new_fault_mesh.mesh = meshio.Mesh(points=clipped.points, cells={"triangle": clipped.faces.reshape(-1, 4)[:, 1:]})
+        new_fault_mesh.name = f"{self.name}_cut_by_{other_mesh.name}"
         new_fault_mesh.vertices = new_fault_mesh.mesh.points
         new_fault_mesh.triangles = new_fault_mesh.mesh.cells_dict["triangle"]
         new_fault_mesh.tri_dict = {i: tri for i, tri in enumerate(new_fault_mesh.triangles)}
         new_fault_mesh.pv_triangles = clipped.faces.reshape(-1, 4)[:, 1:]
         new_fault_mesh.pv_tri_dict = {i: tri for i, tri in enumerate(new_fault_mesh.pv_triangles)}
         new_fault_mesh.vertex_dict = {i: vertex for i, vertex in enumerate(new_fault_mesh.vertices)}
+        new_fault_mesh.pv_vertices = clipped.points
         new_fault_mesh.name = f"{self.name}"
         new_fault_mesh.xmin = np.min(new_fault_mesh.vertices[:, 0])
         new_fault_mesh.xmax = np.max(new_fault_mesh.vertices[:, 0])
