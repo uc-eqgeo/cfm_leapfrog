@@ -546,19 +546,21 @@ class FaultMesh:
         # Quick check using KDTree to see if any vertices are within min_kd_distance
         distances, _ = self.tree.query(other_mesh.vertices, k=1)
         if np.all(distances > min_kd_distance):
-            print("kd fail")
             return False
         
-        # Use PyVista for a more precise intersection check
-
-        pv_self = pv.from_meshio(self.mesh).extract_surface()
-        pv_other = pv.from_meshio(other_mesh.mesh).extract_surface()
-
-        clipped = pv_self.clip_surface(pv_other, invert=False)
-        if clipped.n_cells == pv_self.n_cells:
-            return False
         else:
             return True
+        
+        # # Use PyVista for a more precise intersection check
+
+        # pv_self = pv.from_meshio(self.mesh).extract_surface()
+        # pv_other = pv.from_meshio(other_mesh.mesh).extract_surface()
+
+        # clipped = pv_self.clip_surface(pv_other, invert=False)
+        # if clipped.n_cells == pv_self.n_cells:
+        #     return False
+        # else:
+        #     return True
         
     def get_intersecting_triangles(self, other_mesh):
         """
@@ -574,7 +576,7 @@ class FaultMesh:
         assert self.mesh is not None, "This mesh is not defined."
         assert other_mesh.mesh is not None, "Other mesh is not defined."
 
-        if not self.check_intersection2d(other_mesh):
+        if not self.check_intersection(other_mesh):
             return np.array([], dtype=int)
 
         # Use pyvista for intersection check
@@ -590,8 +592,9 @@ class FaultMesh:
         where_true = np.where(to_keep)[0]
 
         return where_true
+    
 
-    def decide_whether_to_cut(self, other_mesh, threshold=0.7, min_distance: float = 5.e3):
+    def decide_whether_to_cut(self, other_mesh, threshold=0.9, min_distance: float = 10.e3):
         intersecting_triangles = self.get_intersecting_triangles(other_mesh)
         if len(intersecting_triangles) == 0:
             return False
@@ -599,7 +602,6 @@ class FaultMesh:
 
         
         top_tris, bottom_tris, left_tris, right_tris = self.find_top_bottom_left_right_triangles()
-        print(top_tris, bottom_tris, left_tris, right_tris)
         edge_conditions = {
             'top': len(np.intersect1d(intersecting_triangles, top_tris)) > 0,
             'bottom': len(np.intersect1d(intersecting_triangles, bottom_tris)) > 0,
@@ -727,8 +729,6 @@ class FaultMesh:
             dist1 = np.mean(clipped_1_dist)
             dist2 = np.mean(clipped_2_dist)
 
-            print(self.name, other_mesh.name)
-            print(dist1, dist2)
             if dist1 < dist2:
                 clipped = clipped1
             else:

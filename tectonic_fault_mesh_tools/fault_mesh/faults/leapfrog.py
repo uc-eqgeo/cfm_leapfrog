@@ -24,6 +24,7 @@ from fault_mesh.utilities.smoothing import smooth_trace
 from fault_mesh.utilities.cutting import cut_line_between_two_points, cut_line_at_point
 from fault_mesh.utilities.graph import connected_nodes, suggest_combined_name
 from fault_mesh.faults.connected import ConnectedFaultSystem
+from fault_mesh.utilities.merging import merge_multiple_nearly_adjacent_segments
 
 from fault_mesh.utilities.meshing import triangulate_contours
 from fault_mesh.utilities.splines import spline_fit_contours
@@ -264,10 +265,11 @@ class LeapfrogMultiFault(GenericMultiFault):
     def generate_curated_faults(self):
         curated_faults = []
         segments_already_included = []
-        if len(self.connected_faults):
-            curated_faults += self.connected_faults
-            for fault in curated_faults:
-                segments_already_included += [seg.name for seg in fault.segments]
+        if self.connected_faults is not None:
+            if len(self.connected_faults):
+                curated_faults += self.connected_faults
+                for fault in curated_faults:
+                    segments_already_included += [seg.name for seg in fault.segments]
 
         else:
             print("Warning: no multi-segment faults: is this what you wanted?")
@@ -790,7 +792,11 @@ class LeapfrogFault(GenericFault):
     def nztm_trace(self, trace: LineString):
         assert isinstance(trace, (LineString, MultiLineString))
         if isinstance(trace, MultiLineString):
-            trace = list(trace.geoms)[0]
+            try:
+                trace = merge_multiple_nearly_adjacent_segments(trace)
+            except Exception as e:
+                print(f"Error merging segments: {e}. Taking first segment only.")
+                trace = list(trace.geoms)[0]
 
         if trace.has_z:
             new_trace = LineString([(xi, yi, 0.) for xi, yi, _ in trace.coords])
