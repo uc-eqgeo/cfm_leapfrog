@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='fault_mesh',
-      version='0.3',
+      version='0.4',
       description='Tools for building fault meshes in leapfrog',
       author='Andy Howell',
       author_email='a.howell@gns.cri.nz',
