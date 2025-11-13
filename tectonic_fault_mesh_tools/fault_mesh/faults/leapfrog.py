@@ -793,7 +793,7 @@ class LeapfrogFault(GenericFault):
         assert isinstance(trace, (LineString, MultiLineString))
         if isinstance(trace, MultiLineString):
             try:
-                trace = merge_multiple_nearly_adjacent_segments(trace)
+                trace = merge_multiple_nearly_adjacent_segments(list(trace.geoms))
             except Exception as e:
                 print(f"Error merging segments: {e}. Taking first segment only.")
                 trace = list(trace.geoms)[0]
