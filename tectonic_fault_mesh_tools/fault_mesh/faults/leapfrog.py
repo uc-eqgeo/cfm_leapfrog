@@ -220,8 +220,11 @@ class LeapfrogMultiFault(GenericMultiFault):
 
         self._connections = connections
         self._neighbour_connections = neighbour_connections
-        print(f"Found {len(connections)} connections")
-        print(f"Found {len(neighbour_connections)} connections between segment ends")
+
+        connections_set = set(tuple(sorted(conn)) for conn in connections)
+        neighbour_connections_set = set(tuple(sorted(conn)) for conn in neighbour_connections)
+        print(f"Found {len(connections_set)} connections")
+        print(f"Found {len(neighbour_connections_set)} connections between segment ends")
 
     @property
     def connections(self):
