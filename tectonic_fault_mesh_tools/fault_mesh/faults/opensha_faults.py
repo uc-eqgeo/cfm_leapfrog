@@ -3,12 +3,18 @@ import xml.etree.ElementTree as ElemTree
 from xml.dom import minidom
 import os
 
+from fault_mesh.faults.mesh import rectangles_intersect
 import geopandas as gpd
 import pandas as pd
 import numpy as np
 from shapely.geometry import LineString, Polygon, MultiPolygon, MultiLineString
 from shapely.ops import unary_union
 from pyproj import Transformer
+import pyvista as pv
+import meshio
+from sklearn.neighbors import KDTree
+
+rng = np.random.default_rng()
 # import warnings
 
 import logging
@@ -304,14 +310,19 @@ class CfmMultiFault:
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, exclude_region_polygons: list = None,
                  exclude_region_min_sr: float = 1.8, include_names: list = None, depth_type: str = "D90",
                  exclude_aus: bool = True, exclude_zero: bool = True, sort_sr: bool = False,
-                 remove_colons: bool = False, min_dfc: float = 0.0):
+                 remove_colons: bool = False, min_dfc: float = 0.0, default_dfc_multiplier: float = 0.8,
+                 exclude_region_dfc_multiplier: float = 0.66):
         self.logger = logging.getLogger('cmf_logger')
         self.check_input1(fault_geodataframe)
         self.check_input2(fault_geodataframe)
 
         self._faults = []
 
+        self.name_dict = {}
+        self.connected_faults = {}
+
         # If appropriate, clip out data that fall within exclude_regions
+        exclude_region_names = []
         if exclude_region_polygons is not None:
             assert isinstance(exclude_region_polygons, list)
             assert all([isinstance(a, Polygon) for a in exclude_region_polygons])
@@ -335,9 +346,11 @@ class CfmMultiFault:
                     trimmed_fault_ls.append(row)
                 elif row["SR_pref"] >= exclude_region_min_sr:
                     trimmed_fault_ls.append(row)
+                    exclude_region_names.append(row["Name"])
                 elif include_names is not None:
                     if row["Name"] in include_names:
                         trimmed_fault_ls.append(row)
+                        exclude_region_names.append(row["Name"])
                 #     else:
                 #         print(row["Name"])
                 # else:
@@ -370,7 +383,13 @@ class CfmMultiFault:
         # Reset index to line up with alphabetical sorting
         sorted_df = sorted_df.reset_index(drop=True)
         for i, row in sorted_df.iterrows():
-            self.add_fault(row, depth_type=depth_type, remove_colons=remove_colons)
+            if row["Name"] in exclude_region_names:
+                self.add_fault(row, depth_type=depth_type, remove_colons=remove_colons,
+                               dfc_multiplier=exclude_region_dfc_multiplier)
+            else:
+                if depth_type != "D90":
+                    self.add_fault(row, depth_type=depth_type, remove_colons=remove_colons,
+                                   dfc_multiplier=default_dfc_multiplier)
 
         self.df = sorted_df
 
@@ -389,10 +408,11 @@ class CfmMultiFault:
     def faults(self):
         return self._faults
 
-    def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False):
+    def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False, dfc_multiplier: float = None):
         cfmFault = CfmFault.from_series(series, parent_multifault=self, depth_type=depth_type,
-                                        remove_colons=remove_colons)
+                                        remove_colons=remove_colons, dfc_multiplier=dfc_multiplier)
         self.faults.append(cfmFault)
+        self.name_dict[cfmFault.name] = cfmFault
 
     @property
     def fault_numbers(self):
@@ -403,7 +423,7 @@ class CfmMultiFault:
 
     @classmethod
     def from_shp(cls, filename: str, exclude_region_polygons: List[Polygon] = None, depth_type: str = "D90",
-                 exclude_region_min_sr: float = 1.8, sort_sr: bool = False, min_dfc: float = 0.0):
+                 exclude_region_min_sr: float = 1.8, sort_sr: bool = False, min_dfc: float = 0.0, remove_colons: bool = False):
         """
         Read CFM shapefile
         """
@@ -411,7 +431,7 @@ class CfmMultiFault:
         fault_geodataframe = gpd.GeoDataFrame.from_file(filename)
         multi_fault = cls(fault_geodataframe, exclude_region_polygons=exclude_region_polygons,
                           exclude_region_min_sr=exclude_region_min_sr, depth_type=depth_type, sort_sr=sort_sr,
-                          min_dfc=min_dfc)
+                          min_dfc=min_dfc, remove_colons=remove_colons)
         return multi_fault
 
     def to_opensha_xml(self, exclude_subduction: bool = True, buffer_width: float = 5000.,
@@ -501,6 +521,85 @@ class CfmMultiFault:
         with open(output_csv, "w") as out_file:
             out_file.write(out_str)
 
+    
+    def multi_fault_mesh_pv(self, option: str = 'best'):
+        """
+        Create a PyVista mesh of all faults in the multifault object
+        :param dip_value:
+        :return:
+        """
+        mesh_list = []
+        for fault in self.faults:
+            fault_mesh = fault.extrude_mesh(option=option)
+            mesh_list.append(fault_mesh)
+        combined_mesh = mesh_list[0].copy()
+        for mesh in mesh_list[1:]:
+            combined_mesh = combined_mesh.merge(mesh)
+
+        return combined_mesh
+    
+    def build_network(self, max_dist: float = 2.e4, threshold_distance: float = 5.e3, option: str = 'best'):
+        """
+        Build a dictionary of connected faults based on closest distances between fault traces
+        :param max_dist: Maximum distance to search for connections
+        :param threshold_distance: Distance below which faults are considered connected
+        :param option: Which fault parameters to use when extruding mesh ('best', 'min', 'max', 'sampled')
+        :return: Dictionary of connected faults with distances
+        """
+        assert option in ['best', 'min', 'max', 'sampled']
+        network_dict = {}
+        for fault in self.faults:
+            connections_dict = network_dict[fault.name] = {}
+            for other_fault in self.faults:
+                if fault.name != other_fault.name:
+                    fault_distance = fault.closest_distance(other_fault, max_dist=max_dist, option=option)
+                    if fault_distance is not None:
+                        if fault_distance <= threshold_distance:
+                            connections_dict[other_fault.name] = fault_distance
+        self.connected_faults = network_dict
+        return network_dict
+    
+    def total_area(self, option: str = 'best'):
+        total_area = 0.
+        for fault in self.faults:
+            _ = fault.extrude_mesh(option=option)
+            fault_area = fault.area
+            total_area += fault_area
+        return total_area
+    
+    def moment_rate(self, option: str = 'best', rigidity: float = 3.e10):
+        total_moment_rate = 0.
+        for fault in self.faults:
+            _ = fault.extrude_mesh(option=option)
+            fault_area = fault.area
+            fault_sr = fault.sr_best
+            fault_moment_rate = fault_area * fault_sr * rigidity * 1.e-3
+            total_moment_rate += fault_moment_rate
+        return total_moment_rate
+    
+
+    def generate_fault_systems(self, connected_fault_file: str):
+        """
+        Generate fault systems based on connected faults
+        :param connected_fault_file: CSV file containing connected faults dictionary
+        :return:
+        """
+        assert os.path.exists(connected_fault_file)
+
+        self.connected_faults = {}
+
+        with open(connected_fault_file, "r") as f:
+            connections = f.readlines()
+        for line in connections:
+            parts = [p for p in line.strip().split(",") if p]
+            fault_name = parts[0]
+            
+            self.connected_faults[fault_name] = CfmConnectedFault(fault_name, parts[1:])
+            for sub_fault in parts[1:]:
+                self.name_dict[sub_fault].connected_fault = self.connected_faults[fault_name]
+
+    
+
 
 class CfmFault:
     def __init__(self, parent_multifault: CfmMultiFault = None):
@@ -522,6 +621,13 @@ class CfmFault:
         self._nztm_trace = None
         self._dom_num = None
         self._dom_name = None
+        self._connected_fault = None
+        self.bounds = None
+        self.point_cloud = None
+        self.last_point_cloud_option = None
+        self.area = None
+        self.z_score = None
+
 
         # Attributes required for OpenSHA XML
         self._section_id, self._section_name = (None,) * 2
@@ -1045,7 +1151,7 @@ class CfmFault:
 
     @classmethod
     def from_series(cls, series: pd.Series, parent_multifault: CfmMultiFault = None, depth_type: str = "D90",
-                    remove_colons: bool = False):
+                    remove_colons: bool = False, dfc_multiplier: float = None):
         assert isinstance(series, pd.Series)
         assert depth_type in ["D90", "Dfc80", "Dfc66", "Dfc"]
         fault = cls(parent_multifault=parent_multifault)
@@ -1066,7 +1172,11 @@ class CfmFault:
         elif depth_type == "Dfc66":
             fault.depth_best = series["Depth_Dfc"] * 0.666
         else:
-            fault.depth_best = series["Depth_Dfc"]
+            if dfc_multiplier is not None:
+                fault.depth_best = series["Depth_Dfc"] * dfc_multiplier
+            else:
+                fault.depth_best = series["Depth_Dfc"]
+            
 
         fault.dom_num = series["Domain_No"]
         fault.dom_name = series["DomainName"]
@@ -1177,3 +1287,183 @@ class CfmFault:
                     f"{self.sr_max:.2f}\n")
         data_str += self.trace_to_hybrid_csv(num_columns=num_columns)
         return data_str
+    
+    @property
+    def connected_fault(self):
+        """
+        :return:
+        """
+        return self._connected_fault
+    
+    @connected_fault.setter
+    def connected_fault(self, connected_fault: 'CfmConnectedFault'):
+        assert isinstance(connected_fault, CfmConnectedFault)
+        self._connected_fault = connected_fault
+
+    @property
+    def sampled(self):
+        if self.connected_fault is not None:
+            return self.connected_fault.z_score
+        else:
+            return self.z_score
+
+    def sample(self):
+        """Sample a random value from a gaussian
+        """
+        dist = rng.normal(loc=0, scale=1)
+        self.z_score = dist
+    
+    def sampled_dip(self, sample_sd: float = 1.0):
+        """Sample a random dip value from a gaussian distribution
+        """
+        dip_sigma1 = np.abs(self.dip_best - self.dip_min)/2.
+        dip_sigma2 = np.abs(self.dip_max - self.dip_best)/2.
+        if sample_sd < 0:
+            sampled_dip = self.dip_best - dip_sigma1 * np.abs(sample_sd)
+        else:
+            sampled_dip = self.dip_best + dip_sigma2 * np.abs(sample_sd)
+        return sampled_dip
+    
+    def down_dip_vector_optional(self, option: str = 'best', sample_sd: float = 1.0):
+        """
+        Calculated from dip and dip direction
+        """
+        assert option in ['best', 'min', 'max', 'sampled']
+        if option == 'best':
+            dip_used = self.dip_best
+        elif option == 'min':
+            dip_used = self.dip_min
+        elif option == 'max':
+            dip_used = self.dip_max
+        elif option == 'sampled':
+            dip_used = self.sampled_dip(sample_sd=sample_sd)
+        else:
+            raise ValueError("Unrecognised option for down_dip_vector_optional")
+        
+        if self.dip_dir is None:
+            # Assume vertical
+            return np.array([0., 0., -1])
+        else:
+            z = np.sin(np.radians(dip_used))
+            x, y = np.cos(np.radians(dip_used)) * np.array([np.sin(np.radians(self.dip_dir)),
+                                                                 np.cos(np.radians(self.dip_dir))])
+        return np.array([x, y, -z])
+            
+    def extrude_mesh(self, option: str = 'best'):
+        """
+        Generate a fault mesh by extruding the trace down dip
+        :return:
+        """
+        assert option in ['best', 'min', 'max', 'sampled']
+        down_dip_vec = self.down_dip_vector_optional(option=option)
+        trace_3d = np.column_stack((np.array(self.nztm_trace.xy).T,
+                                    np.zeros(len(self.nztm_trace.coords))))
+        down_dip_vec_scaled = down_dip_vec * self.depth_best / down_dip_vec[-1] * -1.e3
+        
+        trace_3d_bottom = trace_3d + down_dip_vec_scaled
+        points = np.vstack((trace_3d, trace_3d_bottom))
+        tris = []
+        num_trace_pts = len(trace_3d)
+        for i in range(num_trace_pts - 1):
+            tris.append([i, i + 1, i + 1 + num_trace_pts])
+            tris.append([i, i + 1 + num_trace_pts, i + num_trace_pts])
+        tris = np.array(tris)
+        mesh = meshio.Mesh(points, [("triangle", tris)])
+        pv_mesh = pv.from_meshio(mesh)
+        self.area = pv_mesh.area
+        return pv_mesh
+    
+    def generate_point_cloud(self, spacing: float = 1000., option: str = 'best'):
+        """
+        Generate a point cloud on the fault surface
+        :param spacing:
+        :return:
+        """
+        trace_2d = gpd.GeoSeries(self.nztm_trace).segmentize(spacing).explode(index_parts=False).geometry.values[0]
+        trace_3d_array = np.column_stack((np.array(trace_2d.coords.xy).T,
+                                         np.zeros(len(trace_2d.coords))))
+        max_extrude_dist = self.depth_best / self.down_dip_vector[-1] * -1.e3
+        extrude_steps = np.arange(0, max_extrude_dist + spacing, spacing)
+        if max(extrude_steps) < max_extrude_dist:
+            extrude_steps = np.append(extrude_steps, max_extrude_dist)
+
+        points = np.vstack([trace_3d_array + self.down_dip_vector_optional(option=option) * dist for dist in extrude_steps])
+        self.point_cloud = points
+        self.bounds = np.array([min(points[:, 0]), min(points[:, 1]),
+                                max(points[:, 0]), max(points[:, 1])])
+        self.last_point_cloud_option = option
+        return
+    
+    def closest_distance(self, other_fault: 'CfmFault', max_dist = 2.e4, option: str = 'best'):
+        """
+        Calculate the closest distance between this fault and another fault
+        :param other_fault:
+        :return:
+        """
+        assert isinstance(other_fault, CfmFault)
+        if self.last_point_cloud_option != option:
+            self.generate_point_cloud(option=option)
+        if other_fault.last_point_cloud_option != option:
+            other_fault.generate_point_cloud(option=option)
+
+        quick_check = self.check_intersection2d(other_fault, max_dist=max_dist)
+        if not quick_check:
+            return None
+        tree = KDTree(other_fault.point_cloud)
+        dists, _ = tree.query(self.point_cloud, k=1)
+        min_dist = np.min(dists)
+        if min_dist > max_dist:
+            return None
+        return min_dist
+        
+    def check_intersection2d(self, other_fault: 'CfmFault', max_dist: float = 2.e4) -> bool:
+        """
+        Checks if this fault intersects with another fault in 2D (ignoring depth).
+
+        Args:
+            other_fault (CfmFault): Another CfmFault instance to check for intersection.
+    Checks if this mesh intersects with another mesh in 2D (ignoring depth).
+
+    Args:
+        other_mesh (FaultMesh): Another FaultMesh instance to check for intersection.
+    Returns:
+        bool: True if the meshes intersect in 2D, False otherwise.
+    """
+        xmin, ymin, xmax, ymax = self.bounds
+        other_xmin, other_ymin, other_xmax, other_ymax = other_fault.bounds
+        # Quick bounding box check
+        return rectangles_intersect(
+            (xmin - max_dist, ymin - max_dist, xmax + max_dist, ymax + max_dist),
+            (other_xmin, other_ymin, other_xmax, other_ymax))
+    
+        
+        
+        
+
+
+
+
+
+class CfmConnectedFault:
+    def __init__(self, name: str, faults: List[CfmFault] = None):
+        """
+        :param faults:
+        """
+        self.name = name
+        self.z_score = None
+        if faults is None:
+            self.faults = []
+        else:
+            self.faults = faults
+
+    def sample(self):
+        """Sample a random value from a gaussian
+        """
+        dist = rng.normal(loc=0, scale=1)
+        self.z_score = dist
+    
+    def __repr__(self):
+        return f"CfmConnectedFault(name={self.name}, num_faults={len(self.faults)})"
+    
+    
+    

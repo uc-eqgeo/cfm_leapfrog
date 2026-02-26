@@ -627,7 +627,8 @@ class ConnectedFaultSystem:
                 contours_list.append(np.array(contour.coords))
             else:
                 assert isinstance(contour, MultiLineString)
-                contours_list.append(np.vstack([np.array(line.coords) for line in contour.geoms]))
+                if not contour.is_empty:
+                    contours_list.append(np.vstack([np.array(line.coords) for line in contour.geoms]))
 
 
         all_contour_points = np.vstack(contours_list)
@@ -694,35 +695,38 @@ class ConnectedFaultSystem:
         refined_spline_contour_list = []
         for spline_contour, fit_contour in zip(resolved_spline_contours, resolved_contours):
             # sort by in_plane x coordinate
-            spline_contour = spline_contour[np.argsort(spline_contour[:, 0])]   
-            fit_contour = fit_contour[np.argsort(fit_contour[:, 0])]
+            try:
+                spline_contour = spline_contour[np.argsort(spline_contour[:, 0])]   
+                fit_contour = fit_contour[np.argsort(fit_contour[:, 0])]
 
 
-            min_resolved_x_spline = min(spline_contour[:, 0])
-            max_resolved_x_spline = max(spline_contour[:, 0])
-            min_resolved_x_fit = min(fit_contour[:, 0])
-            max_resolved_x_fit = max(fit_contour[:, 0])
+                min_resolved_x_spline = min(spline_contour[:, 0])
+                max_resolved_x_spline = max(spline_contour[:, 0])
+                min_resolved_x_fit = min(fit_contour[:, 0])
+                max_resolved_x_fit = max(fit_contour[:, 0])
 
-            if min_resolved_x_spline < min_resolved_x_fit:
-                # trim the spline contour
-                spline_contour = spline_contour[spline_contour[:, 0] >= min_resolved_x_fit]
-            if max_resolved_x_spline > max_resolved_x_fit:
-                spline_contour = spline_contour[spline_contour[:, 0] <= max_resolved_x_fit]
+                if min_resolved_x_spline < min_resolved_x_fit:
+                    # trim the spline contour
+                    spline_contour = spline_contour[spline_contour[:, 0] >= min_resolved_x_fit]
+                if max_resolved_x_spline > max_resolved_x_fit:
+                    spline_contour = spline_contour[spline_contour[:, 0] <= max_resolved_x_fit]
 
-            # Update the min and max resolved x values
-            min_resolved_x_spline = min(spline_contour[:, 0])
-            max_resolved_x_spline = max(spline_contour[:, 0])
+                # Update the min and max resolved x values
+                min_resolved_x_spline = min(spline_contour[:, 0])
+                max_resolved_x_spline = max(spline_contour[:, 0])
 
-            if min_resolved_x_spline > min_resolved_x_fit:
-                new_start = fit_contour[fit_contour[:, 0] <= min_resolved_x_spline][:, :2]
-                spline_contour = np.vstack([new_start, spline_contour])
-            if max_resolved_x_spline < max_resolved_x_fit:
-                new_end = fit_contour[fit_contour[:, 0] >= max_resolved_x_spline][:, :2]
-                spline_contour = np.vstack([spline_contour, new_end])
+                if min_resolved_x_spline > min_resolved_x_fit:
+                    new_start = fit_contour[fit_contour[:, 0] <= min_resolved_x_spline][:, :2]
+                    spline_contour = np.vstack([new_start, spline_contour])
+                if max_resolved_x_spline < max_resolved_x_fit:
+                    new_end = fit_contour[fit_contour[:, 0] >= max_resolved_x_spline][:, :2]
+                    spline_contour = np.vstack([spline_contour, new_end])
 
-            spline_contour = np.unique(spline_contour, axis=0)
-            
-            refined_spline_contour_list.append(spline_contour)
+                spline_contour = np.unique(spline_contour, axis=0)
+                
+                refined_spline_contour_list.append(spline_contour)
+            except Exception as e:                
+                print(f"Fault {self.name}: Error refining spline contour: {e}")
 
         all_resolved_spline_points = np.vstack(refined_spline_contour_list)
 

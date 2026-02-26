@@ -609,7 +609,7 @@ class LeapfrogFault(GenericFault):
                                                                 np.cos(np.radians(self.dip_dir))])
         return np.array([x, y, -z])
 
-    def depth_contour(self, depth: float, smoothing: bool = True, km=False, sr_and_rake: bool = False):
+    def depth_contour(self, depth: float, smoothing: bool = True, km=False, sr_and_rake: bool = False, dummy_segment_length: float = 100.):
         """
         Generate contour of fault surface at depth below surface
         :param depth: In metres, upwards is positive
@@ -659,9 +659,9 @@ class LeapfrogFault(GenericFault):
 
             if len(self.neighbouring_segments) > 1:
                 e1_box = self.end_clipping_box(self.end1, depth, gradient_adjustment=self.trimming_gradient)
-                e1_box_intersection = e1_box.boundary.intersection(self.nztm_trace)
+                e1_box_intersection = e1_box.boundary.intersection(shifted_contour)
                 e2_box = self.end_clipping_box(self.end2, depth, gradient_adjustment=self.trimming_gradient)
-                e2_box_intersection = e2_box.boundary.intersection(self.nztm_trace)
+                e2_box_intersection = e2_box.boundary.intersection(shifted_contour)
 
                 if not e1_box.intersects(e2_box):
                     trimmed_contour = cut_line_between_two_points(shifted_contour, [e1_box_intersection,
@@ -674,11 +674,10 @@ class LeapfrogFault(GenericFault):
                 if all([point.within(e1_box) for point in (contour_e1, contour_e2)]):
                     trimmed_contour = None
                 else:
-                    e1_box_intersection = e1_box.boundary.intersection(self.nztm_trace)
+                    e1_box_intersection = e1_box.boundary.intersection(shifted_contour)
 
                     if isinstance(e1_box_intersection, Point):
                         split_line = cut_line_at_point(shifted_contour, e1_box_intersection)
-
                         if split_line[0].distance(contour_e1) == 0.:
                             trimmed_contour = split_line[1]
                         elif split_line[1].distance(contour_e1) == 0.:
@@ -687,17 +686,27 @@ class LeapfrogFault(GenericFault):
                             print("neither intersects")
                             trimmed_contour = None
                     else:
+                        
                         trimmed_contour = None
+                if trimmed_contour is None:
+                    contour_e1_array = np.array(contour_e1.coords[0])
+                    contour_e2_array = np.array(contour_e2.coords[0])
+                    e1_e2_vector = contour_e2_array - contour_e1_array
+                    if np.dot(e1_e2_vector, self.along_strike_vector) >= 0:
+                        trimmed_contour = LineString([contour_e2, contour_e2_array + self.along_strike_vector * dummy_segment_length])
+                    else:
+                        trimmed_contour = LineString([contour_e2, contour_e2_array - self.along_strike_vector * dummy_segment_length])
+
+                    
 
             else:  # self.end2 in self.neighbour_dict.keys()
                 e2_box = self.end_clipping_box(self.end2, depth, gradient_adjustment=self.trimming_gradient)
                 if all([point.within(e2_box) for point in (contour_e1, contour_e2)]):
                     trimmed_contour = None
                 else:
-                    e2_box_intersection = e2_box.boundary.intersection(self.nztm_trace)
+                    e2_box_intersection = e2_box.boundary.intersection(shifted_contour)
                     if isinstance(e2_box_intersection, Point):
                         split_line = cut_line_at_point(shifted_contour, e2_box_intersection)
-
                         if split_line[0].distance(contour_e2) == 0.:
                             trimmed_contour = split_line[1]
                         elif split_line[1].distance(contour_e2) == 0.:
@@ -707,6 +716,16 @@ class LeapfrogFault(GenericFault):
                             trimmed_contour = None
                     else:
                         trimmed_contour = None
+                
+                if trimmed_contour is None:
+                    contour_e1_array = np.array(contour_e1.coords[0])
+                    contour_e2_array = np.array(contour_e2.coords[0])
+                    e1_e2_vector = contour_e2_array - contour_e1_array
+                    if np.dot(e1_e2_vector, self.along_strike_vector) >= 0:
+                        trimmed_contour = LineString([contour_e1, contour_e1_array - self.along_strike_vector * dummy_segment_length])
+                    else:
+                        trimmed_contour = LineString([contour_e1, contour_e1_array + self.along_strike_vector * dummy_segment_length])
+
 
             # if trimmed_contour is not None:
             #     if abs(trimmed_contour.length - smoothed_contour.length) < distance_tolerance:
@@ -723,6 +742,7 @@ class LeapfrogFault(GenericFault):
                 return None, None, None
         else:
             return trimmed_contour
+        
 
     def generate_depth_contours(self, depths: Union[np.ndarray, List[float]], smoothing: bool = False,
                        km: bool = False, trace: bool = False):
@@ -861,7 +881,7 @@ class LeapfrogFault(GenericFault):
 
 
     def end_clipping_box(self, end_i: Point, depth: float, gradient_adjustment: float = 1.,
-                         across_half_width: float = 10000.):
+                         across_half_width: float = 100000.):
         end_angle = self.neighbour_angle_dict[end_i.coords[0]]
         end_width = gradient_adjustment * np.tan(np.radians(end_angle)) * (depth / np.sin(np.radians(self.dip_best)))
 
