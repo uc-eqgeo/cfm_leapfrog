@@ -106,7 +106,7 @@ Module Contents
       Calculated from dip and dip direction
 
 
-   .. py:method:: depth_contour(depth, smoothing = True, km=False, sr_and_rake = False)
+   .. py:method:: depth_contour(depth, smoothing = True, km=False, sr_and_rake = False, dummy_segment_length = 100.0)
 
       Generate contour of fault surface at depth below surface
       :param depth: In metres, upwards is positive

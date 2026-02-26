@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>fault_mesh.faults.leapfrog &mdash; cfm-leapfrog 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
 
@@ -16,8 +16,8 @@
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
@@ -130,7 +130,7 @@
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">LeapfrogMultiFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_geodataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_distance_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_colons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_choice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pref'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trimming_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strike_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_optional_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">LeapfrogMultiFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_geodataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_distance_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_colons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_choice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pref'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trimming_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strike_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_optional_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="../generic/index.html#fault_mesh.faults.generic.GenericMultiFault" title="fault_mesh.faults.generic.GenericMultiFault"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fault_mesh.faults.generic.GenericMultiFault</span></code></a></p>
 <p>Class to hold data for multiple faults, read in from shapefile (and hopefully also tsurfaces)</p>
 <dl class="field-list simple">
@@ -203,7 +203,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFault">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">LeapfrogFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_multifault</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trimming_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_distance_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">LeapfrogFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_multifault</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trimming_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_distance_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">fault_mesh.faults.generic.GenericFault</span></code></p>
 <p>Represents either a whole fault (for simple faults) or one segment. Behaviours is slightly</p>
 <dl class="field-list simple">
@@ -218,21 +218,21 @@
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFault.is_segment">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_segment</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.is_segment" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_segment</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.is_segment" title="Link to this definition"></a></dt>
 <dd><p>Records whether instance is a segment of a larger multi-segment fault like the Alpine Fault.
 :return:</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFault.smoothing">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">smoothing</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.smoothing" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">smoothing</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.smoothing" title="Link to this definition"></a></dt>
 <dd><p>n value to use in Chaikin’s corner-cutting algorithm.
 :return:</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFault.trimming_gradient">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trimming_gradient</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.trimming_gradient" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trimming_gradient</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.trimming_gradient" title="Link to this definition"></a></dt>
 <dd><p>Factor that controls how much the ends of segment contours of a multi-segment fault are
 shortened to allow
 :return:</p>
@@ -240,14 +240,14 @@ shortened to allow
 
 <dl class="py property">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFault.parent">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parent</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.parent" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parent</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.parent" title="Link to this definition"></a></dt>
 <dd><p>Return LeapfrogMultiFault instance that this fault is part of.
 :return:</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFault.sampled_dip">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampled_dip</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.sampled_dip" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">sampled_dip</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.sampled_dip" title="Link to this definition"></a></dt>
 <dd><p>Dip value sampled from the fault trace. Used for calculating dip in depth contours.
 :return:</p>
 </dd></dl>
@@ -262,13 +262,13 @@ shortened to allow
 
 <dl class="py property">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFault.down_dip_vector_sampled">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">down_dip_vector_sampled</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.down_dip_vector_sampled" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">down_dip_vector_sampled</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.down_dip_vector_sampled" title="Link to this definition"></a></dt>
 <dd><p>Calculated from dip and dip direction</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFault.depth_contour">
-<span class="sig-name descname"><span class="pre">depth_contour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">km</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sr_and_rake</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.depth_contour" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">depth_contour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">km</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sr_and_rake</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dummy_segment_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.depth_contour" title="Link to this definition"></a></dt>
 <dd><p>Generate contour of fault surface at depth below surface
 :param depth: In metres, upwards is positive
 :param smoothing: N for use with Chaikin’s corner cutting
@@ -280,6 +280,7 @@ shortened to allow
 <li><p><strong>depth</strong> (<em>float</em>)</p></li>
 <li><p><strong>smoothing</strong> (<em>bool</em>)</p></li>
 <li><p><strong>sr_and_rake</strong> (<em>bool</em>)</p></li>
+<li><p><strong>dummy_segment_length</strong> (<em>float</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -287,7 +288,7 @@ shortened to allow
 
 <dl class="py property">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogFault.nztm_trace_coords">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nztm_trace_coords</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.nztm_trace_coords" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nztm_trace_coords</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogFault.nztm_trace_coords" title="Link to this definition"></a></dt>
 <dd><p>Return the coordinates of the nztm trace as a numpy array.
 :return: numpy array of coordinates</p>
 </dd></dl>
