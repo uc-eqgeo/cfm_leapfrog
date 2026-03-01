@@ -4,7 +4,7 @@ import rioxarray
 from pyproj import transform
 
 def read_raster(filename, out_crs="EPSG:2193", use_z=False):
-    """Read a raster to a ``pyvista.StructuredGrid``.
+    """Read a raster to a ``pyvista.Surface``.
 
     This will handle coordinate transformations.
     """
@@ -30,4 +30,4 @@ def read_raster(filename, out_crs="EPSG:2193", use_z=False):
     mesh.points[:, 0] = lon
     mesh.points[:, 1] = lat
     mesh["data"] = values.reshape(mesh.n_points, -1, order="F")
-    return mesh
+    return mesh.extract_surface()

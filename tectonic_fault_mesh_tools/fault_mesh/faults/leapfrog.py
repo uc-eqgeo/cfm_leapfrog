@@ -893,8 +893,8 @@ class LeapfrogFault(GenericFault):
             strike_diff = 180. - strike_diff
             dip_diff = 180 - self.dip_best - neighbour.dip_best
             if dip_diff > 90.:
-                raise ValueError(f"{self.name} and {neighbour.name}: shallow dips in opposite directions."
-                                 "Are you sure you want to connect?")
+                print(f"Warning: {self.name} and {neighbour.name}: shallow dips in opposite directions."
+                       "Are you sure you want to connect?")
         else:
             dip_diff = abs(neighbour.dip_best - self.dip_best)
         return max([self.dip_multiplier * dip_diff, self.strike_multiplier * strike_diff])

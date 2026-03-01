@@ -29,41 +29,108 @@ def triangle_normal(v0, v1, v2):
     return normal / norm
 
 @njit
+def _compute_interval(p0, p1, p2, d0, d1, d2):
+    """
+    Compute the interval [t_min, t_max] on the intersection line for one triangle.
+    p0/p1/p2 are the vertices projected onto a scalar axis; d0/d1/d2 are their
+    signed distances to the other triangle's plane.
+    """
+    if d0 * d1 > 0.0:
+        # d0 and d1 on the same side; d2 is isolated
+        denom1 = d0 - d2
+        denom2 = d1 - d2
+        if denom1 != 0.0:
+            t1 = p0 + (p2 - p0) * d0 / denom1
+        else:
+            t1 = p2
+        if denom2 != 0.0:
+            t2 = p1 + (p2 - p1) * d1 / denom2
+        else:
+            t2 = p2
+    elif d0 * d2 > 0.0:
+        # d0 and d2 on the same side; d1 is isolated
+        denom1 = d0 - d1
+        denom2 = d2 - d1
+        if denom1 != 0.0:
+            t1 = p0 + (p1 - p0) * d0 / denom1
+        else:
+            t1 = p1
+        if denom2 != 0.0:
+            t2 = p2 + (p1 - p2) * d2 / denom2
+        else:
+            t2 = p1
+    else:
+        # d1 and d2 on the same side (or degenerate); d0 is isolated
+        denom1 = d1 - d0
+        denom2 = d2 - d0
+        if denom1 != 0.0:
+            t1 = p1 + (p0 - p1) * d1 / denom1
+        else:
+            t1 = p0
+        if denom2 != 0.0:
+            t2 = p2 + (p0 - p2) * d2 / denom2
+        else:
+            t2 = p0
+    if t1 > t2:
+        return t2, t1
+    return t1, t2
+
+
+@njit
 def check_if_triangle_crosses_other_triangle(tri1, tri2):
-    """Check if two triangles in 3D space intersect."""
-    # Using Möller–Trumbore intersection algorithm
-    v0, v1, v2 = tri1
-    u0, u1, u2 = tri2
+    """Check if two triangles in 3D space intersect using the Möller (1997) algorithm."""
+    v0, v1, v2 = tri1[0], tri1[1], tri1[2]
+    u0, u1, u2 = tri2[0], tri2[1], tri2[2]
 
-    # Compute triangle edges
-    e1 = v1 - v0
-    e2 = v2 - v0
-    f1 = u1 - u0
-    f2 = u2 - u0
+    # Plane of tri2: N2·X + d2 = 0
+    n2 = cross_3d(u1 - u0, u2 - u0)
+    d2 = -np.dot(n2, u0)
 
-    # Compute normals
-    n1 = triangle_normal(v0, v1, v2)
-    n2 = triangle_normal(u0, u1, u2)
+    # Signed distances of tri1 vertices to plane of tri2
+    dv0 = np.dot(n2, v0) + d2
+    dv1 = np.dot(n2, v1) + d2
+    dv2 = np.dot(n2, v2) + d2
 
-    # Check if triangles are coplanar
-    if np.abs(np.dot(n1, n2)) == 1.0:
-        return False  # Coplanar triangles are not considered intersecting here
+    # All same sign → tri1 lies entirely on one side of tri2's plane
+    if dv0 * dv1 > 0.0 and dv0 * dv2 > 0.0:
+        return False
 
-    # Compute direction of the line of intersection
-    d = cross_3d(n1, n2)
-    if np.linalg.norm(d) == 0:
-        return False  # Parallel planes
+    # Plane of tri1: N1·X + d1 = 0
+    n1 = cross_3d(v1 - v0, v2 - v0)
+    d1 = -np.dot(n1, v0)
 
-    # Project triangles onto the line of intersection and check for overlap
-    def project_onto_line(tri, line_dir):
-        projections = [np.dot(vertex, line_dir) for vertex in tri]
-        return min(projections), max(projections)
+    # Signed distances of tri2 vertices to plane of tri1
+    du0 = np.dot(n1, u0) + d1
+    du1 = np.dot(n1, u1) + d1
+    du2 = np.dot(n1, u2) + d1
 
-    min1, max1 = project_onto_line(tri1, d)
-    min2, max2 = project_onto_line(tri2, d)
+    # All same sign → tri2 lies entirely on one side of tri1's plane
+    if du0 * du1 > 0.0 and du0 * du2 > 0.0:
+        return False
 
-    # Check for overlap in projections
-    return not (max1 < min2 or max2 < min1)
+    # Direction of the intersection line of the two planes
+    D = cross_3d(n1, n2)
+    abs_D = np.abs(D)
+    max_comp = max(abs_D[0], max(abs_D[1], abs_D[2]))
+    if max_comp == 0.0:
+        return False  # Coplanar triangles
+
+    # Project onto the largest component of D to maximise numerical accuracy
+    if abs_D[0] >= abs_D[1] and abs_D[0] >= abs_D[2]:
+        idx = 0
+    elif abs_D[1] >= abs_D[2]:
+        idx = 1
+    else:
+        idx = 2
+
+    pv0, pv1, pv2 = v0[idx], v1[idx], v2[idx]
+    pu0, pu1, pu2 = u0[idx], u1[idx], u2[idx]
+
+    # Compute each triangle's interval on the intersection line and test overlap
+    t_min1, t_max1 = _compute_interval(pv0, pv1, pv2, dv0, dv1, dv2)
+    t_min2, t_max2 = _compute_interval(pu0, pu1, pu2, du0, du1, du2)
+
+    return not (t_max1 < t_min2 or t_max2 < t_min1)
 
 def find_furthest_points_hull(points):
     """
@@ -412,7 +479,7 @@ class FaultMesh:
         assert len(top_vertex_indices) > 0, f"No top vertices found at depth {top_depth} +/- {tolerance}"
         if len(bottom_vertex_indices) == 0:
             print(f"No bottom vertices found at depth {bottom_depth} +/- {tolerance}, using deepest vertices instead.")
-            bottom_vertex_indices = np.array([self.find_all_outside_vertex_indices()[np.argmin(self.vertices[self.find_all_outside_vertex_indices(), -1])]])
+            bottom_vertex_indices = np.array([self.find_all_outside_vertex_indices()[np.argmin(self.pv_vertices[self.find_all_outside_vertex_indices(), -1])]])
         all_edge_vertices = self.find_all_outside_vertex_indices()
         side_vertex_indices = np.setdiff1d(all_edge_vertices, np.concatenate([top_vertex_indices, bottom_vertex_indices]))
         side_vertex_x = self.resolved_vertex_x[side_vertex_indices]
@@ -527,12 +594,13 @@ class FaultMesh:
             (other_mesh.xmin, other_mesh.ymin, other_mesh.xmax, other_mesh.ymax)
         )
     
-    def check_intersection(self, other_mesh, min_kd_distance=3.e3):
+    def check_intersection(self, other_mesh, max_distance=3.e3):
         """
         Checks if this mesh intersects with another mesh.
 
         Args:
             other_mesh (FaultMesh): Another FaultMesh instance to check for intersection.
+            max_distance (float): KDTree pre-filter radius on triangle centres.
         Returns:
             bool: True if the meshes intersect, False otherwise.
         """
@@ -543,31 +611,89 @@ class FaultMesh:
         if not self.check_intersection2d(other_mesh):
             return False
 
-        # Quick check using KDTree to see if any vertices are within min_kd_distance
+        # Vertex-level KDTree pre-filter: reject if no vertices are close
         distances, _ = self.tree.query(other_mesh.vertices, k=1)
-        if np.all(distances > min_kd_distance):
+        if np.all(distances > max_distance):
             return False
-        
-        else:
-            return True
-        
-        # # Use PyVista for a more precise intersection check
 
-        # pv_self = pv.from_meshio(self.mesh).extract_surface()
-        # pv_other = pv.from_meshio(other_mesh.mesh).extract_surface()
+        # Exact triangle-triangle intersection test
+        tri_centres_self = np.mean(self.pv_vertices[self.pv_triangles], axis=1)
+        tri_centres_other = np.mean(other_mesh.pv_vertices[other_mesh.pv_triangles], axis=1)
+        kdtree_other = KDTree(tri_centres_other)
+        other_verts = other_mesh.pv_vertices.astype(np.float64)
 
-        # clipped = pv_self.clip_surface(pv_other, invert=False)
-        # if clipped.n_cells == pv_self.n_cells:
-        #     return False
-        # else:
-        #     return True
-        
-    def get_intersecting_triangles(self, other_mesh, max_distance=3.e3, max_implicit_distance: float = None):
+        for i, centre in enumerate(tri_centres_self):
+            candidate_indices = kdtree_other.query_ball_point(centre, max_distance)
+            if not candidate_indices:
+                continue
+            tri1 = self.pv_vertices[self.pv_triangles[i]].astype(np.float64)
+            for j in candidate_indices:
+                tri2 = other_verts[other_mesh.pv_triangles[j]]
+                if check_if_triangle_crosses_other_triangle(tri1, tri2):
+                    return True
+
+        return False
+
+    def check_intersection_pv(self, pv_surface: pv.PolyData, max_distance=3.e3, no_data_value=-100.e3):
+        """
+        Checks if this mesh intersects with a PyVista PolyData surface.
+
+        Follows the same three-stage approach as check_intersection:
+        2D bounding box → vertex KDTree pre-filter → exact triangle-triangle test.
+
+        Args:
+            pv_surface (pv.PolyData): A triangulated PyVista surface to test against.
+            max_distance (float): KDTree pre-filter radius on triangle centres.
+            no_data_value (float): The value to treat as "no data" in the surface.
+        Returns:
+            bool: True if the meshes intersect, False otherwise.
+        """
+        assert self.mesh is not None, "This mesh is not defined."
+        assert isinstance(pv_surface, pv.PolyData), "pv_surface must be a pv.PolyData instance."
+
+        # 2D bounding box check using PyVista bounds (xmin, xmax, ymin, ymax, zmin, zmax)
+        bounds = pv_surface.bounds  # (xmin, xmax, ymin, ymax, zmin, zmax)
+        if not rectangles_intersect(
+            (self.xmin, self.ymin, self.xmax, self.ymax),
+            (bounds[0], bounds[2], bounds[1], bounds[3])
+        ):
+            return False
+
+        other_points = pv_surface.points
+        other_points[np.isnan(other_points)] = no_data_value
+        other_tris = pv_surface.faces.reshape(-1, 4)[:, 1:]
+
+        # Vertex-level KDTree pre-filter
+        distances, _ = self.tree.query(other_points, k=1)
+        if np.all(distances > max_distance):
+            return False
+
+        # Exact triangle-triangle intersection test
+        tri_centres_self = np.mean(self.pv_vertices[self.pv_triangles], axis=1)
+        tri_centres_other = np.mean(other_points[other_tris], axis=1)
+        kdtree_other = KDTree(tri_centres_other)
+        other_verts = other_points.astype(np.float64)
+
+        for i, centre in enumerate(tri_centres_self):
+            candidate_indices = kdtree_other.query_ball_point(centre, max_distance)
+            if not candidate_indices:
+                continue
+            tri1 = self.pv_vertices[self.pv_triangles[i]].astype(np.float64)
+            for j in candidate_indices:
+                tri2 = other_verts[other_tris[j]]
+                if check_if_triangle_crosses_other_triangle(tri1, tri2):
+                    return True
+
+        return False
+
+    def get_intersecting_triangles(self, other_mesh, max_distance=3.e3):
         """
         Gets the triangles from this mesh that intersect with another mesh.
 
         Args:
             other_mesh (FaultMesh): Another FaultMesh instance to check for intersection.
+            max_distance (float): KDTree pre-filter radius on triangle centres. Only triangle
+                pairs whose centres are within this distance are tested for intersection.
 
         Returns:
             np.ndarray: Array of triangle indices from this mesh that intersect with the other mesh.
@@ -579,41 +705,101 @@ class FaultMesh:
         if not self.check_intersection(other_mesh):
             return np.array([], dtype=int)
 
-        # Use pyvista for intersection check
-        pv_self = pv.from_meshio(self.mesh).extract_surface()
-        pv_other = pv.from_meshio(other_mesh.mesh).extract_surface()
+        tri_centres_self = np.mean(self.pv_vertices[self.pv_triangles], axis=1)
+        tri_centres_other = np.mean(other_mesh.pv_vertices[other_mesh.pv_triangles], axis=1)
 
-        tri_centres_self = np.mean(pv_self.points[pv_self.faces.reshape(-1, 4)[:, 1:]], axis=1)
-        tri_centres_other = np.mean(pv_other.points[pv_other.faces.reshape(-1, 4)[:, 1:]], axis=1)
+        # For each self-triangle, find candidate other-triangles within max_distance
+        kdtree_other = KDTree(tri_centres_other)
+        other_verts = other_mesh.pv_vertices.astype(np.float64)
 
-        kdtree = KDTree(tri_centres_other)
-        distances, _ = kdtree.query(tri_centres_self, k=1)
-        close_tri_indices = np.where(distances < max_distance)[0]
+        intersecting = []
+        for i, centre in enumerate(tri_centres_self):
+            candidate_indices = kdtree_other.query_ball_point(centre, max_distance)
+            if not candidate_indices:
+                continue
+            tri1 = self.pv_vertices[self.pv_triangles[i]].astype(np.float64)
+            for j in candidate_indices:
+                tri2 = other_verts[other_mesh.pv_triangles[j]]
+                if check_if_triangle_crosses_other_triangle(tri1, tri2):
+                    intersecting.append(i)
+                    break  # one hit is enough; move on to the next self-triangle
 
-
-        implicit_distances = np.array(pv_self.compute_implicit_distance(pv_other)["implicit_distance"])
-        triangle_distances = implicit_distances[self.pv_triangles]
-        if max_implicit_distance is not None:
-            far_tri_indices = np.where(np.abs(triangle_distances) < max_implicit_distance)[0]
-            close_tri_indices = np.intersect1d(close_tri_indices, far_tri_indices)
-        else:
-            all_positive = np.all(triangle_distances >= 0, axis=1)
-            all_negative = np.all(triangle_distances < 0, axis=1)
-            to_keep = ~(all_positive | all_negative)
-            where_true = np.where(to_keep)[0]
-            close_tri_indices = np.intersect1d(where_true, close_tri_indices)
-
-        return close_tri_indices
+        return np.array(intersecting, dtype=int)
     
-    def generate_cutting_mesh(self, other_mesh, max_distance=3.e3, max_implicit_distance: float = None):
-        intersecting_triangles = self.get_intersecting_triangles(other_mesh, max_distance=max_distance, max_implicit_distance=max_implicit_distance)
+    def project_line_onto_mesh(self, point_a, point_b, n_points=100):
+        """
+        Find all triangles that a line segment, draped onto the mesh surface,
+        passes through.
+
+        The line is sampled at n_points positions; each sample is snapped to the
+        nearest cell (triangle) on the mesh surface. Duplicate cell hits are
+        removed while preserving traversal order.
+
+        Args:
+            point_a (array-like): First endpoint, shape (3,).
+            point_b (array-like): Second endpoint, shape (3,).
+            n_points (int): Number of sample points along the line. Increase for
+                finer sampling over a strongly curved surface. Defaults to 100.
+
+        Returns:
+            np.ndarray: Indices into self.pv_triangles of the triangles the
+                draped line passes through, in traversal order.
+        """
+        point_a = np.asarray(point_a, dtype=float)
+        point_b = np.asarray(point_b, dtype=float)
+
+        t = np.linspace(0, 1, n_points)
+        line_points = point_a + t[:, None] * (point_b - point_a)
+
+        pv_mesh = pv.from_meshio(self.mesh).extract_surface()
+
+        cell_ids = []
+        seen = set()
+        for pt in line_points:
+            cell_id = pv_mesh.find_closest_cell(pt)
+            if cell_id >= 0 and cell_id not in seen:
+                seen.add(cell_id)
+                cell_ids.append(cell_id)
+
+        return np.array(cell_ids, dtype=int)
+
+    def generate_cutting_mesh(self, other_mesh, max_distance=3.e3):
+        intersecting_triangles = self.get_intersecting_triangles(other_mesh, max_distance=max_distance)
         if len(intersecting_triangles) == 0:
             return None
-        
+
+        cutting_tri_set = set(intersecting_triangles.tolist())
+
+        # All boundary (edge) triangles — those sharing at least one outside vertex
+        outside_vertex_indices = self.find_all_outside_vertex_indices()
+        edge_tri_mask = np.isin(self.pv_triangles, outside_vertex_indices).any(axis=1)
+        all_edge_tri_indices = np.where(edge_tri_mask)[0]
+
+        intersects_edge = np.isin(intersecting_triangles, all_edge_tri_indices).any()
+
+        if not intersects_edge:
+            # Intersection zone is entirely interior: extend it to the nearest edge
+            # triangle by projecting a line across the mesh surface.
+            int_centres = np.mean(self.pv_vertices[self.pv_triangles[intersecting_triangles]], axis=1)
+            edge_centres = np.mean(self.pv_vertices[self.pv_triangles[all_edge_tri_indices]], axis=1)
+
+            kdtree_edge = KDTree(edge_centres)
+            distances, nearest_idx = kdtree_edge.query(int_centres, k=1)
+
+            # Pair: (intersecting triangle closest to any edge triangle, that edge triangle)
+            closest_int_local = np.argmin(distances)
+            closest_edge_local = nearest_idx[closest_int_local]
+
+            from_point = int_centres[closest_int_local]
+            to_point = edge_centres[closest_edge_local]
+
+            path_tri_indices = self.project_line_onto_mesh(from_point, to_point)
+            cutting_tri_set.update(path_tri_indices.tolist())
+
         cutting_vertices = []
         cutting_triangles = []
         vertex_map = {}
-        for tri_index in intersecting_triangles:
+        for tri_index in sorted(cutting_tri_set):
             tri_vertices = self.pv_triangles[tri_index]
             new_tri_vertices = []
             for v in tri_vertices:
@@ -622,7 +808,7 @@ class FaultMesh:
                     cutting_vertices.append(self.pv_vertex_dict[v])
                 new_tri_vertices.append(vertex_map[v])
             cutting_triangles.append(new_tri_vertices)
-        
+
         cutting_mesh = meshio.Mesh(
             points=np.array(cutting_vertices),
             cells=[("triangle", np.array(cutting_triangles))]
@@ -630,7 +816,10 @@ class FaultMesh:
         return cutting_mesh
     
 
-    def decide_whether_to_cut(self, other_mesh, threshold=0.9, min_distance: float = 10.e3, higher_meshes: list = None, higher_mesh_tolerance: float = 1.e3):
+    def decide_whether_to_cut(self, other_mesh, threshold=0.9, min_distance: float = 10.e3, 
+                              higher_meshes: list = None, higher_mesh_tolerance: float = 1.e3, 
+                              bottom_depth: float = -30000., top_depth: float = 0., depth_tolerance: float = 10., 
+                              min_separation: float = 5.e3, fancy_cutting: bool = False):
         intersecting_triangles = self.get_intersecting_triangles(other_mesh)
         if len(intersecting_triangles) == 0:
             return False
@@ -660,7 +849,7 @@ class FaultMesh:
         
 
         
-        top_tris, bottom_tris, left_tris, right_tris = self.find_top_bottom_left_right_triangles()
+        top_tris, bottom_tris, left_tris, right_tris = self.find_top_bottom_left_right_triangles(bottom_depth=bottom_depth, top_depth=top_depth, tolerance=depth_tolerance, min_separation=min_separation)
         edge_conditions = {
             'top': len(np.intersect1d(intersecting_triangles, top_tris)) > 0,
             'bottom': len(np.intersect1d(intersecting_triangles, bottom_tris)) > 0,
@@ -671,114 +860,118 @@ class FaultMesh:
         if sum(edge_conditions.values()) >= 2:
             return True
         
+        if fancy_cutting:
         
-        top_vertex_indices, bottom_vertex_indices, left_vertex_indices, right_vertex_indices = self.find_top_bottom_left_right_vertices()
-        top_vertex_points, bottom_vertex_points = self.pv_vertices[top_vertex_indices], self.pv_vertices[bottom_vertex_indices]
-        if left_vertex_indices is None or right_vertex_indices is None:
-            left_vertex_points, right_vertex_points = None, None
-        else:
-            left_vertex_points, right_vertex_points = self.pv_vertices[left_vertex_indices], self.pv_vertices[right_vertex_indices]
-        vertex_point_dict = {
-            'top': top_vertex_points, 
-            'bottom': bottom_vertex_points,
-            'left': left_vertex_points,
-            'right': right_vertex_points
-        }
-        # Find centres of intersecting triangles
-        centres = np.mean(self.pv_vertices[self.pv_triangles[intersecting_triangles]], axis=1)
-        
-        # Find centre points that are furthest apart
-        if len(centres) < 2:
-            return False
-        
-        # Use convex hull method for efficiency (or brute force for small arrays)
-        if len(centres) > 100:
-            idx1, idx2, max_distance = find_furthest_points_hull(centres)
-        else:
-            idx1, idx2, max_distance = find_furthest_points_brute(centres)
-        
-        centre1, centre2 = centres[idx1], centres[idx2]
-
-        centre1_nearest_edge = {
-            'top': np.min(np.linalg.norm(top_vertex_points - centre1, axis=1)),
-            'bottom': np.min(np.linalg.norm(bottom_vertex_points - centre1, axis=1)),
-        }
-        if left_vertex_points is not None and right_vertex_points is not None:
-            centre1_nearest_edge['left'] = np.min(np.linalg.norm(left_vertex_points - centre1, axis=1))
-            centre1_nearest_edge['right'] = np.min(np.linalg.norm(right_vertex_points - centre1, axis=1))
-        centre2_nearest_edge = {
-            'top': np.min(np.linalg.norm(top_vertex_points - centre2, axis=1)),
-            'bottom': np.min(np.linalg.norm(bottom_vertex_points - centre2, axis=1)),
-        }
-        if left_vertex_points is not None and right_vertex_points is not None:
-            centre2_nearest_edge['left'] = np.min(np.linalg.norm(left_vertex_points - centre2, axis=1))
-            centre2_nearest_edge['right'] = np.min(np.linalg.norm(right_vertex_points - centre2, axis=1))
-        centre1_closest_edge = min(centre1_nearest_edge, key=centre1_nearest_edge.get)
-        centre2_closest_edge = min(centre2_nearest_edge, key=centre2_nearest_edge.get)
-
-        centre1_closest_edge_point = vertex_point_dict[centre1_closest_edge][np.argmin(np.linalg.norm(vertex_point_dict[centre1_closest_edge][:, :2] - centre1[:2], axis=1))]
-        centre2_closest_edge_point = vertex_point_dict[centre2_closest_edge][np.argmin(np.linalg.norm(vertex_point_dict[centre2_closest_edge][:, :2] - centre2[:2], axis=1))]
-        edge_dist = np.linalg.norm(centre1_closest_edge_point - centre2_closest_edge_point)
-
-        print(f"Furthest centres are {max_distance/1.e3:.1f} km apart, closest to edges {centre1_closest_edge} and {centre2_closest_edge}.")
-        if centre1_closest_edge != centre2_closest_edge:
-            if (max_distance / edge_dist) > threshold:
-                print(f"Deciding to cut {self.name} against {other_mesh.name}: max_distance / edge_dist = {max_distance/edge_dist:.2f} > {threshold}")
-                return True
+            top_vertex_indices, bottom_vertex_indices, left_vertex_indices, right_vertex_indices = self.find_top_bottom_left_right_vertices(bottom_depth=bottom_depth, top_depth=top_depth, tolerance=depth_tolerance, min_separation=min_separation)
+            top_vertex_points, bottom_vertex_points = self.pv_vertices[top_vertex_indices], self.pv_vertices[bottom_vertex_indices]
+            if left_vertex_indices is None or right_vertex_indices is None:
+                left_vertex_points, right_vertex_points = None, None
             else:
-                print(f"Deciding NOT to cut {self.name} against {other_mesh.name}: max_distance / edge_dist = {max_distance/edge_dist:.2f} <= {threshold}")
+                left_vertex_points, right_vertex_points = self.pv_vertices[left_vertex_indices], self.pv_vertices[right_vertex_indices]
+            vertex_point_dict = {
+                'top': top_vertex_points, 
+                'bottom': bottom_vertex_points,
+                'left': left_vertex_points,
+                'right': right_vertex_points
+            }
+            # Find centres of intersecting triangles
+            centres = np.mean(self.pv_vertices[self.pv_triangles[intersecting_triangles]], axis=1)
+            
+            # Find centre points that are furthest apart
+            if len(centres) < 2:
                 return False
-        else:
-            _, _, edge_length = find_furthest_points_brute(vertex_point_dict[centre1_closest_edge])
-            if edge_length < min_distance:
-                if (max_distance / edge_length) > threshold:
-                    print(f"Deciding to cut {self.name} against {other_mesh.name}: max_distance / edge_length = {max_distance/edge_length:.2f} > {threshold}")
+            
+            # Use convex hull method for efficiency (or brute force for small arrays)
+            if len(centres) > 100:
+                idx1, idx2, max_distance = find_furthest_points_hull(centres)
+            else:
+                idx1, idx2, max_distance = find_furthest_points_brute(centres)
+            
+            centre1, centre2 = centres[idx1], centres[idx2]
+
+            centre1_nearest_edge = {
+                'top': np.min(np.linalg.norm(top_vertex_points - centre1, axis=1)),
+                'bottom': np.min(np.linalg.norm(bottom_vertex_points - centre1, axis=1)),
+            }
+            if left_vertex_points is not None and right_vertex_points is not None:
+                centre1_nearest_edge['left'] = np.min(np.linalg.norm(left_vertex_points - centre1, axis=1))
+                centre1_nearest_edge['right'] = np.min(np.linalg.norm(right_vertex_points - centre1, axis=1))
+            centre2_nearest_edge = {
+                'top': np.min(np.linalg.norm(top_vertex_points - centre2, axis=1)),
+                'bottom': np.min(np.linalg.norm(bottom_vertex_points - centre2, axis=1)),
+            }
+            if left_vertex_points is not None and right_vertex_points is not None:
+                centre2_nearest_edge['left'] = np.min(np.linalg.norm(left_vertex_points - centre2, axis=1))
+                centre2_nearest_edge['right'] = np.min(np.linalg.norm(right_vertex_points - centre2, axis=1))
+            centre1_closest_edge = min(centre1_nearest_edge, key=centre1_nearest_edge.get)
+            centre2_closest_edge = min(centre2_nearest_edge, key=centre2_nearest_edge.get)
+
+            centre1_closest_edge_point = vertex_point_dict[centre1_closest_edge][np.argmin(np.linalg.norm(vertex_point_dict[centre1_closest_edge][:, :2] - centre1[:2], axis=1))]
+            centre2_closest_edge_point = vertex_point_dict[centre2_closest_edge][np.argmin(np.linalg.norm(vertex_point_dict[centre2_closest_edge][:, :2] - centre2[:2], axis=1))]
+            edge_dist = np.linalg.norm(centre1_closest_edge_point - centre2_closest_edge_point)
+
+            print(f"Furthest centres are {max_distance/1.e3:.1f} km apart, closest to edges {centre1_closest_edge} and {centre2_closest_edge}.")
+            if centre1_closest_edge != centre2_closest_edge:
+                if (max_distance / edge_dist) > threshold:
+                    print(f"Deciding to cut {self.name} against {other_mesh.name}: max_distance / edge_dist = {max_distance/edge_dist:.2f} > {threshold}")
                     return True
                 else:
-                    print(f"Deciding NOT to cut {self.name} against {other_mesh.name}: max_distance / edge_length = {max_distance/edge_length:.2f} <= {threshold}")
+                    print(f"Deciding NOT to cut {self.name} against {other_mesh.name}: max_distance / edge_dist = {max_distance/edge_dist:.2f} <= {threshold}")
                     return False
             else:
-                if all([centre1_nearest_edge[centre1_closest_edge] < 3.e3, centre2_nearest_edge[centre2_closest_edge] < 3.e3]):
-                    print(f"Both centres are very close to the same edge: {centre1_closest_edge}")
-                    if edge_dist > min_distance:
-                        print(f"Deciding to cut {self.name} against {other_mesh.name}: edge_length = {edge_length:.2f} > {min_distance}")
+                _, _, edge_length = find_furthest_points_brute(vertex_point_dict[centre1_closest_edge])
+                if edge_length < min_distance:
+                    if (max_distance / edge_length) > threshold:
+                        print(f"Deciding to cut {self.name} against {other_mesh.name}: max_distance / edge_length = {max_distance/edge_length:.2f} > {threshold}")
                         return True
-                    
-                    elif (edge_dist/edge_length) > 0.5:
-                        print(f"Deciding to cut {self.name} against {other_mesh.name}: edge_dist / edge_length = {edge_dist/edge_length:.2f} > 0.5")
-                        return True
-
                     else:
-                        print(f"Deciding NOT to cut {self.name} against {other_mesh.name}: edge_length = {edge_length:.2f} <= {min_distance}")
+                        print(f"Deciding NOT to cut {self.name} against {other_mesh.name}: max_distance / edge_length = {max_distance/edge_length:.2f} <= {threshold}")
                         return False
                 else:
-                    if any([centre1_nearest_edge[centre1_closest_edge] < 3.e3, centre2_nearest_edge[centre2_closest_edge] < 3.e3]):
-                        print(f"At least one centre is not very close to the shared edge: {centre1_closest_edge}")
-                        if centre1_nearest_edge[centre1_closest_edge] < 3.e3:
-                            centre2_second_closest_edge = sorted(centre2_nearest_edge.items(), key=lambda item: item[1])[1][0]
-                            centre2_second_closest_edge_point = vertex_point_dict[centre2_second_closest_edge][np.argmin(np.linalg.norm(vertex_point_dict[centre2_second_closest_edge][:, :2] - centre2[:2], axis=1))]
-                            edge_dist_second = np.linalg.norm(centre1_closest_edge_point - centre2_second_closest_edge_point)
-                            print(f"Centre 2 second closest edge: {centre2_second_closest_edge} at distance {centre2_nearest_edge[centre2_second_closest_edge]}")
-                            if (max_distance / edge_dist_second) > threshold:
-                                print(f"Deciding to cut {self.name} against {other_mesh.name}: max_distance / edge_dist_second = {max_distance/edge_dist_second:.2f} > {threshold}")
-                                return True
-                            else:
-                                print(f"Deciding NOT to cut {self.name} against {other_mesh.name}: max_distance / edge_dist_second = {max_distance/edge_dist_second:.2f} <= {threshold}")
-                                return False
+                    # If both centres are very close to the same edge, check the distance of the second closest edge and compare to threshold
+                    if all([centre1_nearest_edge[centre1_closest_edge] < 3.e3, centre2_nearest_edge[centre2_closest_edge] < 3.e3]):
+                        print(f"Both centres are very close to the same edge: {centre1_closest_edge}")
+                        if edge_dist > min_distance:
+                            print(f"Deciding to cut {self.name} against {other_mesh.name}: edge_length = {edge_length:.2f} > {min_distance}")
+                            return True
+                        
+                        elif (edge_dist/edge_length) > 0.5:
+                            print(f"Deciding to cut {self.name} against {other_mesh.name}: edge_dist / edge_length = {edge_dist/edge_length:.2f} > 0.5")
+                            return True
+
                         else:
-                            centre1_second_closest_edge = sorted(centre1_nearest_edge.items(), key=lambda item: item[1])[1][0]
-                            centre1_second_closest_edge_point = vertex_point_dict[centre1_second_closest_edge][np.argmin(np.linalg.norm(vertex_point_dict[centre1_second_closest_edge][:, :2] - centre1[:2], axis=1))]
-                            edge_dist_second = np.linalg.norm(centre1_second_closest_edge_point - centre2_closest_edge_point)
-                            print(f"Centre 1 second closest edge: {centre1_second_closest_edge} at distance {edge_dist_second}")
-                            if (max_distance / edge_dist_second) > threshold:
-                                print(f"Deciding to cut {self.name} against {other_mesh.name}: max_distance / edge_dist_second = {max_distance/edge_dist_second:.2f} > {threshold}")
-                                return True
-                            else:
-                                print(f"Deciding NOT to cut {self.name} against {other_mesh.name}: max_distance / edge_dist_second = {max_distance/edge_dist_second:.2f} <= {threshold}")
-                                return False
+                            print(f"Deciding NOT to cut {self.name} against {other_mesh.name}: edge_length = {edge_dist:.2f} <= {min_distance}")
+                            return False
                     else:
-                        print(f"Neither centre is very close to any edge: NOT cutting.")
-                        return False
+                        if any([centre1_nearest_edge[centre1_closest_edge] < 3.e3, centre2_nearest_edge[centre2_closest_edge] < 3.e3]):
+                            print(f"At least one centre is not very close to the shared edge: {centre1_closest_edge}")
+                            if centre1_nearest_edge[centre1_closest_edge] < 3.e3:
+                                centre2_second_closest_edge = sorted(centre2_nearest_edge.items(), key=lambda item: item[1])[1][0]
+                                centre2_second_closest_edge_point = vertex_point_dict[centre2_second_closest_edge][np.argmin(np.linalg.norm(vertex_point_dict[centre2_second_closest_edge][:, :2] - centre2[:2], axis=1))]
+                                edge_dist_second = np.linalg.norm(centre1_closest_edge_point - centre2_second_closest_edge_point)
+                                print(f"Centre 2 second closest edge: {centre2_second_closest_edge} at distance {centre2_nearest_edge[centre2_second_closest_edge]}")
+                                if (max_distance / edge_dist_second) > threshold:
+                                    print(f"Deciding to cut {self.name} against {other_mesh.name}: max_distance / edge_dist_second = {max_distance/edge_dist_second:.2f} > {threshold}")
+                                    return True
+                                else:
+                                    print(f"Deciding NOT to cut {self.name} against {other_mesh.name}: max_distance / edge_dist_second = {max_distance/edge_dist_second:.2f} <= {threshold}")
+                                    return False
+                            else:
+                                centre1_second_closest_edge = sorted(centre1_nearest_edge.items(), key=lambda item: item[1])[1][0]
+                                centre1_second_closest_edge_point = vertex_point_dict[centre1_second_closest_edge][np.argmin(np.linalg.norm(vertex_point_dict[centre1_second_closest_edge][:, :2] - centre1[:2], axis=1))]
+                                edge_dist_second = np.linalg.norm(centre1_second_closest_edge_point - centre2_closest_edge_point)
+                                print(f"Centre 1 second closest edge: {centre1_second_closest_edge} at distance {edge_dist_second}")
+                                if (max_distance / edge_dist_second) > threshold:
+                                    print(f"Deciding to cut {self.name} against {other_mesh.name}: max_distance / edge_dist_second = {max_distance/edge_dist_second:.2f} > {threshold}")
+                                    return True
+                                else:
+                                    print(f"Deciding NOT to cut {self.name} against {other_mesh.name}: max_distance / edge_dist_second = {max_distance/edge_dist_second:.2f} <= {threshold}")
+                                    return False
+                        else:
+                            print(f"Neither centre is very close to any edge: NOT cutting.")
+                            return False
+        else: 
+            return False
                 
     def cut_mesh(self, other_mesh, fault_trace: np.ndarray, surface_tolerance = 1.0, cutting_fragment: meshio.Mesh = None):
         """
@@ -795,9 +988,10 @@ class FaultMesh:
         assert other_mesh.mesh is not None, "Other mesh is not defined."
         assert fault_trace.shape[1] == 3, "fault_trace must be an array of shape (n, 3)."
 
-        if not self.decide_whether_to_cut(other_mesh):
-            print(f"Decided not to cut {self.name} with {other_mesh.name}.")
-            return self
+        if cutting_fragment is None:
+            if not self.decide_whether_to_cut(other_mesh):
+                print(f"Decided not to cut {self.name} with {other_mesh.name}.")
+                return self
 
         pv_self = pv.from_meshio(self.mesh).extract_surface()
         if cutting_fragment is not None:
@@ -852,6 +1046,81 @@ class FaultMesh:
         new_fault_mesh.ymax = np.max(new_fault_mesh.vertices[:, 1])
 
         return new_fault_mesh
-                
+
+    def cut_mesh_pv(self, pv_surface: pv.PolyData, fault_trace: np.ndarray,
+                    surface_tolerance: float = 1.0, max_distance: float = 3.e3):
+        """
+        Cut this mesh with a PyVista PolyData surface, keeping the half closest
+        to the fault trace.
+
+        The cut is only performed if the mesh and the surface actually intersect
+        (checked with check_intersection_pv). If they do not intersect, the
+        original mesh is returned unchanged.
+
+        Args:
+            pv_surface (pv.PolyData): Triangulated cutting surface.
+            fault_trace (np.ndarray): Array of shape (n, 3) — 3D points along
+                the fault trace used to decide which clipped half to keep.
+            surface_tolerance (float): Points with z >= -surface_tolerance are
+                considered "surface" points when choosing the kept half.
+                Defaults to 1.0.
+            max_distance (float): KDTree radius passed to check_intersection_pv.
+                Defaults to 3e3.
+
+        Returns:
+            FaultMesh: The cut mesh (or self if no intersection was found or the
+                cut produced too few elements).
+        """
+        assert self.mesh is not None, "This mesh is not defined."
+        assert isinstance(pv_surface, pv.PolyData), "pv_surface must be a pv.PolyData instance."
+        assert fault_trace.shape[1] == 3, "fault_trace must be an array of shape (n, 3)."
+
+        # if not self.check_intersection_pv(pv_surface, max_distance=max_distance):
+        #     print(f"No intersection found between {self.name} and the supplied surface. Returning original mesh.")
+        #     return self
+
+        pv_self = pv.from_meshio(self.mesh).extract_surface()
+
+        clipped1 = pv_self.clip_surface(pv_surface, invert=False)
+        clipped1_surface_points = clipped1.points[clipped1.points[:, 2] >= -surface_tolerance]
+        clipped2 = pv_self.clip_surface(pv_surface, invert=True)
+        clipped2_surface_points = clipped2.points[clipped2.points[:, 2] >= -surface_tolerance]
+
+        if clipped1_surface_points.shape[0] == 0:
+            print(f"Clipped1 has no surface points for {self.name}. Returning clipped2.")
+            clipped = clipped2
+        elif clipped2_surface_points.shape[0] == 0:
+            print(f"Clipped2 has no surface points for {self.name}. Returning clipped1.")
+            clipped = clipped1
+        else:
+            trace_kdtree = KDTree(fault_trace)
+            dist1 = np.mean(trace_kdtree.query(clipped1_surface_points)[0])
+            dist2 = np.mean(trace_kdtree.query(clipped2_surface_points)[0])
+            clipped = clipped1 if dist1 < dist2 else clipped2
+
+        if clipped.n_points < 3 or clipped.n_cells < 1:
+            print(f"Cutting produced too few elements for {self.name}. Returning original mesh.")
+            return self
+
+        new_fault_mesh = FaultMesh()
+        new_fault_mesh.mesh = meshio.Mesh(
+            points=clipped.points,
+            cells={"triangle": clipped.faces.reshape(-1, 4)[:, 1:]}
+        )
+        new_fault_mesh.vertices = new_fault_mesh.mesh.points
+        new_fault_mesh.triangles = new_fault_mesh.mesh.cells_dict["triangle"]
+        new_fault_mesh.tri_dict = {i: tri for i, tri in enumerate(new_fault_mesh.triangles)}
+        new_fault_mesh.pv_triangles = clipped.faces.reshape(-1, 4)[:, 1:]
+        new_fault_mesh.pv_tri_dict = {i: tri for i, tri in enumerate(new_fault_mesh.pv_triangles)}
+        new_fault_mesh.vertex_dict = {i: vertex for i, vertex in enumerate(new_fault_mesh.vertices)}
+        new_fault_mesh.pv_vertices = clipped.points
+        new_fault_mesh.pv_vertex_dict = {i: vertex for i, vertex in enumerate(new_fault_mesh.pv_vertices)}
+        new_fault_mesh.name = self.name
+        new_fault_mesh.xmin = np.min(new_fault_mesh.vertices[:, 0])
+        new_fault_mesh.xmax = np.max(new_fault_mesh.vertices[:, 0])
+        new_fault_mesh.ymin = np.min(new_fault_mesh.vertices[:, 1])
+        new_fault_mesh.ymax = np.max(new_fault_mesh.vertices[:, 1])
+
+        return new_fault_mesh
 
 
