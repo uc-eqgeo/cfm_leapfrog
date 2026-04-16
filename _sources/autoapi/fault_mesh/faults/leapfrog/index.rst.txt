@@ -37,6 +37,77 @@ Module Contents
 
 
 
+   .. py:method:: suggest_trace_extensions(out_file, fit_distance = 5000.0, extend_distance = 40000.0, proximity_threshold = 1000.0)
+
+      Suggest trace extensions for faults that terminate against higher-priority faults.
+
+      Generates a CSV file with columns:
+          fault_name, end, extend_distance, fit_distance
+
+      The 'end' column is a compass direction (N, NE, E, SE, S, SW, W, NW)
+      indicating which end of the fault trace to extend. Where both ends
+      terminate, two rows are written.
+
+      The output file can be edited by the user and then read back with
+      read_trace_extensions().
+
+
+
+   .. py:method:: read_trace_extensions(csv_file)
+
+      Read a trace-extensions CSV file.
+
+      Expected columns: fault_name, end, extend_distance, fit_distance.
+      Fault names are validated against current curated fault names.
+
+
+
+   .. py:method:: apply_trace_extensions(resolution = 1000.0)
+
+      Apply trace extensions previously loaded with read_trace_extensions().
+
+      For each row the relevant fault end is identified by compass direction
+      and the trace is extended accordingly.
+
+
+
+   .. py:property:: additional_cuts
+
+      Set of (fault_name, fault_name) tuples for cuts that should always be made.
+
+
+   .. py:property:: excluded_cuts
+
+      Set of (fault_name, fault_name) tuples for cuts that should never be made.
+
+
+   .. py:method:: read_additional_cuts(csv_file)
+
+      Read a two-column CSV listing pairs of faults that should always be cut.
+
+      Columns: fault_to_cut, cutting_fault
+      Fault names are validated against current curated fault names.
+
+
+
+   .. py:method:: read_excluded_cuts(csv_file)
+
+      Read a two-column CSV listing pairs of faults that should NOT be cut.
+
+      Columns: fault_to_cut, cutting_fault
+      Fault names are validated against current curated fault names.
+
+
+
+   .. py:method:: should_cut(fault_name, cutting_fault_name)
+
+      Check additional/excluded cut lists and return True/False/None.
+
+      Returns True if the pair is in additional_cuts, False if in excluded_cuts,
+      or None if neither list applies (fall through to decide_whether_to_cut).
+
+
+
    .. py:method:: to_opensha_xml(exclude_subduction = True, buffer_width = 5000.0, write_buffers = True, subduction_names = ('hikurangi', 'puysegur'))
 
       Write out XML in OpenSHA format

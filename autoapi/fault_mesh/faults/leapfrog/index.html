@@ -10,7 +10,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
@@ -159,6 +159,114 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.suggest_trace_extensions">
+<span class="sig-name descname"><span class="pre">suggest_trace_extensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extend_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proximity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.suggest_trace_extensions" title="Link to this definition"></a></dt>
+<dd><p>Suggest trace extensions for faults that terminate against higher-priority faults.</p>
+<dl class="simple">
+<dt>Generates a CSV file with columns:</dt><dd><p>fault_name, end, extend_distance, fit_distance</p>
+</dd>
+</dl>
+<p>The ‘end’ column is a compass direction (N, NE, E, SE, S, SW, W, NW)
+indicating which end of the fault trace to extend. Where both ends
+terminate, two rows are written.</p>
+<p>The output file can be edited by the user and then read back with
+read_trace_extensions().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_file</strong> (<em>str</em>)</p></li>
+<li><p><strong>fit_distance</strong> (<em>float</em>)</p></li>
+<li><p><strong>extend_distance</strong> (<em>float</em>)</p></li>
+<li><p><strong>proximity_threshold</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.read_trace_extensions">
+<span class="sig-name descname"><span class="pre">read_trace_extensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.read_trace_extensions" title="Link to this definition"></a></dt>
+<dd><p>Read a trace-extensions CSV file.</p>
+<p>Expected columns: fault_name, end, extend_distance, fit_distance.
+Fault names are validated against current curated fault names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>csv_file</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.apply_trace_extensions">
+<span class="sig-name descname"><span class="pre">apply_trace_extensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.apply_trace_extensions" title="Link to this definition"></a></dt>
+<dd><p>Apply trace extensions previously loaded with read_trace_extensions().</p>
+<p>For each row the relevant fault end is identified by compass direction
+and the trace is extended accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>resolution</strong> (<em>float</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.additional_cuts">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">additional_cuts</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.additional_cuts" title="Link to this definition"></a></dt>
+<dd><p>Set of (fault_name, fault_name) tuples for cuts that should always be made.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.excluded_cuts">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">excluded_cuts</span></span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.excluded_cuts" title="Link to this definition"></a></dt>
+<dd><p>Set of (fault_name, fault_name) tuples for cuts that should never be made.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.read_additional_cuts">
+<span class="sig-name descname"><span class="pre">read_additional_cuts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.read_additional_cuts" title="Link to this definition"></a></dt>
+<dd><p>Read a two-column CSV listing pairs of faults that should always be cut.</p>
+<p>Columns: fault_to_cut, cutting_fault
+Fault names are validated against current curated fault names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>csv_file</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.read_excluded_cuts">
+<span class="sig-name descname"><span class="pre">read_excluded_cuts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.read_excluded_cuts" title="Link to this definition"></a></dt>
+<dd><p>Read a two-column CSV listing pairs of faults that should NOT be cut.</p>
+<p>Columns: fault_to_cut, cutting_fault
+Fault names are validated against current curated fault names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>csv_file</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.should_cut">
+<span class="sig-name descname"><span class="pre">should_cut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutting_fault_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.should_cut" title="Link to this definition"></a></dt>
+<dd><p>Check additional/excluded cut lists and return True/False/None.</p>
+<p>Returns True if the pair is in additional_cuts, False if in excluded_cuts,
+or None if neither list applies (fall through to decide_whether_to_cut).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fault_name</strong> (<em>str</em>)</p></li>
+<li><p><strong>cutting_fault_name</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
