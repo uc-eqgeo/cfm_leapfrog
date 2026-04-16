@@ -61,6 +61,9 @@ class LeapfrogMultiFault(GenericMultiFault):
         self._dip_multiplier = dip_multiplier
         self._strike_multiplier = strike_multiplier
         self._sampled_dip = None
+        self._trace_extensions = None
+        self._additional_cuts = None
+        self._excluded_cuts = None
 
     def add_fault(self, series: pd.Series, depth_type: str = "D90", remove_colons: bool = False,
                   tolerance: float = 100.):
@@ -378,6 +381,202 @@ class LeapfrogMultiFault(GenericMultiFault):
         for fault in self.curated_faults:
             fault.adjust_trace(extend_distance=extend_distance, fit_distance=fit_distance, resolution=resolution)
 
+    @staticmethod
+    def _bearing_to_compass(bearing: float) -> str:
+        """Convert a bearing in degrees (0-360) to an 8-point compass label."""
+        bearing = bearing % 360
+        compass_points = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+        index = int((bearing + 22.5) % 360 / 45)
+        return compass_points[index]
+
+    def suggest_trace_extensions(self, out_file: str, fit_distance: float = 5.e3,
+                                 extend_distance: float = 40.e3, proximity_threshold: float = 1.e3):
+        """Suggest trace extensions for faults that terminate against higher-priority faults.
+
+        Generates a CSV file with columns:
+            fault_name, end, extend_distance, fit_distance
+
+        The 'end' column is a compass direction (N, NE, E, SE, S, SW, W, NW)
+        indicating which end of the fault trace to extend. Where both ends
+        terminate, two rows are written.
+
+        The output file can be edited by the user and then read back with
+        read_trace_extensions().
+        """
+        rows = []
+        for fault in self.curated_faults:
+            terms = list(set(chain(*fault.find_terminations())))
+            if not terms:
+                continue
+            cutting_faults = [self.curated_fault_dict[name] for name in terms if name != fault.name]
+
+            if isinstance(fault, ConnectedFaultSystem):
+                trace = fault.nztm_trace
+            else:
+                trace = fault.nztm_trace
+
+            coords = np.array(trace.coords)
+            end1 = Point(coords[0])
+            end2 = Point(coords[-1])
+
+            for nearest_end, other_end in [(end1, end2), (end2, end1)]:
+                for cutting_fault in cutting_faults:
+                    if nearest_end.distance(cutting_fault.nztm_trace) < proximity_threshold:
+                        end_arr = np.array(nearest_end.coords)[0]
+                        # Bearing from centre of fault toward the end being extended
+                        centre = coords.mean(axis=0)
+                        dx = end_arr[0] - centre[0]
+                        dy = end_arr[1] - centre[1]
+                        bearing = normalize_bearing(np.degrees(np.arctan2(dx, dy)))
+                        compass = self._bearing_to_compass(bearing)
+                        rows.append({
+                            "fault_name": fault.name,
+                            "end": compass,
+                            "extend_distance": extend_distance,
+                            "fit_distance": fit_distance,
+                        })
+
+        df = pd.DataFrame(rows, columns=["fault_name", "end", "extend_distance", "fit_distance"])
+        df.drop_duplicates(subset=["fault_name", "end"], inplace=True)
+        df.to_csv(out_file, index=False)
+        print(f"Wrote {len(df)} suggested trace extensions to {out_file}")
+
+    def read_trace_extensions(self, csv_file: str):
+        """Read a trace-extensions CSV file.
+
+        Expected columns: fault_name, end, extend_distance, fit_distance.
+        Fault names are validated against current curated fault names.
+        """
+        assert os.path.exists(csv_file), f"File not found: {csv_file}"
+        df = pd.read_csv(csv_file)
+        for col in ("fault_name", "end"):
+            assert col in df.columns, f"Missing required column: {col}"
+        if "extend_distance" not in df.columns:
+            df["extend_distance"] = 40.e3
+        if "fit_distance" not in df.columns:
+            df["fit_distance"] = 5.e3
+
+        for name in df["fault_name"]:
+            if name not in self.names:
+                print(f"Warning: unrecognised fault '{name}' in trace extensions file")
+
+        self._trace_extensions = df
+        print(f"Read {len(df)} trace extensions from {csv_file}")
+
+    def apply_trace_extensions(self, resolution: float = 1.e3):
+        """Apply trace extensions previously loaded with read_trace_extensions().
+
+        For each row the relevant fault end is identified by compass direction
+        and the trace is extended accordingly.
+        """
+        assert self._trace_extensions is not None, "No trace extensions loaded. Call read_trace_extensions() first."
+
+        for _, row in self._trace_extensions.iterrows():
+            fault_name = row["fault_name"]
+            if fault_name not in self.names:
+                continue
+            fault = self.curated_fault_dict[fault_name]
+            target_compass = row["end"].strip().upper()
+            ext_distance = float(row["extend_distance"])
+            fit_dist = float(row["fit_distance"])
+
+            if isinstance(fault, ConnectedFaultSystem):
+                trace = fault.nztm_trace
+            else:
+                trace = fault.nztm_trace
+
+            coords = np.array(trace.coords)
+            centre = coords.mean(axis=0)
+            end1 = Point(coords[0])
+            end2 = Point(coords[-1])
+
+            # Determine which end matches the requested compass direction
+            for nearest_end, other_end in [(end1, end2), (end2, end1)]:
+                end_arr = np.array(nearest_end.coords)[0]
+                dx = end_arr[0] - centre[0]
+                dy = end_arr[1] - centre[1]
+                bearing = normalize_bearing(np.degrees(np.arctan2(dx, dy)))
+                compass = self._bearing_to_compass(bearing)
+                if compass == target_compass:
+                    if isinstance(fault, ConnectedFaultSystem):
+                        nearest_seg = min(fault.segments, key=lambda s: s.nztm_trace.distance(nearest_end))
+                        nearest_seg.extend_trace(nearest_end, other_end, fit_distance=fit_dist,
+                                                 extend_distance=ext_distance, resolution=resolution)
+                    else:
+                        fault.extend_trace(nearest_end, other_end, fit_distance=fit_dist,
+                                           extend_distance=ext_distance, resolution=resolution)
+                    print(f"Extended {fault_name} trace at {target_compass} end by {ext_distance/1.e3:.0f} km")
+                    break
+
+    # --- Additional and excluded cuts ---
+
+    @property
+    def additional_cuts(self):
+        """Set of (fault_name, fault_name) tuples for cuts that should always be made."""
+        if self._additional_cuts is None:
+            return set()
+        return self._additional_cuts
+
+    @property
+    def excluded_cuts(self):
+        """Set of (fault_name, fault_name) tuples for cuts that should never be made."""
+        if self._excluded_cuts is None:
+            return set()
+        return self._excluded_cuts
+
+    def read_additional_cuts(self, csv_file: str):
+        """Read a two-column CSV listing pairs of faults that should always be cut.
+
+        Columns: fault_to_cut, cutting_fault
+        Fault names are validated against current curated fault names.
+        """
+        assert os.path.exists(csv_file), f"File not found: {csv_file}"
+        df = pd.read_csv(csv_file, header=None, names=["fault_to_cut", "cutting_fault"])
+        cuts = set()
+        for _, row in df.iterrows():
+            name1 = row["fault_to_cut"].strip()
+            name2 = row["cutting_fault"].strip()
+            for name in (name1, name2):
+                if name not in self.names:
+                    print(f"Warning: unrecognised fault '{name}' in additional cuts file")
+            cuts.add((name1, name2))
+
+        self._additional_cuts = cuts
+        print(f"Read {len(cuts)} additional cuts from {csv_file}")
+
+    def read_excluded_cuts(self, csv_file: str):
+        """Read a two-column CSV listing pairs of faults that should NOT be cut.
+
+        Columns: fault_to_cut, cutting_fault
+        Fault names are validated against current curated fault names.
+        """
+        assert os.path.exists(csv_file), f"File not found: {csv_file}"
+        df = pd.read_csv(csv_file, header=None, names=["fault_to_cut", "cutting_fault"])
+        cuts = set()
+        for _, row in df.iterrows():
+            name1 = row["fault_to_cut"].strip()
+            name2 = row["cutting_fault"].strip()
+            for name in (name1, name2):
+                if name not in self.names:
+                    print(f"Warning: unrecognised fault '{name}' in excluded cuts file")
+            cuts.add((name1, name2))
+
+        self._excluded_cuts = cuts
+        print(f"Read {len(cuts)} excluded cuts from {csv_file}")
+
+    def should_cut(self, fault_name: str, cutting_fault_name: str) -> bool:
+        """Check additional/excluded cut lists and return True/False/None.
+
+        Returns True if the pair is in additional_cuts, False if in excluded_cuts,
+        or None if neither list applies (fall through to decide_whether_to_cut).
+        """
+        if (fault_name, cutting_fault_name) in self.excluded_cuts:
+            print(f"Skipping cut of {fault_name} by {cutting_fault_name} (excluded cuts list).")
+            return False
+        if (fault_name, cutting_fault_name) in self.additional_cuts:
+            print(f"Forcing cut of {fault_name} by {cutting_fault_name} (additional cuts list).")
+            return True
+        return None
 
     def to_opensha_xml(self, exclude_subduction: bool = True, buffer_width: float = 5000.,
                        write_buffers: bool = True, subduction_names: tuple = ("hikurangi", "puysegur")):

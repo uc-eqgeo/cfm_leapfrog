@@ -30,4 +30,4 @@ def read_raster(filename, out_crs="EPSG:2193", use_z=False):
     mesh.points[:, 0] = lon
     mesh.points[:, 1] = lat
     mesh["data"] = values.reshape(mesh.n_points, -1, order="F")
-    return mesh.extract_surface()
+    return mesh.extract_surface(algorithm="dataset_surface")

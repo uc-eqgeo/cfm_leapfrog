@@ -356,8 +356,11 @@ class GenericMultiFault:
             if depth_type == "D90":
                 if "Depth_D90" in trimmed_fault_gdf.columns:
                     trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["Depth_D90"]
-                else:
+                elif "D90" in trimmed_fault_gdf.columns:
                     trimmed_fault_gdf["Depth_pref"] = trimmed_fault_gdf["D90"]
+                else:
+                    print("Warning: no D90 depth field found, setting all depths to 30 km")                    
+                    trimmed_fault_gdf["Depth_pref"] = 3.e4
                 trimmed_fault_gdf["Depth_std"] = 0.
             elif depth_type == "Dfcomb":
                 if "Depth_D90" in trimmed_fault_gdf.columns:

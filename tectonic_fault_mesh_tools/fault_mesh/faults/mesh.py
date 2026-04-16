@@ -283,7 +283,7 @@ class FaultMesh:
         mesh = meshio.read(file_path)
         fault_mesh = cls()
         fault_mesh.mesh = mesh
-        pv_mesh = pv.from_meshio(mesh).extract_surface()
+        pv_mesh = pv.from_meshio(mesh).extract_surface(algorithm="dataset_surface")
         fault_mesh.pv_triangles = pv_mesh.faces.reshape(-1, 4)[:, 1:]
         fault_mesh.vertices = mesh.points
         fault_mesh.pv_vertices = pv_mesh.points
@@ -751,7 +751,7 @@ class FaultMesh:
         t = np.linspace(0, 1, n_points)
         line_points = point_a + t[:, None] * (point_b - point_a)
 
-        pv_mesh = pv.from_meshio(self.mesh).extract_surface()
+        pv_mesh = pv.from_meshio(self.mesh).extract_surface(algorithm="dataset_surface")
 
         cell_ids = []
         seen = set()
@@ -816,10 +816,19 @@ class FaultMesh:
         return cutting_mesh
     
 
-    def decide_whether_to_cut(self, other_mesh, threshold=0.9, min_distance: float = 10.e3, 
-                              higher_meshes: list = None, higher_mesh_tolerance: float = 1.e3, 
-                              bottom_depth: float = -30000., top_depth: float = 0., depth_tolerance: float = 10., 
-                              min_separation: float = 5.e3, fancy_cutting: bool = False):
+    def decide_whether_to_cut(self, other_mesh, threshold=0.9, min_distance: float = 10.e3,
+                              higher_meshes: list = None, higher_mesh_tolerance: float = 1.e3,
+                              bottom_depth: float = -30000., top_depth: float = 0., depth_tolerance: float = 10.,
+                              min_separation: float = 5.e3, fancy_cutting: bool = False,
+                              excluded_cuts: set = None, additional_cuts: set = None):
+        # Check user-specified cut overrides first
+        if excluded_cuts is not None and (self.name, other_mesh.name) in excluded_cuts:
+            print(f"Skipping cut of {self.name} by {other_mesh.name} (excluded cuts list).")
+            return False
+        if additional_cuts is not None and (self.name, other_mesh.name) in additional_cuts:
+            print(f"Forcing cut of {self.name} by {other_mesh.name} (additional cuts list).")
+            return True
+
         intersecting_triangles = self.get_intersecting_triangles(other_mesh)
         if len(intersecting_triangles) == 0:
             return False
@@ -830,8 +839,8 @@ class FaultMesh:
                 self_check_intersection = self.check_intersection(higher_mesh)
                 other_check_intersection = other_mesh.check_intersection(higher_mesh)
                 if self_check_intersection and other_check_intersection:
-                    self_implicit_distances = np.array(pv.from_meshio(self.mesh).extract_surface().compute_implicit_distance(pv.from_meshio(higher_mesh.mesh).extract_surface())["implicit_distance"])
-                    other_implicit_distances = np.array(pv.from_meshio(other_mesh.mesh).extract_surface().compute_implicit_distance(pv.from_meshio(higher_mesh.mesh).extract_surface())["implicit_distance"])
+                    self_implicit_distances = np.array(pv.from_meshio(self.mesh).extract_surface(algorithm="dataset_surface").compute_implicit_distance(pv.from_meshio(higher_mesh.mesh).extract_surface(algorithm="dataset_surface"))["implicit_distance"])
+                    other_implicit_distances = np.array(pv.from_meshio(other_mesh.mesh).extract_surface(algorithm="dataset_surface").compute_implicit_distance(pv.from_meshio(higher_mesh.mesh).extract_surface(algorithm="dataset_surface"))["implicit_distance"])
 
                     self_mainly_positive = np.sum(self_implicit_distances > 0) > 0.7 * len(self_implicit_distances)
                     other_mainly_positive = np.sum(other_implicit_distances > 0) > 0.7 * len(other_implicit_distances)
@@ -883,7 +892,11 @@ class FaultMesh:
             
             # Use convex hull method for efficiency (or brute force for small arrays)
             if len(centres) > 100:
-                idx1, idx2, max_distance = find_furthest_points_hull(centres)
+                try:
+                    idx1, idx2, max_distance = find_furthest_points_hull(centres)
+                except Exception as e:
+                    print(f"Error occurred while finding furthest points with convex hull: {e}")
+                    idx1, idx2, max_distance = find_furthest_points_brute(centres)
             else:
                 idx1, idx2, max_distance = find_furthest_points_brute(centres)
             
@@ -973,7 +986,7 @@ class FaultMesh:
         else: 
             return False
                 
-    def cut_mesh(self, other_mesh, fault_trace: np.ndarray, surface_tolerance = 1.0, cutting_fragment: meshio.Mesh = None):
+    def cut_mesh(self, other_mesh, fault_trace: np.ndarray, surface_tolerance = 1.0, cutting_fragment: meshio.Mesh = None, surface_max_dist_tolerance: float = 1.e3, fancy_cutting: bool = False):
         """
         Cuts this mesh using another mesh.
 
@@ -989,15 +1002,15 @@ class FaultMesh:
         assert fault_trace.shape[1] == 3, "fault_trace must be an array of shape (n, 3)."
 
         if cutting_fragment is None:
-            if not self.decide_whether_to_cut(other_mesh):
+            if not self.decide_whether_to_cut(other_mesh, fancy_cutting=fancy_cutting):
                 print(f"Decided not to cut {self.name} with {other_mesh.name}.")
                 return self
 
-        pv_self = pv.from_meshio(self.mesh).extract_surface()
+        pv_self = pv.from_meshio(self.mesh).extract_surface(algorithm="dataset_surface")
         if cutting_fragment is not None:
-            pv_other = pv.from_meshio(cutting_fragment).extract_surface()
+            pv_other = pv.from_meshio(cutting_fragment).extract_surface(algorithm="dataset_surface")
         else:
-            pv_other = pv.from_meshio(other_mesh.mesh).extract_surface()
+            pv_other = pv.from_meshio(other_mesh.mesh).extract_surface(algorithm="dataset_surface")
 
         clipped1 = pv_self.clip_surface(pv_other, invert=False)
         clipped1_surface_points = clipped1.points[clipped1.points[:, 2] >= -surface_tolerance]
@@ -1016,10 +1029,10 @@ class FaultMesh:
             clipped_1_dist, _ = trace_kdtree.query(clipped1_surface_points)
             clipped_2_dist, _ = trace_kdtree.query(clipped2_surface_points)
 
-            dist1 = np.mean(clipped_1_dist)
-            dist2 = np.mean(clipped_2_dist)
+            n_dist1 = (clipped_1_dist < surface_max_dist_tolerance).sum()
+            n_dist2 = (clipped_2_dist < surface_max_dist_tolerance).sum()
 
-            if dist1 < dist2:
+            if n_dist1 > n_dist2:
                 clipped = clipped1
             else:
                 clipped = clipped2
@@ -1079,7 +1092,7 @@ class FaultMesh:
         #     print(f"No intersection found between {self.name} and the supplied surface. Returning original mesh.")
         #     return self
 
-        pv_self = pv.from_meshio(self.mesh).extract_surface()
+        pv_self = pv.from_meshio(self.mesh).extract_surface(algorithm="dataset_surface")
 
         clipped1 = pv_self.clip_surface(pv_surface, invert=False)
         clipped1_surface_points = clipped1.points[clipped1.points[:, 2] >= -surface_tolerance]

@@ -1313,18 +1313,24 @@ class CfmFault:
         dist = rng.normal(loc=0, scale=1)
         self.z_score = dist
     
-    def sampled_dip(self, sample_sd: float = 1.0):
-        """Sample a random dip value from a gaussian distribution
+    def sampled_dip(self):
+        """Return a dip value scaled by the stored z_score (correlated if part of a connected fault).
+
+        Uses self.sampled, which returns the connected fault's z_score when this fault belongs to
+        a CfmConnectedFault, ensuring correlated sampling across sub-faults.
         """
-        dip_sigma1 = np.abs(self.dip_best - self.dip_min)/2.
-        dip_sigma2 = np.abs(self.dip_max - self.dip_best)/2.
-        if sample_sd < 0:
-            sampled_dip = self.dip_best - dip_sigma1 * np.abs(sample_sd)
+        z = self.sampled
+        if z is None:
+            return self.dip_best
+        dip_sigma1 = np.abs(self.dip_best - self.dip_min) / 2.
+        dip_sigma2 = np.abs(self.dip_max - self.dip_best) / 2.
+        if z < 0:
+            sampled_dip = self.dip_best + dip_sigma1 * z  # z is negative, so this decreases dip
         else:
-            sampled_dip = self.dip_best + dip_sigma2 * np.abs(sample_sd)
-        return sampled_dip
-    
-    def down_dip_vector_optional(self, option: str = 'best', sample_sd: float = 1.0):
+            sampled_dip = self.dip_best + dip_sigma2 * z
+        return max(sampled_dip, 0.)
+
+    def down_dip_vector_optional(self, option: str = 'best'):
         """
         Calculated from dip and dip direction
         """
@@ -1336,7 +1342,7 @@ class CfmFault:
         elif option == 'max':
             dip_used = self.dip_max
         elif option == 'sampled':
-            dip_used = self.sampled_dip(sample_sd=sample_sd)
+            dip_used = self.sampled_dip()
         else:
             raise ValueError("Unrecognised option for down_dip_vector_optional")
         
@@ -1382,7 +1388,7 @@ class CfmFault:
         trace_2d = gpd.GeoSeries(self.nztm_trace).segmentize(spacing).explode(index_parts=False).geometry.values[0]
         trace_3d_array = np.column_stack((np.array(trace_2d.coords.xy).T,
                                          np.zeros(len(trace_2d.coords))))
-        max_extrude_dist = self.depth_best / self.down_dip_vector[-1] * -1.e3
+        max_extrude_dist = self.depth_best / self.down_dip_vector_optional(option=option)[-1] * -1.e3
         extrude_steps = np.arange(0, max_extrude_dist + spacing, spacing)
         if max(extrude_steps) < max_extrude_dist:
             extrude_steps = np.append(extrude_steps, max_extrude_dist)
@@ -1456,11 +1462,14 @@ class CfmConnectedFault:
         else:
             self.faults = faults
 
-    def sample(self):
+    def sample(self, replace_faults: bool = True):
         """Sample a random value from a gaussian
         """
         dist = rng.normal(loc=0, scale=1)
         self.z_score = dist
+        if replace_faults:
+            for fault in self.faults:
+                fault.z_score = dist
     
     def __repr__(self):
         return f"CfmConnectedFault(name={self.name}, num_faults={len(self.faults)})"
