@@ -26,6 +26,8 @@ fault_data.read_cutting_hierarchy(r"C:\Users\arh128\vscode_projects\cfm_leapfrog
 # Read depth raster and convert to PyVista surface
 depth_pyvista = read_raster("with_hannu_mods.tif", use_z=True, out_crs=f"EPSG:{epsg}")
 
+fault_data.read_additional_cuts("additional_cuts.csv")
+
 # Read in existing meshes for each fault if they exist, and store in a dictionary for cutting
 for fault in fault_data.curated_faults:
     obj_file = os.path.join(r"test_objs", f"{fault.name}_depth_contours.obj")
