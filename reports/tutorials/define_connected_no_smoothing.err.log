@@ -58,10 +58,10 @@ fault_data = LeapfrogMultiFault.from_nz_cfm_shp("tutorial_gis/cfm_gt_1_5.gpkg", 
 [32m    292[39m                     exclude_region_min_sr: [38;5;28mfloat[39m = [32m1.8[39m, include_names: [38;5;28mlist[39m = [38;5;28;01mNone[39;00m, exclude_aus: [38;5;28mbool[39m = [38;5;28;01mTrue[39;00m,
 [32m   (...)[39m[32m    295[39m                     trimming_gradient: [38;5;28mfloat[39m = [32m1.0[39m, dip_multiplier: [38;5;28mfloat[39m = [32m1.[39m, strike_multiplier: [38;5;28mfloat[39m = [32m0.5[39m,
 [32m    296[39m                     check_optional_fields: [38;5;28mbool[39m = [38;5;28;01mTrue[39;00m):
-[32m--> [39m[32m298[39m     trimmed_fault_gdf = [38;5;28;43mcls[39;49m[43m.[49m[43mgdf_from_nz_cfm_shp[49m[43m([49m[43mfilename[49m[43m=[49m[43mfilename[49m[43m,[49m[43m [49m[43mexclude_region_polygons[49m[43m=[49m[43mexclude_region_polygons[49m[43m,[49m
-[32m    299[39m [43m                                                [49m[43mdepth_type[49m[43m=[49m[43mdepth_type[49m[43m,[49m[43m [49m[43mexclude_region_min_sr[49m[43m=[49m[43mexclude_region_min_sr[49m[43m,[49m
-[32m    300[39m [43m                                                [49m[43minclude_names[49m[43m=[49m[43minclude_names[49m[43m,[49m[43m [49m[43mexclude_aus[49m[43m=[49m[43mexclude_aus[49m[43m,[49m
-[32m    301[39m [43m                                                [49m[43mexclude_zero[49m[43m=[49m[43mexclude_zero[49m[43m)[49m
+[32m--> [39m[32m298[39m     trimmed_fault_gdf = [30;43mcls[39;49m[30;43m.[39;49m[30;43mgdf_from_nz_cfm_shp[39;49m[30;43m([39;49m[30;43mfilename[39;49m[30;43m=[39;49m[30;43mfilename[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mexclude_region_polygons[39;49m[30;43m=[39;49m[30;43mexclude_region_polygons[39;49m[30;43m,[39;49m
+[32m    299[39m [30;43m                                                [39;49m[30;43mdepth_type[39;49m[30;43m=[39;49m[30;43mdepth_type[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mexclude_region_min_sr[39;49m[30;43m=[39;49m[30;43mexclude_region_min_sr[39;49m[30;43m,[39;49m
+[32m    300[39m [30;43m                                                [39;49m[30;43minclude_names[39;49m[30;43m=[39;49m[30;43minclude_names[39;49m[30;43m,[39;49m[30;43m [39;49m[30;43mexclude_aus[39;49m[30;43m=[39;49m[30;43mexclude_aus[39;49m[30;43m,[39;49m
+[32m    301[39m [30;43m                                                [39;49m[30;43mexclude_zero[39;49m[30;43m=[39;49m[30;43mexclude_zero[39;49m[30;43m)[39;49m
 [32m    302[39m     multi_fault = [38;5;28mcls[39m(trimmed_fault_gdf, sort_sr=sort_sr,
 [32m    303[39m                       remove_colons=remove_colons, smoothing_n=smoothing_n,
 [32m    304[39m                       dip_choice=dip_choice, epsg=epsg, trimming_gradient=trimming_gradient,
