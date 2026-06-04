@@ -445,14 +445,17 @@ print(f"{len(cutting_dict)} faults have meshes available for cutting")""")
 md(
 """### Apply the cutting hierarchy
 
-We walk the faults in hierarchy order. For each fault we consider every
-**higher-priority** fault. The manual override lists are checked first via
-`should_cut(...)` (a pair in `additional_cuts` is always cut, one in
-`excluded_cuts` never); otherwise we fall back to `decide_whether_to_cut(...)`,
-which asks whether they genuinely intersect and are far enough apart to warrant a
-cut (the `higher_meshes` give the context of faults that already truncate the
-cutter). If a cut is called for, we build a *cutting fragment* from the cutter and
-slice this fault with it, keeping the side nearest the fault's own trace.
+We walk the faults in hierarchy order. For each fault the candidate cutters are
+every **higher-priority** fault, **plus** any fault named for it in
+`additional_cuts` — so an additional cut *overrides the hierarchy* and applies
+even when the named cutter ranks lower (or isn't in the hierarchy at all). For
+each candidate the override lists are checked first via `should_cut(...)` (a pair
+in `additional_cuts` is always cut, one in `excluded_cuts` never); otherwise we
+fall back to `decide_whether_to_cut(...)`, which asks whether they genuinely
+intersect and are far enough apart to warrant a cut (the `higher_meshes` give the
+context of faults that already truncate the cutter). If a cut is called for, we
+build a *cutting fragment* from the cutter and slice this fault with it, keeping
+the side nearest the fault's own trace.
 
 Finally each fault is trimmed against the depth surface with `cut_mesh_pv(...)`
 and the result written as `<name>_cut.obj` — the input to Stage 3.
@@ -460,13 +463,16 @@ and the result written as `<name>_cut.obj` — the input to Stage 3.
 `fancy_cutting=True` uses the more robust intersection-following cut.""",
 """### カット階層の適用
 
-断層を階層順にたどります。各断層について、すべての**上位**断層を検討します。
-まず手動の上書きリストを `should_cut(...)` で確認し（`additional_cuts` のペアは
-必ずカット、`excluded_cuts` のペアは決してカットしない）、該当しなければ
-`decide_whether_to_cut(...)` にフォールバックして、実際に交差しておりカットに
-値するだけ離れているかを判定します（`higher_meshes` は、カッター側を既に切断
-している断層の文脈を与えます）。カットすべき場合は、カッターから*カット用
-フラグメント*を作り、この断層を切断して、断層自身のトレースに近い側を残します。
+断層を階層順にたどります。各断層のカッター候補は、すべての**上位**断層に加え、
+`additional_cuts` でその断層に指定された断層も含みます。つまり additional_cut は
+*階層を上書き*し、指定されたカッターが下位（または階層外）にあっても適用され
+ます。各候補について、まず上書きリストを `should_cut(...)` で確認し
+（`additional_cuts` のペアは必ずカット、`excluded_cuts` のペアは決してカットしない）、
+該当しなければ `decide_whether_to_cut(...)` にフォールバックして、実際に交差して
+おりカットに値するだけ離れているかを判定します（`higher_meshes` は、カッター側を
+既に切断している断層の文脈を与えます）。カットすべき場合は、カッターから
+*カット用フラグメント*を作り、この断層を切断して、断層自身のトレースに近い側を
+残します。
 
 最後に各断層を `cut_mesh_pv(...)` で深度面に対してトリミングし、結果を
 `<name>_cut.obj` として書き出します。これがステージ3の入力です。
@@ -484,11 +490,14 @@ for fault_name in fault_data.cutting_hierarchy:
 
     # Faults ranked above this one are candidates to cut it.
     faults_to_cut = fault_data.cutting_hierarchy[:fault_data.cutting_hierarchy.index(fault_name)]
-    for cut_name in faults_to_cut:
+    # additional_cuts override the hierarchy: a fault listed as cutting this one is
+    # forced in as a candidate even when it sits lower in (or outside) the
+    # hierarchy, where the loop above would otherwise never consider it.
+    forced_cutters = [cut for (cut_fault, cut) in fault_data.additional_cuts
+                      if cut_fault == fault_name and cut not in faults_to_cut]
+    for cut_name in faults_to_cut + forced_cutters:
         if cut_name not in cutting_dict:
             continue
-        higher = fault_data.cutting_hierarchy[:fault_data.cutting_hierarchy.index(cut_name)]
-        higher_meshes = [cutting_dict[n].mesh for n in higher]
         cutting_mesh = cutting_dict[cut_name].mesh
         # Manual overrides win first. should_cut() matches on the curated fault
         # names (reliable) and returns True/False to force/skip a cut, or None to
@@ -499,6 +508,11 @@ for fault_name in fault_data.cutting_hierarchy:
         # default to empty sets, so this is a no-op unless you loaded the CSVs.
         decision = fault_data.should_cut(fault_name, cut_name)
         if decision is None:
+            # Only the geometric test needs the cutter's own higher-priority
+            # context, so build it lazily (a forced cutter may sit outside the
+            # hierarchy, where .index() would fail).
+            higher = fault_data.cutting_hierarchy[:fault_data.cutting_hierarchy.index(cut_name)]
+            higher_meshes = [cutting_dict[n].mesh for n in higher if n in cutting_dict]
             decision = fault.mesh.decide_whether_to_cut(cutting_mesh, threshold=threshold,
                                                         min_distance=MIN_CUT_DISTANCE,
                                                         higher_meshes=higher_meshes,
@@ -532,11 +546,14 @@ for fault_name in fault_data.cutting_hierarchy:
 
     # この断層より上位の断層が、これをカットする候補。
     faults_to_cut = fault_data.cutting_hierarchy[:fault_data.cutting_hierarchy.index(fault_name)]
-    for cut_name in faults_to_cut:
+    # additional_cuts は階層を上書きします：この断層をカットすると指定された断層は、
+    # 階層で下位（または階層外）にあっても候補として強制的に加えます。通常はこの
+    # ループが考慮しない相手です。
+    forced_cutters = [cut for (cut_fault, cut) in fault_data.additional_cuts
+                      if cut_fault == fault_name and cut not in faults_to_cut]
+    for cut_name in faults_to_cut + forced_cutters:
         if cut_name not in cutting_dict:
             continue
-        higher = fault_data.cutting_hierarchy[:fault_data.cutting_hierarchy.index(cut_name)]
-        higher_meshes = [cutting_dict[n].mesh for n in higher]
         cutting_mesh = cutting_dict[cut_name].mesh
         # 手動の上書きが最優先です。should_cut() は精査済みの断層名で照合し（確実）、
         # カットを強制/抑止する場合は True/False を、そうでなければ下の幾何判定に
@@ -547,6 +564,10 @@ for fault_name in fault_data.cutting_hierarchy:
         # 何も起きません。
         decision = fault_data.should_cut(fault_name, cut_name)
         if decision is None:
+            # 幾何判定だけがカッター側の上位文脈を必要とするので、遅延構築します
+            # （強制カッターは階層外のことがあり、その場合 .index() が失敗します）。
+            higher = fault_data.cutting_hierarchy[:fault_data.cutting_hierarchy.index(cut_name)]
+            higher_meshes = [cutting_dict[n].mesh for n in higher if n in cutting_dict]
             decision = fault.mesh.decide_whether_to_cut(cutting_mesh, threshold=threshold,
                                                         min_distance=MIN_CUT_DISTANCE,
                                                         higher_meshes=higher_meshes,

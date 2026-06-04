@@ -51,22 +51,38 @@ min_distance = 2.e3
 for fault_name in fault_data.cutting_hierarchy:
     print (f"Processing {fault_name}...")
     fault = fault_data.name_dict[fault_name]
-    # Get list of faults that cut this fault, in order of hierarchy
+    # Faults that may cut this one, in hierarchy order (higher priority first).
     faults_to_cut =  fault_data.cutting_hierarchy[:fault_data.cutting_hierarchy.index(fault_name)]
-    # Loop through cutting faults and decide whether to cut based on intersection with cutting fault mesh and distance to cutting fault trace. 
-    for cut_name in faults_to_cut:
-        if cut_name in cutting_dict:
+    # additional_cuts override the hierarchy: a fault listed as cutting this one is
+    # forced in as a candidate even when it sits lower in (or outside) the
+    # hierarchy, where the loop above would otherwise never consider it.
+    forced_cutters = [cut for (cut_fault, cut) in fault_data.additional_cuts
+                      if cut_fault == fault_name and cut not in faults_to_cut]
+    # Loop through candidate cutters and decide whether to cut.
+    for cut_name in faults_to_cut + forced_cutters:
+        if cut_name not in cutting_dict:
+            continue
+        cutting_mesh = cutting_dict[cut_name].mesh
+        # Manual overrides win first. should_cut() matches on the curated fault
+        # names (reliable), unlike decide_whether_to_cut's internal mesh.name
+        # check (mesh names carry a "_depth_contours"/"_cut_by_" suffix and
+        # won't match the CSV). Returns True/False to force/skip, or None to
+        # fall through to the geometric test.
+        decide_to_cut = fault_data.should_cut(fault_name, cut_name)
+        if decide_to_cut is None:
+            # Context of faults that already truncate the cutter; only the
+            # geometric test needs it, so compute it lazily (a forced cutter may
+            # sit outside the hierarchy, where .index() would fail).
             higher_faults_to_cut = fault_data.cutting_hierarchy[:fault_data.cutting_hierarchy.index(cut_name)]
-            higher_meshes = [cutting_dict[name].mesh for name in higher_faults_to_cut]
-            cutting_mesh = cutting_dict[cut_name].mesh
-            decide_to_cut = fault.mesh.decide_whether_to_cut(cutting_mesh, threshold=threshold, min_distance=min_distance, 
+            higher_meshes = [cutting_dict[name].mesh for name in higher_faults_to_cut if name in cutting_dict]
+            decide_to_cut = fault.mesh.decide_whether_to_cut(cutting_mesh, threshold=threshold, min_distance=min_distance,
                                                              higher_meshes=higher_meshes, bottom_depth=-31500., fancy_cutting=True)
-            if decide_to_cut:
-                print(f"Cutting {fault.name} by {cut_name}")
-                cutting_fragment = cutting_mesh.generate_cutting_mesh(fault.mesh, max_distance=5.e3)
-                new_mesh = fault.mesh.cut_mesh(cutting_mesh, fault_trace=fault.original_nztm_trace_array, cutting_fragment=cutting_fragment, fancy_cutting=True)
-                fault_data.name_dict[fault.name].mesh = new_mesh
-                cutting_dict[fault.name].mesh = new_mesh
+        if decide_to_cut:
+            print(f"Cutting {fault.name} by {cut_name}")
+            cutting_fragment = cutting_mesh.generate_cutting_mesh(fault.mesh, max_distance=5.e3)
+            new_mesh = fault.mesh.cut_mesh(cutting_mesh, fault_trace=fault.original_nztm_trace_array, cutting_fragment=cutting_fragment, fancy_cutting=True)
+            fault_data.name_dict[fault.name].mesh = new_mesh
+            cutting_dict[fault.name].mesh = new_mesh
 
     # Cut meshes by depth surface and save final meshes as OBJ files     
     try:
