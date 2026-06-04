@@ -26,3 +26,4 @@ dependencies:
     - meshio
     - sphinx-rtd-theme
     - triangle
+    - gmsh

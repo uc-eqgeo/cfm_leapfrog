@@ -61,6 +61,7 @@ dom_dict = {26: 'Puysegur subduction front',
             8: 'Hikurangi accretionary margin - eastern zone'}
 
 valid_dip_range = [0, 90]
+valid_dip_max_range = [0, 180]
 valid_depth_range = [0, 50]
 valid_rake_range = [0, 360]
 valid_sr_range = [0, 60]
@@ -388,6 +389,7 @@ class CfmMultiFault:
                                dfc_multiplier=exclude_region_dfc_multiplier)
             else:
                 if depth_type != "D90":
+
                     self.add_fault(row, depth_type=depth_type, remove_colons=remove_colons,
                                    dfc_multiplier=default_dfc_multiplier)
 
@@ -593,12 +595,180 @@ class CfmMultiFault:
         for line in connections:
             parts = [p for p in line.strip().split(",") if p]
             fault_name = parts[0]
-            
-            self.connected_faults[fault_name] = CfmConnectedFault(fault_name, parts[1:])
-            for sub_fault in parts[1:]:
-                self.name_dict[sub_fault].connected_fault = self.connected_faults[fault_name]
+            sub_fault_names = parts[1:]
+            sub_faults = []
+            for sub_name in sub_fault_names:
+                if sub_name not in self.name_dict:
+                    print(f"Warning: connected sub-fault '{sub_name}' not found, skipping")
+                    continue
+                sub_faults.append(self.name_dict[sub_name])
 
-    
+            connected = CfmConnectedFault(fault_name, sub_faults)
+            self.connected_faults[fault_name] = connected
+            for sub_fault in sub_faults:
+                sub_fault.connected_fault = connected
+
+    def sample_all(self, seed: int = None):
+        """
+        Sample z-scores for every fault, respecting connected-fault groupings.
+
+        Faults that belong to a CfmConnectedFault inherit the group's z_score
+        (correlated sampling). Faults that are not part of a connected group
+        are sampled independently.
+
+        :param seed: optional seed for reproducibility. If provided, replaces
+            the module-level rng.
+        """
+        global rng
+        if seed is not None:
+            rng = np.random.default_rng(seed)
+
+        for connected in self.connected_faults.values():
+            if not isinstance(connected, CfmConnectedFault):
+                continue
+            connected.sample(replace_faults=True)
+
+        for fault in self.faults:
+            if fault.connected_fault is None:
+                fault.sample()
+
+    def sampled_dips_dataframe(self):
+        """
+        Return a DataFrame of current sampled state: one row per fault with
+        name, z_score, sampled_dip, and connected_fault_name (empty string if
+        the fault is not part of a connected group).
+        """
+        rows = []
+        for fault in self.faults:
+            if fault.connected_fault is not None:
+                z = fault.connected_fault.z_score
+                cf_name = fault.connected_fault.name
+            else:
+                z = fault.z_score
+                cf_name = ""
+            rows.append({
+                "name": fault.name,
+                "z_score": z,
+                "sampled_dip": fault.sampled_dip(),
+                "connected_fault_name": cf_name,
+            })
+        return pd.DataFrame(rows, columns=["name", "z_score", "sampled_dip", "connected_fault_name"])
+
+    def write_sampled_dips(self, filename: str):
+        """
+        Write z-scores and sampled dips to CSV. Use read_sampled_dips to
+        restore the sampled state on a freshly-loaded CfmMultiFault.
+        """
+        self.sampled_dips_dataframe().to_csv(filename, index=False)
+
+    def read_sampled_dips(self, filename: str, validate_dips: bool = False, tolerance: float = 1e-3):
+        """
+        Restore z-scores from a CSV written by write_sampled_dips.
+
+        Sets z_score on each CfmConnectedFault (which propagates to its member
+        faults) and on each standalone CfmFault. Faults named in the CSV but
+        absent from this CfmMultiFault are skipped with a warning.
+
+        :param validate_dips: if True, recompute sampled_dip from current
+            dip_best/min/max and warn when it differs from the stored value
+            by more than `tolerance`. Useful for detecting drift if the
+            source CFM has changed.
+        """
+        assert os.path.exists(filename)
+        df = pd.read_csv(filename)
+        for _, row in df.iterrows():
+            name = row["name"]
+            if name not in self.name_dict:
+                print(f"Warning: fault '{name}' from {filename} not in this CfmMultiFault, skipping")
+                continue
+            z = row["z_score"]
+            if pd.isna(z):
+                z = None
+            else:
+                z = float(z)
+
+            fault = self.name_dict[name]
+            if fault.connected_fault is not None:
+                fault.connected_fault.z_score = z
+            fault.z_score = z
+
+            if validate_dips and z is not None and not pd.isna(row.get("sampled_dip", np.nan)):
+                recomputed = fault.sampled_dip()
+                stored = float(row["sampled_dip"])
+                if abs(recomputed - stored) > tolerance:
+                    print(f"{name}: stored sampled_dip ({stored:.4f}) differs from "
+                          f"recomputed ({recomputed:.4f}) — source dip values may have changed")
+
+    def _collect_z_and_weights(self, weight: str = None):
+        """
+        Gather (z_scores, weights) arrays for sampled faults, used by the
+        z-score summary methods. Faults with z_score is None are skipped.
+        Connected-group faults each contribute one entry carrying the
+        group's shared z but their own individual weight.
+        """
+        valid_weights = (None, "trace_length", "sr_best")
+        assert weight in valid_weights, f"weight must be one of {valid_weights}"
+
+        zs = []
+        ws = []
+        for fault in self.faults:
+            if fault.connected_fault is not None:
+                z = fault.connected_fault.z_score
+            else:
+                z = fault.z_score
+            if z is None:
+                continue
+            if weight is None:
+                w = 1.0
+            elif weight == "trace_length":
+                w = fault.nztm_trace.length
+            else:
+                w = fault.sr_best
+            zs.append(z)
+            ws.append(w)
+
+        if not zs:
+            raise ValueError("No sampled z-scores found; call sample_all first.")
+        return np.asarray(zs), np.asarray(ws, dtype=float)
+
+    def average_z_score(self, weight: str = None) -> float:
+        """
+        Weighted arithmetic mean of z-scores across faults. Useful as a
+        bias indicator for a realisation (was this draw systematically
+        steep or shallow?).
+
+        Faults that have not been sampled (z_score is None) are skipped.
+        For faults belonging to a CfmConnectedFault, the group's z_score
+        is used; each member fault still contributes its own weight, so
+        a long connected system has more influence than a short isolated
+        fault even though they share a z.
+
+        :param weight: None for unweighted mean, "trace_length" to weight
+            by NZTM trace length (metres), or "sr_best" to weight by
+            preferred slip rate.
+        """
+        zs, ws = self._collect_z_and_weights(weight)
+        return float(np.average(zs, weights=ws))
+
+    def rms_z_score(self, weight: str = None) -> float:
+        """
+        Weighted root-mean-square z-score across faults: sqrt(<z^2>).
+
+        Indicates how extreme a realisation is in either direction
+        (a draw with z's clustered far from zero, regardless of sign,
+        scores high). Pairs naturally with average_z_score, which
+        captures bias rather than spread.
+
+        Skipping and connected-fault handling are identical to
+        average_z_score.
+
+        :param weight: None, "trace_length", or "sr_best" — same options
+            as average_z_score.
+        """
+        zs, ws = self._collect_z_and_weights(weight)
+        return float(np.sqrt(np.average(np.square(zs), weights=ws)))
+
+
 
 
 class CfmFault:
@@ -731,7 +901,7 @@ class CfmFault:
 
     @dip_max.setter
     def dip_max(self, dip: Union[float, int]):
-        dip_v = self.validate_dip(dip)
+        dip_v = self.validate_dip_max(dip)
         for key, dip_value in zip(["dip_min", "dip_best"], [self.dip_min, self.dip_best]):
             if dip_value is not None and bearing_leq(dip_v, dip_value):
                 print("{}: dip_max ({}) is lower than {} ({})".format(self.name, dip_v, key, dip_value))
@@ -845,6 +1015,17 @@ class CfmFault:
         """
         assert isinstance(dip, (float, int))
         assert valid_dip_range[0] <= dip <= valid_dip_range[1]
+        return dip
+
+    @staticmethod
+    def validate_dip_max(dip: Union[float, int]):
+        """
+        Allowed up to 180 so that uncertainty about which way a near-vertical
+        fault dips can be sampled across the vertical. A value > 90 implies
+        a dip of (180 - dip) in the opposite direction to dip_dir.
+        """
+        assert isinstance(dip, (float, int))
+        assert valid_dip_max_range[0] <= dip <= valid_dip_max_range[1]
         return dip
 
     @property
@@ -1006,6 +1187,8 @@ class CfmFault:
     @sense_dom.setter
     def sense_dom(self, sense: str):
         assert any([isinstance(sense, str), sense is None])
+        if isinstance(sense, float) and np.isnan(sense):
+            sense = None
         if sense is None:
             print("{}: Unexpected sense_dom: {}".format(self.name, sense))
         elif sense.lower() not in possible_rake_dirs:
@@ -1014,6 +1197,8 @@ class CfmFault:
 
     @sense_sec.setter
     def sense_sec(self, sense: str):
+        if isinstance(sense, float) and np.isnan(sense):
+            sense = None
         assert any([sense is None, isinstance(sense, str)])
         if sense is not None:
             if sense.lower() not in possible_rake_dirs:
@@ -1364,7 +1549,12 @@ class CfmFault:
         down_dip_vec = self.down_dip_vector_optional(option=option)
         trace_3d = np.column_stack((np.array(self.nztm_trace.xy).T,
                                     np.zeros(len(self.nztm_trace.coords))))
-        down_dip_vec_scaled = down_dip_vec * self.depth_best / down_dip_vec[-1] * -1.e3
+        # print("Down dip vector:", down_dip_vec, self.depth_best)
+        if down_dip_vec[-1] == 0:
+            print(f"Warning: down dip vector has zero vertical component for fault {self.name}. Using a default vertical extrusion.")
+            down_dip_vec_scaled = np.array([0., 0., -self.depth_best * 1.e3])
+        else:
+            down_dip_vec_scaled = down_dip_vec * self.depth_best / down_dip_vec[-1] * -1.e3
         
         trace_3d_bottom = trace_3d + down_dip_vec_scaled
         points = np.vstack((trace_3d, trace_3d_bottom))
@@ -1453,7 +1643,7 @@ class CfmFault:
 class CfmConnectedFault:
     def __init__(self, name: str, faults: List[CfmFault] = None):
         """
-        :param faults:
+        :param faults: list of CfmFault objects belonging to this connected group.
         """
         self.name = name
         self.z_score = None
@@ -1463,7 +1653,11 @@ class CfmConnectedFault:
             self.faults = faults
 
     def sample(self, replace_faults: bool = True):
-        """Sample a random value from a gaussian
+        """Sample a single z-score for the whole group from N(0, 1).
+
+        With replace_faults=True, the same z-score is propagated to every
+        member CfmFault so that downstream sampled_dip() calls give correlated
+        dips across the group.
         """
         dist = rng.normal(loc=0, scale=1)
         self.z_score = dist

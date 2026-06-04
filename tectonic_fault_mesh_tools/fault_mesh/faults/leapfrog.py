@@ -389,8 +389,38 @@ class LeapfrogMultiFault(GenericMultiFault):
         index = int((bearing + 22.5) % 360 / 45)
         return compass_points[index]
 
+    @staticmethod
+    def _build_extended_trace(trace: LineString, nearest_end: Point, other_end: Point,
+                              fit_distance: float, extend_distance: float,
+                              resolution: float = 1.e3) -> LineString:
+        """Return what `trace` would look like after extending the `nearest_end` end.
+
+        Mirrors the geometry produced by GenericFault.extend_trace but does not
+        mutate any underlying object — used for visualising suggested extensions.
+        """
+        coords = np.asarray(trace.coords)
+        dim = coords.shape[1]
+        end_arr = np.array(nearest_end.coords)[0][:dim]
+        other_end_arr = np.array(other_end.coords)[0][:dim]
+        line_dists = np.linalg.norm(coords[:, :2] - end_arr[:2], axis=1)
+        coords_to_fit = coords[line_dists <= fit_distance]
+        local_strike = calculate_strike_direction(coords_to_fit[:, 0], coords_to_fit[:, 1])
+        strike_vec = np.array([np.sin(np.radians(local_strike)),
+                               np.cos(np.radians(local_strike)), 0.])[:dim]
+        extend_dists = np.arange(0, extend_distance + resolution, resolution)
+        if np.dot(other_end_arr - end_arr, strike_vec) < 0:
+            extra = end_arr + extend_dists[:, np.newaxis] * strike_vec
+        else:
+            extra = end_arr - extend_dists[:, np.newaxis] * strike_vec
+        if np.allclose(end_arr[:2], coords[0, :2]):
+            new_coords = np.vstack([extra[::-1], coords])
+        else:
+            new_coords = np.vstack([coords, extra])
+        return LineString(new_coords)
+
     def suggest_trace_extensions(self, out_file: str, fit_distance: float = 5.e3,
-                                 extend_distance: float = 40.e3, proximity_threshold: float = 1.e3):
+                                 extend_distance: float = 40.e3, proximity_threshold: float = 1.e3,
+                                 geojson_out_file: str = None):
         """Suggest trace extensions for faults that terminate against higher-priority faults.
 
         Generates a CSV file with columns:
@@ -402,8 +432,14 @@ class LeapfrogMultiFault(GenericMultiFault):
 
         The output file can be edited by the user and then read back with
         read_trace_extensions().
+
+        If `geojson_out_file` is provided, also writes a GeoJSON containing the
+        suggested extended trace geometries (one feature per row of the CSV) so
+        the suggestions can be inspected in GIS software before being applied.
         """
         rows = []
+        geom_rows = []
+        seen_geom_keys = set()
         for fault in self.curated_faults:
             terms = list(set(chain(*fault.find_terminations())))
             if not terms:
@@ -435,11 +471,37 @@ class LeapfrogMultiFault(GenericMultiFault):
                             "extend_distance": extend_distance,
                             "fit_distance": fit_distance,
                         })
+                        if geojson_out_file is not None and (fault.name, compass) not in seen_geom_keys:
+                            try:
+                                extended = self._build_extended_trace(
+                                    trace, nearest_end, other_end,
+                                    fit_distance=fit_distance,
+                                    extend_distance=extend_distance,
+                                )
+                                geom_rows.append({
+                                    "fault_name": fault.name,
+                                    "end": compass,
+                                    "extend_distance": extend_distance,
+                                    "fit_distance": fit_distance,
+                                    "geometry": extended,
+                                })
+                                seen_geom_keys.add((fault.name, compass))
+                            except Exception as e:
+                                print(f"Could not build extended trace for {fault.name} ({compass}): {e}")
 
         df = pd.DataFrame(rows, columns=["fault_name", "end", "extend_distance", "fit_distance"])
         df.drop_duplicates(subset=["fault_name", "end"], inplace=True)
         df.to_csv(out_file, index=False)
         print(f"Wrote {len(df)} suggested trace extensions to {out_file}")
+
+        if geojson_out_file is not None:
+            if geom_rows:
+                crs = f"EPSG:{self.epsg}" if self.epsg is not None else None
+                geom_df = gpd.GeoDataFrame(geom_rows, geometry="geometry", crs=crs)
+                geom_df.to_file(geojson_out_file, driver="GeoJSON")
+                print(f"Wrote {len(geom_df)} suggested extended trace geometries to {geojson_out_file}")
+            else:
+                print("No extended trace geometries to write")
 
     def read_trace_extensions(self, csv_file: str):
         """Read a trace-extensions CSV file.
@@ -635,6 +697,69 @@ class LeapfrogMultiFault(GenericMultiFault):
 
         return merged_meshes
 
+    def combine_meshes_to_vtk(self, file_name: str = None, only_faults: List[str] = None,
+                              include_connected_segments: bool = True):
+        """
+        Merge each curated fault's surface mesh into a single VTK file.
+
+        Each fault contributes its `.mesh.mesh` (a meshio Mesh on the
+        attached FaultMesh). A `fault_id` cell array distinguishes faults
+        in the merged output; the id → name mapping is stored as field
+        data under `fault_names`. For `ConnectedFaultSystem` faults whose
+        top-level mesh isn't set, falls back to merging individual segment
+        meshes when `include_connected_segments` is True.
+
+        Args:
+            file_name (str): Optional output path. Defaults to no save.
+                `.vtk` extension is appended if missing.
+            only_faults (List[str]): Optional restricted list of fault
+                names to include.
+            include_connected_segments (bool): If True, when a
+                ConnectedFaultSystem has no combined mesh, merge in any
+                meshes attached to its individual segments.
+
+        Returns:
+            pv.PolyData (or UnstructuredGrid): The merged mesh.
+        """
+        pieces = []
+        fault_names: List[str] = []
+        for fault in self.curated_faults:
+            if only_faults is not None and fault.name not in only_faults:
+                continue
+
+            fault_meshes = []
+            top_mesh = getattr(fault, "_mesh", None)
+            if top_mesh is not None and getattr(top_mesh, "mesh", None) is not None:
+                fault_meshes.append(top_mesh)
+            elif include_connected_segments and isinstance(fault, ConnectedFaultSystem):
+                for seg in fault.segments:
+                    seg_mesh = getattr(seg, "_mesh", None)
+                    if seg_mesh is not None and getattr(seg_mesh, "mesh", None) is not None:
+                        fault_meshes.append(seg_mesh)
+
+            if not fault_meshes:
+                continue
+
+            fault_id = len(fault_names)
+            for fm in fault_meshes:
+                piece = pv.from_meshio(fm.mesh)
+                piece.cell_data["fault_id"] = np.full(piece.n_cells, fault_id, dtype=np.int32)
+                pieces.append(piece)
+            fault_names.append(fault.name)
+
+        if not pieces:
+            raise RuntimeError("No fault meshes available to combine.")
+
+        merged = pv.merge(pieces)
+        merged.field_data["fault_names"] = np.array(fault_names)
+
+        if file_name is not None:
+            if not file_name.endswith(".vtk"):
+                file_name += ".vtk"
+            merged.save(file_name)
+
+        return merged
+
 
 class LeapfrogFault(GenericFault):
     """
@@ -661,6 +786,7 @@ class LeapfrogFault(GenericFault):
         self._smoothed_trace = None
         self._footprint = None
         self._sampled_dip = None
+        self._mesh = None
 
     @property
     def is_segment(self):
@@ -862,7 +988,9 @@ class LeapfrogFault(GenericFault):
                 e2_box = self.end_clipping_box(self.end2, depth, gradient_adjustment=self.trimming_gradient)
                 e2_box_intersection = e2_box.boundary.intersection(shifted_contour)
 
-                if not e1_box.intersects(e2_box):
+                if (not e1_box.intersects(e2_box)
+                        and isinstance(e1_box_intersection, Point)
+                        and isinstance(e2_box_intersection, Point)):
                     trimmed_contour = cut_line_between_two_points(shifted_contour, [e1_box_intersection,
                                                                                      e2_box_intersection])
                 else:

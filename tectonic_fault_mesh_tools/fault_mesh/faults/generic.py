@@ -20,6 +20,7 @@ dip_direction_ranges = {"E": (45, 135), "NE": (0, 90), "N": (315, 45), "NW": (27
 valid_dip_directions = list(dip_direction_ranges.keys()) + [None, "SUBVERTICAL AND VARIABLE"]
 
 valid_dip_range = [0, 90]
+valid_dip_max_range = [0, 180]
 valid_depth_range = [0, 50]
 valid_sr_range = [0, 80]
 
@@ -520,7 +521,7 @@ class GenericFault:
 
     @dip_max.setter
     def dip_max(self, dip: Union[float, int]):
-        dip_v = self.validate_dip(dip)
+        dip_v = self.validate_dip_max(dip)
         for key, dip_value in zip(["dip_min", "dip_best"], [self.dip_min, self.dip_best]):
             if dip_value is not None and bearing_leq(dip_v, dip_value):
                 print("{}: dip_max ({}) is lower than {} ({})".format(self.name, dip_v, key, dip_value))
@@ -633,6 +634,17 @@ class GenericFault:
         """
         assert isinstance(dip, (float, int))
         assert valid_dip_range[0] <= dip <= valid_dip_range[1]
+        return dip
+
+    @staticmethod
+    def validate_dip_max(dip: Union[float, int]):
+        """
+        Allowed up to 180 so that uncertainty about which way a near-vertical
+        fault dips can be sampled across the vertical. A value > 90 implies
+        a dip of (180 - dip) in the opposite direction to dip_dir.
+        """
+        assert isinstance(dip, (float, int))
+        assert valid_dip_max_range[0] <= dip <= valid_dip_max_range[1]
         return dip
 
     @property

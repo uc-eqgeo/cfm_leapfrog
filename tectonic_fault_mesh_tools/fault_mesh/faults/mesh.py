@@ -1,3 +1,6 @@
+import math
+import tempfile
+
 import meshio
 import numpy as np
 import os
@@ -1053,6 +1056,98 @@ class FaultMesh:
         new_fault_mesh.pv_vertices = clipped.points
         new_fault_mesh.pv_vertex_dict = {i: vertex for i, vertex in enumerate(new_fault_mesh.pv_vertices)}
         new_fault_mesh.name = f"{self.name}"
+        new_fault_mesh.xmin = np.min(new_fault_mesh.vertices[:, 0])
+        new_fault_mesh.xmax = np.max(new_fault_mesh.vertices[:, 0])
+        new_fault_mesh.ymin = np.min(new_fault_mesh.vertices[:, 1])
+        new_fault_mesh.ymax = np.max(new_fault_mesh.vertices[:, 1])
+
+        return new_fault_mesh
+
+    def remesh(self, target_size: float = 1000.,
+               feature_angle_deg: float = 45.,
+               corner_angle_deg: float = 40.,
+               output_path: str = None,
+               verbose: bool = False):
+        """
+        Remesh this fault surface with gmsh into near-equilateral triangles.
+
+        Imports the current mesh into gmsh as a triangle soup, recovers patch
+        topology with `classifySurfaces`, builds a parametrisation, then meshes
+        with the Frontal-Delaunay algorithm at a uniform target edge length.
+
+        Args:
+            target_size (float): Target edge length (same units as the mesh
+                coordinates; metres for NZTM).
+            feature_angle_deg (float): Dihedral threshold (deg) for splitting
+                the surface into patches at sharp folds. Lower → more patches.
+            corner_angle_deg (float): Boundary-curve corner threshold (deg).
+                Lower preserves polygonal corners at the patch boundary instead
+                of smoothing them into arcs.
+            output_path (str): Optional path to also save the remeshed surface
+                (format inferred from extension by gmsh.write).
+            verbose (bool): If True, let gmsh print to the terminal.
+
+        Returns:
+            FaultMesh: A new FaultMesh with the remeshed surface.
+        """
+        import gmsh
+
+        assert self.mesh is not None, "Mesh is not defined."
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            in_path = os.path.join(tmpdir, "in.msh")
+            out_path = output_path if output_path is not None else os.path.join(tmpdir, "out.msh")
+
+            # .msh preserves float64 precision, unlike STL's float32 — important
+            # for vertex coincidence when gmsh recovers topology in NZTM coords.
+            meshio.write(in_path, self.mesh, file_format="gmsh")
+
+            gmsh.initialize()
+            try:
+                gmsh.option.setNumber("General.Terminal", 1 if verbose else 0)
+                gmsh.merge(in_path)
+
+                gmsh.model.mesh.classifySurfaces(
+                    math.radians(feature_angle_deg), True, True,
+                    math.radians(corner_angle_deg)
+                )
+                gmsh.model.mesh.createGeometry()
+
+                gmsh.option.setNumber("Mesh.MeshSizeMin", target_size)
+                gmsh.option.setNumber("Mesh.MeshSizeMax", target_size)
+                gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
+                gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+                gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+                gmsh.option.setNumber("Mesh.Algorithm", 6)
+                gmsh.option.setNumber("Mesh.Optimize", 1)
+                gmsh.option.setNumber("Mesh.OptimizeNetgen", 1)
+
+                gmsh.model.mesh.generate(2)
+                gmsh.model.mesh.optimize("Laplace2D")
+
+                gmsh.write(out_path)
+            finally:
+                gmsh.finalize()
+
+            new_mesh = meshio.read(out_path)
+
+        # Strip any non-triangle cells gmsh may have emitted (boundary lines).
+        tri_cells = [cb for cb in new_mesh.cells if cb.type == "triangle"]
+        new_mesh = meshio.Mesh(points=new_mesh.points,
+                                cells=[("triangle", tri_cells[0].data)])
+
+        new_fault_mesh = FaultMesh()
+        new_fault_mesh.mesh = new_mesh
+        pv_mesh = pv.from_meshio(new_mesh).extract_surface(algorithm="dataset_surface")
+        new_fault_mesh.pv_triangles = pv_mesh.faces.reshape(-1, 4)[:, 1:]
+        new_fault_mesh.vertices = new_mesh.points
+        new_fault_mesh.pv_vertices = pv_mesh.points
+        new_fault_mesh.triangles = new_mesh.cells_dict["triangle"]
+        new_fault_mesh.tri_dict = {i: tri for i, tri in enumerate(new_fault_mesh.triangles)}
+        new_fault_mesh.vertex_dict = {i: vertex for i, vertex in enumerate(new_fault_mesh.vertices)}
+        new_fault_mesh.pv_tri_dict = {i: tri for i, tri in enumerate(new_fault_mesh.pv_triangles)}
+        new_fault_mesh.pv_vertex_dict = {i: vertex for i, vertex in enumerate(new_fault_mesh.pv_vertices)}
+        new_fault_mesh.name = self.name
         new_fault_mesh.xmin = np.min(new_fault_mesh.vertices[:, 0])
         new_fault_mesh.xmax = np.max(new_fault_mesh.vertices[:, 0])
         new_fault_mesh.ymin = np.min(new_fault_mesh.vertices[:, 1])

@@ -45,7 +45,6 @@ def cut_line_at_point(line: LineString, point: Point):
         :return: Two LineString objects representing the portions of the line before and after the cut
         :rtype: tuple[LineString, LineString]
         """
-
     assert isinstance(point, Point)
     distance = line.project(point)
     l1, l2 = cut(line, distance)

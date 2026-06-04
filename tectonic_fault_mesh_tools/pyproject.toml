@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fault_mesh"
+version = "0.6"
+description = "Tools for building fault meshes in leapfrog"
+authors = [
+    { name = "Andy Howell", email = "andrew.howell@canterbury.ac.nz" }
+]
+
+[tool.setuptools.packages.find]
+where = ["."]

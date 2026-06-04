@@ -258,8 +258,60 @@ class ConnectedFaultSystem:
         return MultiLineString(valid_contours)
 
     def generate_depth_contours(self, depths: Union[np.ndarray, List[float]], smoothing: bool = True, damping: int = None,
-                       km: bool = False):
-        contours = [self.depth_contour(depth, smoothing) for depth in depths]
+                       km: bool = False, tip_length: float = 10.):
+        depths_arr = np.asarray(depths, dtype=float)
+        depth_below_surface = np.abs(depths_arr)
+        order = np.argsort(depth_below_surface)
+
+        # Per-segment per-depth contours. Walk each segment shallow → deep; when
+        # that segment stops producing a contour, substitute a short along-strike
+        # stub (length `tip_length`) centred on the midpoint of its deepest
+        # still-valid contour, projected to the requested depth along that
+        # segment's own down-dip vector. Keeps geometry type LineString so the
+        # combined output stays a MultiLineString.
+        per_seg_per_depth = [
+            [seg.depth_contour(d, smoothing) for d in depths]
+            for seg in self.segments
+        ]
+
+        for seg_idx, seg in enumerate(self.segments):
+            if seg.dip_dir is None:
+                dd_vec = np.array([0., 0., -1.])
+                strike_vec = np.array([1., 0., 0.])
+            else:
+                z_comp = np.sin(np.radians(seg.dip_best))
+                x_comp, y_comp = np.cos(np.radians(seg.dip_best)) * np.array(
+                    [np.sin(np.radians(seg.dip_dir)), np.cos(np.radians(seg.dip_dir))])
+                dd_vec = np.array([x_comp, y_comp, -z_comp])
+                strike_vec = seg.along_strike_vector
+
+            half_len = tip_length / 2.
+
+            last_midpoint_xyz = None
+            last_depth = None
+            for i in order:
+                c = per_seg_per_depth[seg_idx][i]
+                if c is None or c.is_empty:
+                    if last_midpoint_xyz is not None:
+                        shift = (depth_below_surface[i] - last_depth) / abs(dd_vec[-1])
+                        tip_xyz = last_midpoint_xyz + shift * dd_vec
+                        stub = LineString([tip_xyz - half_len * strike_vec,
+                                            tip_xyz + half_len * strike_vec])
+                        per_seg_per_depth[seg_idx][i] = stub
+                else:
+                    mp = c.interpolate(0.5, normalized=True)
+                    last_midpoint_xyz = np.array([mp.x, mp.y, -depth_below_surface[i]])
+                    last_depth = depth_below_surface[i]
+
+        # Combine across segments at each depth into a MultiLineString.
+        contours = []
+        for i in range(len(depths)):
+            geoms_here = [
+                per_seg_per_depth[s][i]
+                for s in range(len(self.segments))
+                if per_seg_per_depth[s][i] is not None and not per_seg_per_depth[s][i].is_empty
+            ]
+            contours.append(MultiLineString(geoms_here))
 
         if max(depths) > 0:
             depths *= -1
