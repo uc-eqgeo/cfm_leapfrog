@@ -37,7 +37,7 @@ Module Contents
 
 
 
-   .. py:method:: suggest_trace_extensions(out_file, fit_distance = 5000.0, extend_distance = 40000.0, proximity_threshold = 1000.0)
+   .. py:method:: suggest_trace_extensions(out_file, fit_distance = 5000.0, extend_distance = 40000.0, proximity_threshold = 1000.0, geojson_out_file = None)
 
       Suggest trace extensions for faults that terminate against higher-priority faults.
 
@@ -50,6 +50,10 @@ Module Contents
 
       The output file can be edited by the user and then read back with
       read_trace_extensions().
+
+      If `geojson_out_file` is provided, also writes a GeoJSON containing the
+      suggested extended trace geometries (one feature per row of the CSV) so
+      the suggestions can be inspected in GIS software before being applied.
 
 
 
@@ -122,6 +126,33 @@ Module Contents
       :param sampled_dip: If True, use the sampled dip value for the fault.
       :param depth_multiplier: Multiplier for the depth to control the spacing of the mesh.
       :return: Meshio mesh object.
+
+
+
+   .. py:method:: combine_meshes_to_vtk(file_name = None, only_faults = None, include_connected_segments = True)
+
+      Merge each curated fault's surface mesh into a single VTK file.
+
+      Each fault contributes its `.mesh.mesh` (a meshio Mesh on the
+      attached FaultMesh). A `fault_id` cell array distinguishes faults
+      in the merged output; the id → name mapping is stored as field
+      data under `fault_names`. For `ConnectedFaultSystem` faults whose
+      top-level mesh isn't set, falls back to merging individual segment
+      meshes when `include_connected_segments` is True.
+
+      :param file_name: Optional output path. Defaults to no save.
+                        `.vtk` extension is appended if missing.
+      :type file_name: str
+      :param only_faults: Optional restricted list of fault
+                          names to include.
+      :type only_faults: List[str]
+      :param include_connected_segments: If True, when a
+                                         ConnectedFaultSystem has no combined mesh, merge in any
+                                         meshes attached to its individual segments.
+      :type include_connected_segments: bool
+
+      :returns: The merged mesh.
+      :rtype: pv.PolyData (or UnstructuredGrid)
 
 
 
