@@ -66,12 +66,160 @@ Module Contents
 
 
 
+   .. py:method:: read_removed_trace_extensions(csv_file)
+
+      Drop trace extensions listed in a removals CSV.
+
+      Expected columns: fault_name, end. Written by review_trace_extensions.py
+      as a separate list rather than by editing the curated extensions file,
+      so the hand-made edited_trace_extensions.csv stays exactly as its author
+      left it. Call between read_trace_extensions() and
+      apply_trace_extensions().
+
+
+
    .. py:method:: apply_trace_extensions(resolution = 1000.0)
 
       Apply trace extensions previously loaded with read_trace_extensions().
 
       For each row the relevant fault end is identified by compass direction
       and the trace is extended accordingly.
+
+
+
+   .. py:method:: check_surface_trace_extensions(mesh_dir, suffix = '_cut.obj', flag_distance = 2000.0, lateral_tolerance = 500.0, top_depth = 0.0, z_tolerance = 1.0, out_file = None, geojson_out_file = None, verbose = True)
+
+      Compare the surface trace of each cut mesh against the original fault trace.
+
+      Trace extensions exist to grow a fault's *subsurface* area so that it
+      meets its neighbours and can be cut cleanly; they are not meant to
+      survive at the surface. Where a cut mesh still reaches the surface
+      beyond the end of the original (un-extended) trace, either the cut did
+      not happen (fix with additional_cuts) or the extension was unnecessary
+      (fix by removing it from the trace-extensions CSV).
+
+      Each cut mesh in `mesh_dir` is read back from disk, so this can be run
+      on its own without re-cutting. For every fault the parts of the mesh's
+      surface trace lying further than `lateral_tolerance` from the original
+      trace are reported, split by which end of the trace they run off; parts
+      reaching more than `flag_distance` beyond it are flagged.
+
+      :param mesh_dir: directory holding the cut meshes
+      :param suffix: appended to the fault name to make each mesh filename
+      :param flag_distance: overhang (m) beyond which an end is flagged
+      :param lateral_tolerance: distance (m) from the original trace within
+          which surface trace is considered coincident with it; allows for
+          the smoothing and spline fitting done when meshing
+      :param top_depth: z value (m) of the top of the meshes
+      :param z_tolerance: tolerance (m) on `top_depth`
+      :param out_file: optional CSV to write the results to
+      :param geojson_out_file: optional GeoJSON of the extra trace geometry
+      :param verbose: print a summary of the flagged faults
+      :return: DataFrame of results, worst overhang first
+
+
+
+   .. py:method:: check_jagged_cuts(mesh_dir, suffix = '_cut.obj', angle_threshold = 20.0, min_kinked_segments = 3, step_scales = (500.0, 1000.0), step_angle = 30.0, min_reversals = 3, top_depth = 0.0, z_tolerance = 1.0, out_file = None, geojson_out_file = None, verbose = True)
+
+      Flag cut meshes whose subsurface outline is jagged.
+
+      A clean cut leaves a smooth outline. A cut that has gone wrong leaves a
+      rough one, and roughness comes in two forms that need measuring
+      differently:
+
+      *Kinks* are single segments that differ in 3-D direction from **both**
+      their neighbours by at least `angle_threshold`. This catches isolated
+      spikes and the sliver segments a bad clip leaves behind. A fault with
+      `min_kinked_segments` or more is flagged.
+
+      *Steps* are the staircases a cut leaves when it follows whole triangle
+      edges instead of the true intersection. These are invisible to the kink
+      test, because each tread and riser is several collinear segments: the
+      turn inside a tread is zero, and the segment at a corner differs from
+      only one of its neighbours. They are found instead by resampling the
+      outline at each of `step_scales` and counting *direction reversals* --
+      consecutive turns of at least `step_angle` that go opposite ways. The
+      scale with the most reversals is reported, and `min_reversals` or more
+      flags the fault.
+
+      Only the subsurface part of the outline is examined. The surface trace
+      is dropped first, because a trace faithfully follows the mapped fault
+      and is expected to bend sharply; use check_surface_trace_extensions()
+      for that part of the outline.
+
+      :param mesh_dir: directory holding the cut meshes
+      :param suffix: appended to the fault name to make each mesh filename
+      :param angle_threshold: direction change (degrees) counting as a kink
+      :param min_kinked_segments: number of kinks needed to flag a fault
+      :param step_scales: chord lengths (m) at which to look for steps
+      :param step_angle: direction change (degrees) counting as a step turn
+      :param min_reversals: number of reversals needed to flag a fault
+      :param top_depth: z value (m) of the top of the meshes
+      :param z_tolerance: tolerance (m) on `top_depth`
+      :param out_file: optional CSV to write the results to
+      :param geojson_out_file: optional GeoJSON of the kinked and stepped parts
+      :param verbose: print a summary of the flagged faults
+      :return: DataFrame of every mesh with a kink or a step, worst first
+
+
+
+   .. py:method:: candidate_cutters(fault_name)
+
+      Every fault that could have cut `fault_name`: those ranked above it
+      in the cutting hierarchy, plus any forced onto it by additional_cuts
+      (which apply even where the named cutter ranks lower, or is absent
+      from the hierarchy altogether).
+
+
+
+   .. py:method:: attribute_jagged_cuts(jagged, uncut_mesh_dir, suffix = '_depth_contours.obj', max_distance = 1500.0, depth_surface = None, verify_cuts = True, actual_cuts=None, cut_threshold = 0.7, min_cut_distance = 10000.0, bottom_depth = -30000.0, out_file = None, geojson_out_file = None, verbose = True)
+
+      Work out which cut left each jagged fault's outline serrated.
+
+      Takes the output of check_jagged_cuts() and, for every kinked segment,
+      finds the nearest fault surface that was entitled to cut that fault
+      (see candidate_cutters()). A kink sitting on a cutter's surface was
+      left by that cut. Kinks near neither, but close to the base depth
+      surface, are attributed to it; the rest come back "unattributed" and
+      are worth a look, since they point at something other than a cut --
+      awkward contours, or a surface self-intersecting.
+
+      The uncut Stage 1 surfaces are used for the cutters, because those are
+      the meshes the cutting loop starts from and they span the whole
+      intersection even where the cutter was later trimmed itself.
+
+      Proximity alone will happily blame a fault that merely passes nearby,
+      so each attribution is checked and reported in the `cut_confirmed`
+      column. Pass `actual_cuts` -- the record the cutting loop kept of what
+      it really cut (see FaultMesh.cut_against) -- and the column is exact.
+      Without it, `verify_cuts` falls back to re-running the model's own cut
+      decision; that test is run without the higher-priority context that can
+      veto a cut, which only makes it more willing to say yes, so a False
+      still means the real run cannot have made that cut either.
+
+      Attributions that come back False are worth reading the other way round
+      -- the outline is following a surface that never cut it, which may be a
+      cut that should have been made and was not.
+
+      :param jagged: DataFrame from check_jagged_cuts(), typically the
+          flagged rows only
+      :param uncut_mesh_dir: directory of the uncut (Stage 1) surfaces
+      :param suffix: appended to the fault name to make each mesh filename
+      :param max_distance: how close (m) a kink must lie to a surface to be
+          attributed to it
+      :param depth_surface: the base depth surface, if kinks should also be
+          attributed to the depth trim
+      :param verify_cuts: check each attribution when `actual_cuts` is not given
+      :param actual_cuts: the cuts really made, as {fault_name: [cutter, ...]}
+          or the path to a two-column cuts_applied.csv; makes `cut_confirmed`
+          exact and skips the re-test entirely
+      :param cut_threshold: `threshold` passed to decide_whether_to_cut
+      :param min_cut_distance: `min_distance` passed to decide_whether_to_cut
+      :param bottom_depth: `bottom_depth` passed to decide_whether_to_cut
+      :param out_file: optional CSV to write the results to
+      :param geojson_out_file: optional GeoJSON of the attributed segments
+      :param verbose: print the attribution per fault
+      :return: DataFrame with a row per (jagged fault, cutter)
 
 
 

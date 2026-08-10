@@ -206,6 +206,22 @@ Fault names are validated against current curated fault names.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.read_removed_trace_extensions">
+<span class="sig-name descname"><span class="pre">read_removed_trace_extensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.read_removed_trace_extensions" title="Link to this definition"></a></dt>
+<dd><p>Drop trace extensions listed in a removals CSV.</p>
+<p>Expected columns: fault_name, end. Written by review_trace_extensions.py
+as a separate list rather than by editing the curated extensions file,
+so the hand-made edited_trace_extensions.csv stays exactly as its author
+left it. Call between read_trace_extensions() and
+apply_trace_extensions().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>csv_file</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.apply_trace_extensions">
 <span class="sig-name descname"><span class="pre">apply_trace_extensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.apply_trace_extensions" title="Link to this definition"></a></dt>
 <dd><p>Apply trace extensions previously loaded with read_trace_extensions().</p>
@@ -214,6 +230,158 @@ and the trace is extended accordingly.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>resolution</strong> (<em>float</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.check_surface_trace_extensions">
+<span class="sig-name descname"><span class="pre">check_surface_trace_extensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_cut.obj'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lateral_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geojson_out_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.check_surface_trace_extensions" title="Link to this definition"></a></dt>
+<dd><p>Compare the surface trace of each cut mesh against the original fault trace.</p>
+<p>Trace extensions exist to grow a fault’s <em>subsurface</em> area so that it
+meets its neighbours and can be cut cleanly; they are not meant to
+survive at the surface. Where a cut mesh still reaches the surface
+beyond the end of the original (un-extended) trace, either the cut did
+not happen (fix with additional_cuts) or the extension was unnecessary
+(fix by removing it from the trace-extensions CSV).</p>
+<p>Each cut mesh in <cite>mesh_dir</cite> is read back from disk, so this can be run
+on its own without re-cutting. For every fault the parts of the mesh’s
+surface trace lying further than <cite>lateral_tolerance</cite> from the original
+trace are reported, split by which end of the trace they run off; parts
+reaching more than <cite>flag_distance</cite> beyond it are flagged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mesh_dir</strong> (<em>str</em>) – directory holding the cut meshes</p></li>
+<li><p><strong>suffix</strong> (<em>str</em>) – appended to the fault name to make each mesh filename</p></li>
+<li><p><strong>flag_distance</strong> (<em>float</em>) – overhang (m) beyond which an end is flagged</p></li>
+<li><p><strong>lateral_tolerance</strong> (<em>float</em>) – distance (m) from the original trace within
+which surface trace is considered coincident with it; allows for
+the smoothing and spline fitting done when meshing</p></li>
+<li><p><strong>top_depth</strong> (<em>float</em>) – z value (m) of the top of the meshes</p></li>
+<li><p><strong>z_tolerance</strong> (<em>float</em>) – tolerance (m) on <cite>top_depth</cite></p></li>
+<li><p><strong>out_file</strong> (<em>str</em>) – optional CSV to write the results to</p></li>
+<li><p><strong>geojson_out_file</strong> (<em>str</em>) – optional GeoJSON of the extra trace geometry</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – print a summary of the flagged faults</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame of results, worst overhang first</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.check_jagged_cuts">
+<span class="sig-name descname"><span class="pre">check_jagged_cuts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_cut.obj'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_kinked_segments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_scales</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(500.0,</span> <span class="pre">1000.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_reversals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geojson_out_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.check_jagged_cuts" title="Link to this definition"></a></dt>
+<dd><p>Flag cut meshes whose subsurface outline is jagged.</p>
+<p>A clean cut leaves a smooth outline. A cut that has gone wrong leaves a
+rough one, and roughness comes in two forms that need measuring
+differently:</p>
+<p><em>Kinks</em> are single segments that differ in 3-D direction from <strong>both</strong>
+their neighbours by at least <cite>angle_threshold</cite>. This catches isolated
+spikes and the sliver segments a bad clip leaves behind. A fault with
+<cite>min_kinked_segments</cite> or more is flagged.</p>
+<p><em>Steps</em> are the staircases a cut leaves when it follows whole triangle
+edges instead of the true intersection. These are invisible to the kink
+test, because each tread and riser is several collinear segments: the
+turn inside a tread is zero, and the segment at a corner differs from
+only one of its neighbours. They are found instead by resampling the
+outline at each of <cite>step_scales</cite> and counting <em>direction reversals</em> –
+consecutive turns of at least <cite>step_angle</cite> that go opposite ways. The
+scale with the most reversals is reported, and <cite>min_reversals</cite> or more
+flags the fault.</p>
+<p>Only the subsurface part of the outline is examined. The surface trace
+is dropped first, because a trace faithfully follows the mapped fault
+and is expected to bend sharply; use check_surface_trace_extensions()
+for that part of the outline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mesh_dir</strong> (<em>str</em>) – directory holding the cut meshes</p></li>
+<li><p><strong>suffix</strong> (<em>str</em>) – appended to the fault name to make each mesh filename</p></li>
+<li><p><strong>angle_threshold</strong> (<em>float</em>) – direction change (degrees) counting as a kink</p></li>
+<li><p><strong>min_kinked_segments</strong> (<em>int</em>) – number of kinks needed to flag a fault</p></li>
+<li><p><strong>step_scales</strong> (<em>tuple</em>) – chord lengths (m) at which to look for steps</p></li>
+<li><p><strong>step_angle</strong> (<em>float</em>) – direction change (degrees) counting as a step turn</p></li>
+<li><p><strong>min_reversals</strong> (<em>int</em>) – number of reversals needed to flag a fault</p></li>
+<li><p><strong>top_depth</strong> (<em>float</em>) – z value (m) of the top of the meshes</p></li>
+<li><p><strong>z_tolerance</strong> (<em>float</em>) – tolerance (m) on <cite>top_depth</cite></p></li>
+<li><p><strong>out_file</strong> (<em>str</em>) – optional CSV to write the results to</p></li>
+<li><p><strong>geojson_out_file</strong> (<em>str</em>) – optional GeoJSON of the kinked and stepped parts</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – print a summary of the flagged faults</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame of every mesh with a kink or a step, worst first</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.candidate_cutters">
+<span class="sig-name descname"><span class="pre">candidate_cutters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.candidate_cutters" title="Link to this definition"></a></dt>
+<dd><p>Every fault that could have cut <cite>fault_name</cite>: those ranked above it
+in the cutting hierarchy, plus any forced onto it by additional_cuts
+(which apply even where the named cutter ranks lower, or is absent
+from the hierarchy altogether).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fault_name</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault.attribute_jagged_cuts">
+<span class="sig-name descname"><span class="pre">attribute_jagged_cuts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jagged</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncut_mesh_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_depth_contours.obj'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1500.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify_cuts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actual_cuts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cut_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-30000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geojson_out_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault.attribute_jagged_cuts" title="Link to this definition"></a></dt>
+<dd><p>Work out which cut left each jagged fault’s outline serrated.</p>
+<p>Takes the output of check_jagged_cuts() and, for every kinked segment,
+finds the nearest fault surface that was entitled to cut that fault
+(see candidate_cutters()). A kink sitting on a cutter’s surface was
+left by that cut. Kinks near neither, but close to the base depth
+surface, are attributed to it; the rest come back “unattributed” and
+are worth a look, since they point at something other than a cut –
+awkward contours, or a surface self-intersecting.</p>
+<p>The uncut Stage 1 surfaces are used for the cutters, because those are
+the meshes the cutting loop starts from and they span the whole
+intersection even where the cutter was later trimmed itself.</p>
+<p>Proximity alone will happily blame a fault that merely passes nearby,
+so each attribution is checked and reported in the <cite>cut_confirmed</cite>
+column. Pass <cite>actual_cuts</cite> – the record the cutting loop kept of what
+it really cut (see FaultMesh.cut_against) – and the column is exact.
+Without it, <cite>verify_cuts</cite> falls back to re-running the model’s own cut
+decision; that test is run without the higher-priority context that can
+veto a cut, which only makes it more willing to say yes, so a False
+still means the real run cannot have made that cut either.</p>
+<p>Attributions that come back False are worth reading the other way round
+– the outline is following a surface that never cut it, which may be a
+cut that should have been made and was not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>jagged</strong> (<em>pandas.DataFrame</em>) – DataFrame from check_jagged_cuts(), typically the
+flagged rows only</p></li>
+<li><p><strong>uncut_mesh_dir</strong> (<em>str</em>) – directory of the uncut (Stage 1) surfaces</p></li>
+<li><p><strong>suffix</strong> (<em>str</em>) – appended to the fault name to make each mesh filename</p></li>
+<li><p><strong>max_distance</strong> (<em>float</em>) – how close (m) a kink must lie to a surface to be
+attributed to it</p></li>
+<li><p><strong>depth_surface</strong> (<em>pyvista.PolyData</em>) – the base depth surface, if kinks should also be
+attributed to the depth trim</p></li>
+<li><p><strong>verify_cuts</strong> (<em>bool</em>) – check each attribution when <cite>actual_cuts</cite> is not given</p></li>
+<li><p><strong>actual_cuts</strong> – the cuts really made, as {fault_name: [cutter, …]}
+or the path to a two-column cuts_applied.csv; makes <cite>cut_confirmed</cite>
+exact and skips the re-test entirely</p></li>
+<li><p><strong>cut_threshold</strong> (<em>float</em>) – <cite>threshold</cite> passed to decide_whether_to_cut</p></li>
+<li><p><strong>min_cut_distance</strong> (<em>float</em>) – <cite>min_distance</cite> passed to decide_whether_to_cut</p></li>
+<li><p><strong>bottom_depth</strong> (<em>float</em>) – <cite>bottom_depth</cite> passed to decide_whether_to_cut</p></li>
+<li><p><strong>out_file</strong> (<em>str</em>) – optional CSV to write the results to</p></li>
+<li><p><strong>geojson_out_file</strong> (<em>str</em>) – optional GeoJSON of the attributed segments</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – print the attribution per fault</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame with a row per (jagged fault, cutter)</p>
 </dd>
 </dl>
 </dd></dl>
