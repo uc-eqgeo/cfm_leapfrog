@@ -14,9 +14,10 @@ import geopandas as gpd
 import pandas as pd
 import meshio
 import pyvista as pv
+from scipy.spatial import cKDTree
 
 from shapely.affinity import translate
-from shapely.ops import unary_union
+from shapely.ops import unary_union, linemerge
 from shapely.geometry import LineString, MultiLineString, Point, Polygon, MultiPoint
 
 from fault_mesh.faults.generic import GenericMultiFault, GenericFault, normalize_bearing, smallest_difference, calculate_strike_direction
@@ -525,6 +526,35 @@ class LeapfrogMultiFault(GenericMultiFault):
         self._trace_extensions = df
         print(f"Read {len(df)} trace extensions from {csv_file}")
 
+    def read_removed_trace_extensions(self, csv_file: str):
+        """Drop trace extensions listed in a removals CSV.
+
+        Expected columns: fault_name, end. Written by review_trace_extensions.py
+        as a separate list rather than by editing the curated extensions file,
+        so the hand-made edited_trace_extensions.csv stays exactly as its author
+        left it. Call between read_trace_extensions() and
+        apply_trace_extensions().
+        """
+        assert os.path.exists(csv_file), f"File not found: {csv_file}"
+        assert self._trace_extensions is not None, \
+            "No trace extensions loaded. Call read_trace_extensions() first."
+        df = pd.read_csv(csv_file)
+        for col in ("fault_name", "end"):
+            assert col in df.columns, f"Missing required column: {col}"
+
+        removals = {(str(name).strip(), str(end).strip().upper())
+                    for name, end in zip(df["fault_name"], df["end"])}
+        keys = list(zip(self._trace_extensions["fault_name"].astype(str).str.strip(),
+                        self._trace_extensions["end"].astype(str).str.strip().str.upper()))
+        keep = [key not in removals for key in keys]
+        dropped = len(keep) - sum(keep)
+        self._trace_extensions = self._trace_extensions[keep]
+
+        for key in removals:
+            if key not in keys:
+                print(f"Warning: removal '{key[0]} ({key[1]})' matches no loaded trace extension")
+        print(f"Removed {dropped} trace extensions listed in {csv_file}")
+
     def apply_trace_extensions(self, resolution: float = 1.e3):
         """Apply trace extensions previously loaded with read_trace_extensions().
 
@@ -569,6 +599,773 @@ class LeapfrogMultiFault(GenericMultiFault):
                                            extend_distance=ext_distance, resolution=resolution)
                     print(f"Extended {fault_name} trace at {target_compass} end by {ext_distance/1.e3:.0f} km")
                     break
+
+    # --- Checking cut meshes against the original traces ---
+
+    @staticmethod
+    def _mesh_outline(mesh_file: str):
+        """The outline (open edges) of a fault mesh.
+
+        Returns the mesh vertices and an array of vertex-index pairs, one per
+        boundary edge, or (None, None) if the mesh has no boundary.
+        """
+        pv_mesh = pv.read(mesh_file)
+        edges = pv_mesh.extract_feature_edges(boundary_edges=True, feature_edges=False,
+                                              manifold_edges=False, non_manifold_edges=False)
+        if edges.n_cells == 0:
+            return None, None
+        # extract_feature_edges returns two-point line cells: [2, i, j, 2, i, j, ...]
+        return edges.points, edges.lines.reshape(-1, 3)[:, 1:]
+
+    @classmethod
+    def _mesh_surface_trace(cls, mesh_file: str, top_depth: float = 0., z_tolerance: float = 1.):
+        """Extract the surface trace of a fault mesh as 2-D line geometry.
+
+        The surface trace is the part of the mesh outline whose edges have both
+        vertices at `top_depth` (z = 0 for these models), merged into as few
+        LineStrings as possible. Returns None if the outline never reaches that
+        depth, i.e. the fault's whole surface expression has been cut away.
+        """
+        points, line_pairs = cls._mesh_outline(mesh_file)
+        if points is None:
+            return None
+        at_top = np.abs(points[:, 2] - top_depth) <= z_tolerance
+        top_lines = line_pairs[at_top[line_pairs[:, 0]] & at_top[line_pairs[:, 1]]]
+        if not len(top_lines):
+            return None
+        merged = linemerge([LineString([points[i, :2], points[j, :2]]) for i, j in top_lines])
+        return None if merged.is_empty else merged
+
+    @staticmethod
+    def _order_edges_into_chains(line_pairs: np.ndarray):
+        """Order a set of edges into chains of consecutive vertex indices.
+
+        Consecutive edges within a chain are genuine neighbours in the outline.
+        A chain runs until it closes on itself, reaches a loose end, or meets a
+        vertex where more than two edges join, since past such a junction there
+        is no single "next" edge.
+        """
+        neighbours = {}
+        for a, b in line_pairs:
+            neighbours.setdefault(a, []).append(b)
+            neighbours.setdefault(b, []).append(a)
+        walked = set()
+
+        def walk(start, second):
+            chain = [start, second]
+            walked.add(frozenset((start, second)))
+            while True:
+                current = chain[-1]
+                onward = [n for n in neighbours[current]
+                          if frozenset((current, n)) not in walked]
+                if len(onward) != 1:
+                    break
+                walked.add(frozenset((current, onward[0])))
+                chain.append(onward[0])
+                if onward[0] == chain[0]:
+                    break
+            return chain
+
+        chains = []
+        # Loose ends and junctions first, so open chains are walked in one piece
+        # rather than being picked up from the middle; whatever is left over
+        # after that is a closed loop and can be started anywhere.
+        for vertex in sorted(neighbours, key=lambda v: len(neighbours[v]) == 2):
+            for neighbour in neighbours[vertex]:
+                if frozenset((vertex, neighbour)) not in walked:
+                    chains.append(walk(vertex, neighbour))
+        return chains
+
+    @staticmethod
+    def _kinked_segments(chain_points: np.ndarray, angle_threshold: float):
+        """Find the kinks in one ordered chain of outline points.
+
+        A segment counts as kinked if its 3-D direction differs from that of
+        *both* the segments either side of it by at least `angle_threshold`
+        degrees. The first and last segment of a chain have only one neighbour
+        each, so they can never qualify.
+
+        :return: (chain points with any repeats dropped, indices of the kinked
+            segments within that chain, turn angle between each pair of
+            consecutive segments)
+        """
+        # Repeated points would give a zero-length segment with no direction.
+        not_repeated = np.concatenate([[True],
+                                       np.linalg.norm(np.diff(chain_points, axis=0), axis=1) > 0.])
+        chain_points = chain_points[not_repeated]
+        if len(chain_points) < 4:
+            return chain_points, np.array([], dtype=int), np.array([])
+
+        vectors = np.diff(chain_points, axis=0)
+        units = vectors / np.linalg.norm(vectors, axis=1)[:, np.newaxis]
+        turns = np.degrees(np.arccos(np.clip(np.sum(units[:-1] * units[1:], axis=1), -1., 1.)))
+        # Segment i turns by turns[i - 1] from the segment before it and by
+        # turns[i] from the one after it.
+        kinked = np.where((turns[:-1] >= angle_threshold) & (turns[1:] >= angle_threshold))[0] + 1
+        return chain_points, kinked, turns
+
+    @staticmethod
+    def _outline_plane_normal(points: np.ndarray):
+        """Best-fit plane normal for a set of outline points, used to give the
+        direction of a turn a consistent sign."""
+        centred = points - points.mean(axis=0)
+        return np.linalg.svd(centred, full_matrices=False)[2][-1]
+
+    @staticmethod
+    def _resample_chain(chain_points: np.ndarray, spacing: float):
+        """Resample an ordered chain of outline points at a uniform arc length.
+
+        Comparing chords of a fixed length is what makes a step test independent
+        of how finely the outline happens to be segmented. A 1 km tread built
+        from six 170 m segments turns by 0 degrees within itself, so a
+        per-segment test sees nothing there and the step at its end differs from
+        only one of its neighbours; measured between 1 km chords the same step
+        is unmissable.
+        """
+        vectors = np.diff(chain_points, axis=0)
+        lengths = np.linalg.norm(vectors, axis=1)
+        keep = lengths > 0.
+        vectors, lengths, starts = vectors[keep], lengths[keep], chain_points[:-1][keep]
+        if not len(lengths):
+            return None
+        distance = np.concatenate([[0.], np.cumsum(lengths)])
+        if distance[-1] < 3. * spacing:
+            return None
+        targets = np.arange(0., distance[-1], spacing)
+        segment = np.clip(np.searchsorted(distance, targets, side="right") - 1, 0, len(lengths) - 1)
+        fraction = (targets - distance[segment]) / lengths[segment]
+        return starts[segment] + fraction[:, np.newaxis] * vectors[segment]
+
+    @classmethod
+    def _direction_reversals(cls, chain_points: np.ndarray, normal: np.ndarray,
+                             spacing: float, angle_threshold: float):
+        """Find where an outline turns one way and then straight back again.
+
+        Requiring the two turns to have *opposite* sign is what separates a
+        staircase from the rest of an outline: the corner where a side edge
+        meets the bottom turns once, a smooth bend keeps turning the same way,
+        and only a step goes back on itself. Without that test every mesh looks
+        rough, because every outline has corners.
+
+        :return: (stepped chords as LineStrings, their step amplitudes in m)
+        """
+        points = cls._resample_chain(chain_points, spacing)
+        if points is None or len(points) < 4:
+            return [], []
+        vectors = np.diff(points, axis=0)
+        units = vectors / np.linalg.norm(vectors, axis=1)[:, np.newaxis]
+        turns = np.degrees(np.arccos(np.clip(np.sum(units[:-1] * units[1:], axis=1), -1., 1.)))
+        signs = np.sign(np.sum(np.cross(units[:-1], units[1:]) * normal, axis=1))
+        big = turns >= angle_threshold
+        reversed_here = big[:-1] & big[1:] & (signs[:-1] * signs[1:] < 0.)
+
+        segments, amplitudes = [], []
+        for i in np.where(reversed_here)[0]:
+            # turns[i] happens at points[i + 1] and turns[i + 1] at points[i + 2],
+            # so the chord between them is the tread of the step.
+            segments.append(LineString([points[i + 1], points[i + 2]]))
+            amplitudes.append(spacing * np.sin(np.radians(min(turns[i], turns[i + 1]))))
+        return segments, amplitudes
+
+    @staticmethod
+    def _as_2d_linestring(trace: Union[LineString, MultiLineString]):
+        """Flatten a trace to a single 2-D LineString (longest part if multipart)."""
+        if isinstance(trace, MultiLineString):
+            trace = linemerge(trace)
+        if isinstance(trace, MultiLineString):
+            trace = max(trace.geoms, key=lambda g: g.length)
+        return LineString([coord[:2] for coord in trace.coords])
+
+    def _end_compass_labels(self, original_trace: LineString):
+        """Label the two ends of `original_trace` the way the trace-extensions
+        CSV does: by the bearing from the centre of the trace to each end.
+
+        The labels are taken from the original (un-extended) trace because that
+        is the trace suggest_trace_extensions() saw, so the labels here line up
+        with the `end` column of the CSV. Doing it on the extended trace would
+        not: extending an end drags the centre towards it, which can shift a
+        short fault's labels by a compass point.
+        """
+        coords = np.array(original_trace.coords)
+        centre = coords.mean(axis=0)
+        out = {}
+        for key, end in (("start", coords[0]), ("end", coords[-1])):
+            bearing = normalize_bearing(np.degrees(np.arctan2(end[0] - centre[0], end[1] - centre[1])))
+            out[key] = self._bearing_to_compass(bearing)
+        return out
+
+    def check_surface_trace_extensions(self, mesh_dir: str, suffix: str = "_cut.obj",
+                                       flag_distance: float = 2.e3, lateral_tolerance: float = 500.,
+                                       top_depth: float = 0., z_tolerance: float = 1.,
+                                       out_file: str = None, geojson_out_file: str = None,
+                                       verbose: bool = True):
+        """Compare the surface trace of each cut mesh against the original fault trace.
+
+        Trace extensions exist to grow a fault's *subsurface* area so that it
+        meets its neighbours and can be cut cleanly; they are not meant to
+        survive at the surface. Where a cut mesh still reaches the surface
+        beyond the end of the original (un-extended) trace, either the cut did
+        not happen (fix with additional_cuts) or the extension was unnecessary
+        (fix by removing it from the trace-extensions CSV).
+
+        Each cut mesh in `mesh_dir` is read back from disk, so this can be run
+        on its own without re-cutting. For every fault the parts of the mesh's
+        surface trace lying further than `lateral_tolerance` from the original
+        trace are reported, split by which end of the trace they run off; parts
+        reaching more than `flag_distance` beyond it are flagged.
+
+        :param mesh_dir: directory holding the cut meshes
+        :param suffix: appended to the fault name to make each mesh filename
+        :param flag_distance: overhang (m) beyond which an end is flagged
+        :param lateral_tolerance: distance (m) from the original trace within
+            which surface trace is considered coincident with it; allows for
+            the smoothing and spline fitting done when meshing
+        :param top_depth: z value (m) of the top of the meshes
+        :param z_tolerance: tolerance (m) on `top_depth`
+        :param out_file: optional CSV to write the results to
+        :param geojson_out_file: optional GeoJSON of the extra trace geometry
+        :param verbose: print a summary of the flagged faults
+        :return: DataFrame of results, worst overhang first
+        """
+        assert os.path.isdir(mesh_dir), f"Directory not found: {mesh_dir}"
+        extensions = self._trace_extensions
+        rows = []
+        missing_meshes = []
+        no_surface_trace = []
+        n_checked = 0
+
+        for fault in self.curated_faults:
+            mesh_file = os.path.join(mesh_dir, f"{fault.name}{suffix}")
+            if not os.path.exists(mesh_file):
+                missing_meshes.append(fault.name)
+                continue
+            if fault.original_nztm_trace is None:
+                print(f"Warning: no original trace stored for {fault.name}; skipping")
+                continue
+
+            n_checked += 1
+            surface_trace = self._mesh_surface_trace(mesh_file, top_depth=top_depth,
+                                                     z_tolerance=z_tolerance)
+            if surface_trace is None:
+                no_surface_trace.append(fault.name)
+                continue
+
+            original = self._as_2d_linestring(fault.original_nztm_trace)
+            compass = self._end_compass_labels(original)
+
+            # Everything further from the original trace than lateral_tolerance is "extra".
+            extra = surface_trace.difference(original.buffer(lateral_tolerance))
+            if extra.is_empty:
+                continue
+            parts = list(extra.geoms) if hasattr(extra, "geoms") else [extra]
+
+            # Group the extra pieces by the end of the original trace they run off.
+            by_end = {}
+            for part in parts:
+                if not isinstance(part, LineString) or part.length == 0.:
+                    continue
+                coords = np.array(part.coords)
+                distances = [original.distance(Point(xy)) for xy in coords]
+                furthest = int(np.argmax(distances))
+                position = original.project(Point(coords[furthest]))
+                if position <= 0.:
+                    end = compass["start"]
+                elif position >= original.length:
+                    end = compass["end"]
+                else:
+                    # Not off either end: an along-strike bulge or a stray fragment.
+                    end = "side"
+                record = by_end.setdefault(end, {"max": 0., "length": 0., "parts": []})
+                record["max"] = max(record["max"], max(distances))
+                record["length"] += part.length
+                record["parts"].append(part)
+
+            for end, record in by_end.items():
+                if extensions is not None and end != "side":
+                    matching = extensions[(extensions["fault_name"] == fault.name) &
+                                          (extensions["end"].str.strip().str.upper() == end)]
+                else:
+                    matching = None
+                rows.append({
+                    "fault_name": fault.name,
+                    "end": end,
+                    "max_extra_m": record["max"],
+                    "extra_length_m": record["length"],
+                    "flagged": record["max"] > flag_distance,
+                    "has_extension": bool(matching is not None and len(matching)),
+                    "extend_distance": (float(matching["extend_distance"].iloc[0])
+                                        if matching is not None and len(matching) else np.nan),
+                    "geometry": linemerge(record["parts"]) if len(record["parts"]) > 1 else record["parts"][0],
+                })
+
+        columns = ["fault_name", "end", "max_extra_m", "extra_length_m", "flagged",
+                   "has_extension", "extend_distance", "geometry"]
+        df = pd.DataFrame(rows, columns=columns)
+        df.sort_values("max_extra_m", ascending=False, inplace=True, ignore_index=True)
+
+        # These are inspection-only outputs, so a file left open in QGIS should
+        # warn rather than throw away the results of the whole check.
+        if out_file is not None:
+            try:
+                df.drop(columns="geometry").to_csv(out_file, index=False)
+                print(f"Wrote {len(df)} surface-trace checks to {out_file}")
+            except PermissionError as e:
+                print(f"Could not write {out_file} (open in another program?): {e}")
+        if geojson_out_file is not None:
+            if len(df):
+                crs = f"EPSG:{self.epsg}" if self.epsg is not None else None
+                try:
+                    gpd.GeoDataFrame(df, geometry="geometry", crs=crs).to_file(geojson_out_file,
+                                                                              driver="GeoJSON")
+                    print(f"Wrote {len(df)} extra surface trace geometries to {geojson_out_file}")
+                except PermissionError as e:
+                    print(f"Could not write {geojson_out_file} (open in QGIS?): {e}")
+            else:
+                print("No extra surface trace geometries to write")
+
+        if verbose:
+            flagged = df[df["flagged"]]
+            print(f"\nChecked surface traces of {n_checked} cut meshes against the original traces "
+                  f"({len(df)} ends with >{lateral_tolerance:.0f} m of extra trace, "
+                  f"{len(flagged)} over the {flag_distance/1.e3:.1f} km threshold)")
+            if missing_meshes:
+                print(f"  {len(missing_meshes)} curated faults have no mesh in {mesh_dir}")
+            if no_surface_trace:
+                print(f"  {len(no_surface_trace)} meshes reach the surface nowhere: "
+                      f"{', '.join(no_surface_trace[:5])}"
+                      f"{' ...' if len(no_surface_trace) > 5 else ''}")
+            for _, row in flagged.iterrows():
+                fix = "remove/shorten the trace extension, or add a cut" if row["has_extension"] \
+                    else "check the cutting hierarchy"
+                print(f"  {row['fault_name']} ({row['end']}): {row['max_extra_m']/1.e3:.1f} km beyond "
+                      f"the original trace, {row['extra_length_m']/1.e3:.1f} km of extra trace -- {fix}")
+
+        return df
+
+    def check_jagged_cuts(self, mesh_dir: str, suffix: str = "_cut.obj",
+                          angle_threshold: float = 20., min_kinked_segments: int = 3,
+                          step_scales: tuple = (500., 1000.), step_angle: float = 30.,
+                          min_reversals: int = 3,
+                          top_depth: float = 0., z_tolerance: float = 1.,
+                          out_file: str = None, geojson_out_file: str = None,
+                          verbose: bool = True):
+        """Flag cut meshes whose subsurface outline is jagged.
+
+        A clean cut leaves a smooth outline. A cut that has gone wrong leaves a
+        rough one, and roughness comes in two forms that need measuring
+        differently:
+
+        *Kinks* are single segments that differ in 3-D direction from **both**
+        their neighbours by at least `angle_threshold`. This catches isolated
+        spikes and the sliver segments a bad clip leaves behind. A fault with
+        `min_kinked_segments` or more is flagged.
+
+        *Steps* are the staircases a cut leaves when it follows whole triangle
+        edges instead of the true intersection. These are invisible to the kink
+        test, because each tread and riser is several collinear segments: the
+        turn inside a tread is zero, and the segment at a corner differs from
+        only one of its neighbours. They are found instead by resampling the
+        outline at each of `step_scales` and counting *direction reversals* --
+        consecutive turns of at least `step_angle` that go opposite ways. The
+        scale with the most reversals is reported, and `min_reversals` or more
+        flags the fault.
+
+        Only the subsurface part of the outline is examined. The surface trace
+        is dropped first, because a trace faithfully follows the mapped fault
+        and is expected to bend sharply; use check_surface_trace_extensions()
+        for that part of the outline.
+
+        :param mesh_dir: directory holding the cut meshes
+        :param suffix: appended to the fault name to make each mesh filename
+        :param angle_threshold: direction change (degrees) counting as a kink
+        :param min_kinked_segments: number of kinks needed to flag a fault
+        :param step_scales: chord lengths (m) at which to look for steps
+        :param step_angle: direction change (degrees) counting as a step turn
+        :param min_reversals: number of reversals needed to flag a fault
+        :param top_depth: z value (m) of the top of the meshes
+        :param z_tolerance: tolerance (m) on `top_depth`
+        :param out_file: optional CSV to write the results to
+        :param geojson_out_file: optional GeoJSON of the kinked and stepped parts
+        :param verbose: print a summary of the flagged faults
+        :return: DataFrame of every mesh with a kink or a step, worst first
+        """
+        assert os.path.isdir(mesh_dir), f"Directory not found: {mesh_dir}"
+        rows = []
+        n_checked = 0
+
+        for fault in self.curated_faults:
+            mesh_file = os.path.join(mesh_dir, f"{fault.name}{suffix}")
+            if not os.path.exists(mesh_file):
+                continue
+            n_checked += 1
+            points, line_pairs = self._mesh_outline(mesh_file)
+            if points is None:
+                continue
+
+            # Drop the surface trace, leaving the subsurface outline. Chains
+            # then break where the trace used to be, so the segments dropping
+            # away from the surface are chain ends and are never counted as
+            # kinks against the trace they hang off.
+            at_top = np.abs(points[:, 2] - top_depth) <= z_tolerance
+            subsurface = line_pairs[~(at_top[line_pairs[:, 0]] & at_top[line_pairs[:, 1]])]
+            if not len(subsurface):
+                continue
+
+            chains = [points[np.array(chain)]
+                      for chain in self._order_edges_into_chains(subsurface)]
+            normal = self._outline_plane_normal(points)
+
+            segments = []
+            turn_angles = []
+            longest_run = 0
+            for chain_points in chains:
+                chain_points, kinked, turns = self._kinked_segments(chain_points, angle_threshold)
+                if not len(kinked):
+                    continue
+                for i in kinked:
+                    segments.append(LineString([chain_points[i], chain_points[i + 1]]))
+                    turn_angles.append(max(turns[i - 1], turns[i]))
+                # Kinks that run together are a serrated stretch of outline
+                # rather than isolated spikes, so record the longest such run.
+                run = np.split(kinked, np.where(np.diff(kinked) != 1)[0] + 1)
+                longest_run = max(longest_run, max(len(part) for part in run))
+
+            # Steps, at whichever of the scales shows them most clearly.
+            step_segments, step_amplitudes, step_scale = [], [], np.nan
+            for scale in step_scales:
+                scale_segments, scale_amplitudes = [], []
+                for chain_points in chains:
+                    found, amplitudes = self._direction_reversals(chain_points, normal, scale,
+                                                                  step_angle)
+                    scale_segments.extend(found)
+                    scale_amplitudes.extend(amplitudes)
+                if len(scale_segments) > len(step_segments):
+                    step_segments, step_amplitudes, step_scale = (scale_segments,
+                                                                  scale_amplitudes, scale)
+
+            geometry = segments + step_segments
+            if not geometry:
+                continue
+            rows.append({
+                "fault_name": fault.name,
+                "n_kinked_segments": len(segments),
+                "longest_run": longest_run,
+                "max_turn_deg": max(turn_angles) if turn_angles else 0.,
+                "n_reversals": len(step_segments),
+                "reversal_scale_m": step_scale,
+                "step_amplitude_m": (float(np.median(step_amplitudes)) if step_amplitudes
+                                     else np.nan),
+                "flagged_kinks": len(segments) >= min_kinked_segments,
+                "flagged_steps": len(step_segments) >= min_reversals,
+                "flagged": (len(segments) >= min_kinked_segments
+                            or len(step_segments) >= min_reversals),
+                "geometry": MultiLineString(geometry) if len(geometry) > 1 else geometry[0],
+            })
+
+        columns = ["fault_name", "n_kinked_segments", "longest_run", "max_turn_deg",
+                   "n_reversals", "reversal_scale_m", "step_amplitude_m",
+                   "flagged_kinks", "flagged_steps", "flagged", "geometry"]
+        df = pd.DataFrame(rows, columns=columns)
+        # Steps first: they are the defect that usually means the cut went wrong.
+        df.sort_values(["n_reversals", "n_kinked_segments"], ascending=False, inplace=True,
+                       ignore_index=True)
+
+        # Inspection-only outputs, so a file left open elsewhere should warn
+        # rather than throw away the results of the whole check.
+        if out_file is not None:
+            try:
+                df.drop(columns="geometry").to_csv(out_file, index=False)
+                print(f"Wrote {len(df)} jagged-cut checks to {out_file}")
+            except PermissionError as e:
+                print(f"Could not write {out_file} (open in another program?): {e}")
+        if geojson_out_file is not None:
+            if len(df):
+                crs = f"EPSG:{self.epsg}" if self.epsg is not None else None
+                try:
+                    gpd.GeoDataFrame(df, geometry="geometry", crs=crs).to_file(geojson_out_file,
+                                                                              driver="GeoJSON")
+                    print(f"Wrote kinked outline segments for {len(df)} faults to {geojson_out_file}")
+                except PermissionError as e:
+                    print(f"Could not write {geojson_out_file} (open in QGIS?): {e}")
+            else:
+                print("No kinked outline segments to write")
+
+        if verbose:
+            flagged = df[df["flagged"]]
+            print(f"\nChecked the subsurface outline of {n_checked} cut meshes for jaggedness "
+                  f"({len(flagged)} flagged of {len(df)} with any roughness: "
+                  f"{int(df['flagged_steps'].sum())} stepped, "
+                  f"{int(df['flagged_kinks'].sum())} kinked)")
+            for _, row in flagged.iterrows():
+                detail = []
+                if row["flagged_steps"]:
+                    detail.append(f"{row['n_reversals']} reversals at "
+                                  f"{row['reversal_scale_m']:.0f} m, steps of "
+                                  f"{row['step_amplitude_m']:.0f} m")
+                if row["flagged_kinks"]:
+                    detail.append(f"{row['n_kinked_segments']} kinked segments "
+                                  f"(longest run {row['longest_run']}, worst turn "
+                                  f"{row['max_turn_deg']:.0f} deg)")
+                print(f"  {row['fault_name']}: {'; '.join(detail)}")
+
+        return df
+
+    def candidate_cutters(self, fault_name: str):
+        """Every fault that could have cut `fault_name`: those ranked above it
+        in the cutting hierarchy, plus any forced onto it by additional_cuts
+        (which apply even where the named cutter ranks lower, or is absent
+        from the hierarchy altogether)."""
+        if fault_name in self.cutting_hierarchy:
+            higher = self.cutting_hierarchy[:self.cutting_hierarchy.index(fault_name)]
+        else:
+            higher = []
+        forced = [cut for (cut_fault, cut) in self.additional_cuts
+                  if cut_fault == fault_name and cut not in higher]
+        return higher + forced
+
+    def attribute_jagged_cuts(self, jagged: pd.DataFrame, uncut_mesh_dir: str,
+                              suffix: str = "_depth_contours.obj", max_distance: float = 1.5e3,
+                              depth_surface: pv.PolyData = None, verify_cuts: bool = True,
+                              actual_cuts=None,
+                              cut_threshold: float = 0.7, min_cut_distance: float = 10.e3,
+                              bottom_depth: float = -30000., out_file: str = None,
+                              geojson_out_file: str = None, verbose: bool = True):
+        """Work out which cut left each jagged fault's outline serrated.
+
+        Takes the output of check_jagged_cuts() and, for every kinked segment,
+        finds the nearest fault surface that was entitled to cut that fault
+        (see candidate_cutters()). A kink sitting on a cutter's surface was
+        left by that cut. Kinks near neither, but close to the base depth
+        surface, are attributed to it; the rest come back "unattributed" and
+        are worth a look, since they point at something other than a cut --
+        awkward contours, or a surface self-intersecting.
+
+        The uncut Stage 1 surfaces are used for the cutters, because those are
+        the meshes the cutting loop starts from and they span the whole
+        intersection even where the cutter was later trimmed itself.
+
+        Proximity alone will happily blame a fault that merely passes nearby,
+        so each attribution is checked and reported in the `cut_confirmed`
+        column. Pass `actual_cuts` -- the record the cutting loop kept of what
+        it really cut (see FaultMesh.cut_against) -- and the column is exact.
+        Without it, `verify_cuts` falls back to re-running the model's own cut
+        decision; that test is run without the higher-priority context that can
+        veto a cut, which only makes it more willing to say yes, so a False
+        still means the real run cannot have made that cut either.
+
+        Attributions that come back False are worth reading the other way round
+        -- the outline is following a surface that never cut it, which may be a
+        cut that should have been made and was not.
+
+        :param jagged: DataFrame from check_jagged_cuts(), typically the
+            flagged rows only
+        :param uncut_mesh_dir: directory of the uncut (Stage 1) surfaces
+        :param suffix: appended to the fault name to make each mesh filename
+        :param max_distance: how close (m) a kink must lie to a surface to be
+            attributed to it
+        :param depth_surface: the base depth surface, if kinks should also be
+            attributed to the depth trim
+        :param verify_cuts: check each attribution when `actual_cuts` is not given
+        :param actual_cuts: the cuts really made, as {fault_name: [cutter, ...]}
+            or the path to a two-column cuts_applied.csv; makes `cut_confirmed`
+            exact and skips the re-test entirely
+        :param cut_threshold: `threshold` passed to decide_whether_to_cut
+        :param min_cut_distance: `min_distance` passed to decide_whether_to_cut
+        :param bottom_depth: `bottom_depth` passed to decide_whether_to_cut
+        :param out_file: optional CSV to write the results to
+        :param geojson_out_file: optional GeoJSON of the attributed segments
+        :param verbose: print the attribution per fault
+        :return: DataFrame with a row per (jagged fault, cutter)
+        """
+        assert os.path.isdir(uncut_mesh_dir), f"Directory not found: {uncut_mesh_dir}"
+
+        # Read every candidate surface once; the cutters are drawn from the
+        # whole hierarchy, so there is little to be saved by being lazy here.
+        vertices = {}
+        for fault in self.curated_faults:
+            path = os.path.join(uncut_mesh_dir, f"{fault.name}{suffix}")
+            if os.path.exists(path):
+                vertices[fault.name] = meshio.read(path).points
+        if verbose:
+            print(f"Read {len(vertices)} uncut surfaces from {uncut_mesh_dir} for attribution")
+        extents = {name: np.array([points[:, 0].min(), points[:, 0].max(),
+                                   points[:, 1].min(), points[:, 1].max()])
+                   for name, points in vertices.items()}
+
+        # KD-trees are only built for surfaces that survive the extent test.
+        trees = {}
+
+        def tree_for(name):
+            if name not in trees:
+                trees[name] = cKDTree(vertices[name])
+            return trees[name]
+
+        depth_tree = None
+        if depth_surface is not None:
+            depth_points = np.asarray(depth_surface.points)
+            depth_tree = cKDTree(depth_points[:, :2])
+
+        rows = []
+        for _, jagged_row in jagged.iterrows():
+            fault_name = jagged_row["fault_name"]
+            geometry = jagged_row["geometry"]
+            segments = list(geometry.geoms) if hasattr(geometry, "geoms") else [geometry]
+            midpoints = np.array([np.asarray(seg.coords).mean(axis=0) for seg in segments])
+
+            kink_extent = np.array([midpoints[:, 0].min(), midpoints[:, 0].max(),
+                                    midpoints[:, 1].min(), midpoints[:, 1].max()])
+            nearest_cutter = np.full(len(segments), None, dtype=object)
+            nearest_distance = np.full(len(segments), np.inf)
+            for cutter in self.candidate_cutters(fault_name):
+                if cutter not in vertices:
+                    continue
+                xmin, xmax, ymin, ymax = extents[cutter]
+                if (xmin > kink_extent[1] + max_distance or xmax < kink_extent[0] - max_distance or
+                        ymin > kink_extent[3] + max_distance or ymax < kink_extent[2] - max_distance):
+                    continue
+                distances, _ = tree_for(cutter).query(midpoints)
+                closer = distances < nearest_distance
+                nearest_distance[closer] = distances[closer]
+                nearest_cutter[closer] = cutter
+
+            if depth_tree is not None:
+                _, index = depth_tree.query(midpoints[:, :2])
+                depth_distance = np.abs(midpoints[:, 2] - depth_points[index, 2])
+            else:
+                depth_distance = np.full(len(segments), np.inf)
+
+            by_cutter = {}
+            for i, segment in enumerate(segments):
+                if nearest_distance[i] <= max_distance:
+                    cutter, distance = nearest_cutter[i], nearest_distance[i]
+                elif depth_distance[i] <= max_distance:
+                    cutter, distance = "base depth surface", depth_distance[i]
+                else:
+                    cutter, distance = "unattributed", nearest_distance[i]
+                record = by_cutter.setdefault(cutter, {"segments": [], "distances": []})
+                record["segments"].append(segment)
+                record["distances"].append(distance)
+
+            for cutter, record in sorted(by_cutter.items(),
+                                         key=lambda item: -len(item[1]["segments"])):
+                rows.append({
+                    "fault_name": fault_name,
+                    "cutter": cutter,
+                    "n_segments": len(record["segments"]),
+                    "median_distance_m": float(np.median(record["distances"])),
+                    "geometry": (MultiLineString(record["segments"])
+                                 if len(record["segments"]) > 1 else record["segments"][0]),
+                })
+
+        if actual_cuts is not None:
+            self._confirm_from_record(rows, actual_cuts)
+        elif verify_cuts:
+            self._verify_attributions(rows, uncut_mesh_dir, suffix, cut_threshold,
+                                      min_cut_distance, bottom_depth)
+
+        columns = ["fault_name", "cutter", "n_segments", "median_distance_m"]
+        if verify_cuts or actual_cuts is not None:
+            columns.append("cut_confirmed")
+        columns.append("geometry")
+        df = pd.DataFrame(rows, columns=columns)
+
+        # Inspection-only outputs, so a file left open elsewhere should warn
+        # rather than throw away the results of the whole run.
+        if out_file is not None:
+            try:
+                df.drop(columns="geometry").to_csv(out_file, index=False)
+                print(f"Wrote {len(df)} jagged-cut attributions to {out_file}")
+            except PermissionError as e:
+                print(f"Could not write {out_file} (open in another program?): {e}")
+        if geojson_out_file is not None:
+            if len(df):
+                crs = f"EPSG:{self.epsg}" if self.epsg is not None else None
+                try:
+                    gpd.GeoDataFrame(df, geometry="geometry", crs=crs).to_file(geojson_out_file,
+                                                                              driver="GeoJSON")
+                    print(f"Wrote {len(df)} attributed kink groups to {geojson_out_file}")
+                except PermissionError as e:
+                    print(f"Could not write {geojson_out_file} (open in QGIS?): {e}")
+            else:
+                print("No attributed kinks to write")
+
+        if verbose and len(df):
+            unattributed = df[df["cutter"] == "unattributed"]["n_segments"].sum()
+            print(f"\nAttributed the kinks on {df['fault_name'].nunique()} faults "
+                  f"({df['n_segments'].sum() - unattributed} of {df['n_segments'].sum()} "
+                  f"segments matched to a cut)")
+            if verify_cuts or actual_cuts is not None:
+                # Explicit identity test: the column also holds pd.NA, which
+                # makes an == comparison ambiguous.
+                unconfirmed = df["cut_confirmed"].apply(lambda value: value is False).sum()
+                print(f"  {unconfirmed} attributions are to a fault that did not cut this "
+                      f"one (cut_confirmed False) -- a surface being followed without a cut")
+            for fault_name, group in df.groupby("fault_name", sort=False):
+                blame = ", ".join(
+                    f"{row['cutter']} x{row['n_segments']}"
+                    f"{'?' if verify_cuts and row['cut_confirmed'] is False else ''}"
+                    for _, row in group.iterrows())
+                print(f"  {fault_name}: {blame}")
+
+        return df
+
+    @staticmethod
+    def _confirm_from_record(rows: list, actual_cuts):
+        """Fill in `cut_confirmed` from the record of cuts really made.
+
+        `actual_cuts` is either {fault_name: [cutter, ...]} or the path to a
+        two-column cuts_applied.csv written by the cutting loop. Nothing is
+        re-tested here: a cut either happened or it did not.
+        """
+        if not isinstance(actual_cuts, dict):
+            frame = pd.read_csv(actual_cuts)
+            actual_cuts = {name: list(group["cutter"])
+                           for name, group in frame.groupby("fault_name")}
+        for row in rows:
+            if row["cutter"] in ("unattributed", "base depth surface"):
+                row["cut_confirmed"] = pd.NA
+            else:
+                row["cut_confirmed"] = row["cutter"] in actual_cuts.get(row["fault_name"], [])
+
+    def _verify_attributions(self, rows: list, uncut_mesh_dir: str, suffix: str,
+                             cut_threshold: float, min_cut_distance: float,
+                             bottom_depth: float):
+        """Put each attributed (fault, cutter) pair back through the model's own
+        cut decision, adding a `cut_confirmed` entry to every row in place."""
+        meshes = {}
+
+        def mesh_for(name):
+            if name not in meshes:
+                path = os.path.join(uncut_mesh_dir, f"{name}{suffix}")
+                meshes[name] = FaultMesh.from_file(path) if os.path.exists(path) else None
+            return meshes[name]
+
+        decisions = {}
+        for row in rows:
+            fault_name, cutter = row["fault_name"], row["cutter"]
+            if cutter in ("unattributed", "base depth surface"):
+                row["cut_confirmed"] = pd.NA
+                continue
+            if (fault_name, cutter) not in decisions:
+                decision = self.should_cut(fault_name, cutter)
+                if decision is None:
+                    target_mesh, cutting_mesh = mesh_for(fault_name), mesh_for(cutter)
+                    if target_mesh is None or cutting_mesh is None:
+                        decision = pd.NA
+                    else:
+                        try:
+                            # higher_meshes is left out on purpose: it can only
+                            # veto a cut, so omitting it keeps a False answer
+                            # meaning "the real run cannot have cut this either".
+                            decision = bool(target_mesh.decide_whether_to_cut(
+                                cutting_mesh, threshold=cut_threshold,
+                                min_distance=min_cut_distance, higher_meshes=None,
+                                bottom_depth=bottom_depth, fancy_cutting=True))
+                        except Exception as e:
+                            print(f"  Could not test cut of {fault_name} by {cutter}: {e}")
+                            decision = pd.NA
+                decisions[(fault_name, cutter)] = decision
+            row["cut_confirmed"] = decisions[(fault_name, cutter)]
 
     # --- Additional and excluded cuts ---
 

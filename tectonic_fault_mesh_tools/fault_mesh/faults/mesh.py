@@ -1,6 +1,3 @@
-import math
-import tempfile
-
 import meshio
 import numpy as np
 import os
@@ -221,6 +218,65 @@ def rectangles_intersect(rect1, rect2):
     return not (xmax1 < xmin2 or xmax2 < xmin1 or ymax1 < ymin2 or ymax2 < ymin1)
 
 
+def reclaim_distant_islands(kept: pv.PolyData, discarded: pv.PolyData,
+                            cutting_surface: pv.PolyData, reclaim_distance: float = 5.e3):
+    """
+    Hand back pieces of a clipped surface that the cutting surface could not
+    legitimately have cut off.
+
+    clip_surface cuts at the zero level of the *signed* implicit distance to
+    the cutting surface. That sign is only meaningful near the surface itself;
+    far away it degenerates into "which side of the surface's plane, extended
+    to infinity". A small, near-planar cutting fragment therefore carries the
+    clip tens of km beyond the real intersection, and a fault running
+    sub-parallel to its cutter can wander back across that extrapolated plane
+    and have an island carved out of its middle (the Kelly fault lost a
+    10 x 3 km patch 22 km from where it actually meets the Hope fault).
+
+    A genuinely cut-off piece is adjacent to the intersection, so it touches
+    the cutting surface. Any discarded piece that never comes within
+    reclaim_distance of the cutting surface is an extrapolation artefact and
+    is merged back into the kept half.
+
+    Args:
+        kept (pv.PolyData): The half of the clip that is being retained.
+        discarded (pv.PolyData): The other half of the same clip.
+        cutting_surface (pv.PolyData): The surface passed to clip_surface --
+            the cutting fragment, where one was used.
+        reclaim_distance (float): Minimum distance (m) a discarded piece must
+            keep from the cutting surface to be treated as an artefact. Pass
+            None to disable reclaiming entirely.
+
+    Returns:
+        pv.PolyData: The kept half, plus any reclaimed islands.
+    """
+    if reclaim_distance is None or discarded.n_cells == 0:
+        return kept
+
+    tree = KDTree(cutting_surface.points)
+    bodies = discarded.connectivity("all")
+    region_ids = np.asarray(bodies.cell_data["RegionId"])
+
+    reclaimed = []
+    for region in np.unique(region_ids):
+        piece = bodies.extract_cells(np.where(region_ids == region)[0]).extract_surface(
+            algorithm="dataset_surface")
+        if piece.n_cells == 0:
+            continue
+        if tree.query(piece.points)[0].min() > reclaim_distance:
+            reclaimed.append(piece)
+
+    if not reclaimed:
+        return kept
+
+    print(f"  Reclaiming {len(reclaimed)} island(s), {sum(p.n_cells for p in reclaimed)} cells, "
+          f"discarded more than {reclaim_distance / 1.e3:.1f} km from the cutting surface.")
+    out = kept
+    for piece in reclaimed:
+        out = out.merge(piece)
+    return out.clean().extract_surface(algorithm="dataset_surface")
+
+
 class FaultMesh:
     """
     A class representing a fault mesh.
@@ -263,8 +319,13 @@ class FaultMesh:
         self._tree = None
         self.xmin = None
         self.xmax = None
-        self.ymin = None    
+        self.ymin = None
         self.ymax = None
+        # Names of the surfaces this mesh has actually been cut against, in the
+        # order the cuts were made. Only cuts that changed the mesh are recorded,
+        # so this is narrower than "everything ranked above it in the hierarchy"
+        # and narrower again than "everything it was tested against".
+        self.cut_against = []
 
 
     def __repr__(self):
@@ -989,12 +1050,16 @@ class FaultMesh:
         else: 
             return False
                 
-    def cut_mesh(self, other_mesh, fault_trace: np.ndarray, surface_tolerance = 1.0, cutting_fragment: meshio.Mesh = None, surface_max_dist_tolerance: float = 1.e3, fancy_cutting: bool = False):
+    def cut_mesh(self, other_mesh, fault_trace: np.ndarray, surface_tolerance = 1.0, cutting_fragment: meshio.Mesh = None, surface_max_dist_tolerance: float = 1.e3, fancy_cutting: bool = False, reclaim_distance: float = 5.e3):
         """
         Cuts this mesh using another mesh.
 
         Args:
             other_mesh (FaultMesh): Another FaultMesh instance to cut this mesh with.
+            reclaim_distance (float): Discarded pieces that stay further than this
+                (m) from the cutting surface are extrapolation artefacts rather
+                than genuine cuts, and are merged back in -- see
+                reclaim_distant_islands. Pass None to keep the raw clip.
 
         Returns:
             FaultMesh: A new FaultMesh instance representing the cut mesh.
@@ -1023,7 +1088,7 @@ class FaultMesh:
         if clipped1_surface_points.shape[0] == 0:
             print(f"Clipped1 resulted in no surface points for {self.name} after cutting with {other_mesh.name}. Returning clipped2.")
             clipped = clipped2
-        if clipped2_surface_points.shape[0] == 0:
+        elif clipped2_surface_points.shape[0] == 0:
             print(f"Clipped2 resulted in no surface points for {self.name} after cutting with {other_mesh.name}. Returning clipped1.")
             clipped = clipped1
 
@@ -1039,6 +1104,13 @@ class FaultMesh:
                 clipped = clipped1
             else:
                 clipped = clipped2
+
+        # Give back anything the clip removed that pv_other was never close enough
+        # to have cut -- see reclaim_distant_islands for why an open cutting
+        # fragment carves spurious islands far from the real intersection.
+        discarded = clipped2 if clipped is clipped1 else clipped1
+        clipped = reclaim_distant_islands(clipped, discarded, pv_other,
+                                          reclaim_distance=reclaim_distance)
 
         if clipped.n_points < 3 or clipped.n_cells < 1:
             print(f"Cutting resulted in too few points or cells for {self.name} after cutting with {other_mesh.name}. Returning original mesh.")
@@ -1060,81 +1132,74 @@ class FaultMesh:
         new_fault_mesh.xmax = np.max(new_fault_mesh.vertices[:, 0])
         new_fault_mesh.ymin = np.min(new_fault_mesh.vertices[:, 1])
         new_fault_mesh.ymax = np.max(new_fault_mesh.vertices[:, 1])
+        # Only reached when the cut actually changed the mesh; the early returns
+        # above hand back self untouched and so record nothing.
+        new_fault_mesh.cut_against = list(self.cut_against) + [other_mesh.name]
 
         return new_fault_mesh
 
     def remesh(self, target_size: float = 1000.,
-               feature_angle_deg: float = 45.,
-               corner_angle_deg: float = 40.,
+               hausd: float = None,
+               ridge_angle_deg: float = 45.,
+               gradation: float = 1.3,
                output_path: str = None,
                verbose: bool = False):
         """
-        Remesh this fault surface with gmsh into near-equilateral triangles.
+        Remesh this fault surface into uniform, near-equilateral triangles
+        using MMG's surface remesher (mmgs).
 
-        Imports the current mesh into gmsh as a triangle soup, recovers patch
-        topology with `classifySurfaces`, builds a parametrisation, then meshes
-        with the Frontal-Delaunay algorithm at a uniform target edge length.
+        MMG remeshes the surface *in place* with local operations (edge
+        split/collapse/swap and node relocation, projecting new nodes back
+        onto the original surface). Unlike a parametrise-and-regenerate
+        approach (e.g. gmsh classifySurfaces + createGeometry), there is no
+        global parametrisation that can fold over a long, warped fault sheet,
+        so no part of the surface is dropped — the fault outline and extent
+        are preserved while only the triangulation is optimised.
 
         Args:
-            target_size (float): Target edge length (same units as the mesh
-                coordinates; metres for NZTM).
-            feature_angle_deg (float): Dihedral threshold (deg) for splitting
-                the surface into patches at sharp folds. Lower → more patches.
-            corner_angle_deg (float): Boundary-curve corner threshold (deg).
-                Lower preserves polygonal corners at the patch boundary instead
-                of smoothing them into arcs.
+            target_size (float): Target (uniform) edge length, in the mesh
+                coordinate units (metres for NZTM). Sets MMG's ``hsiz``.
+            hausd (float): Maximum allowed distance between the remeshed
+                surface and the original (MMG ``hausd``), same units. Smaller
+                values follow curvature more tightly at the cost of slightly
+                non-uniform sizing near bends. Defaults to ``target_size / 2``.
+            ridge_angle_deg (float): Dihedral angle (deg) above which an edge
+                is treated as a sharp ridge and preserved (MMG ``ar``). Keeps
+                fault kinks/corners instead of smoothing them away.
+            gradation (float): Maximum ratio between adjacent edge lengths
+                (MMG ``hgrad``); controls how quickly element size may vary.
             output_path (str): Optional path to also save the remeshed surface
-                (format inferred from extension by gmsh.write).
-            verbose (bool): If True, let gmsh print to the terminal.
+                (format inferred from extension by meshio).
+            verbose (bool): If True, let MMG print progress to the terminal.
 
         Returns:
             FaultMesh: A new FaultMesh with the remeshed surface.
         """
-        import gmsh
+        import mmgpy
 
         assert self.mesh is not None, "Mesh is not defined."
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            in_path = os.path.join(tmpdir, "in.msh")
-            out_path = output_path if output_path is not None else os.path.join(tmpdir, "out.msh")
+        if hausd is None:
+            hausd = target_size / 2.
 
-            # .msh preserves float64 precision, unlike STL's float32 — important
-            # for vertex coincidence when gmsh recovers topology in NZTM coords.
-            meshio.write(in_path, self.mesh, file_format="gmsh")
+        vertices = np.ascontiguousarray(self.mesh.points, dtype=np.float64)
+        triangles = np.ascontiguousarray(self.mesh.cells_dict["triangle"],
+                                         dtype=np.int32)
 
-            gmsh.initialize()
-            try:
-                gmsh.option.setNumber("General.Terminal", 1 if verbose else 0)
-                gmsh.merge(in_path)
+        mmg_mesh = mmgpy.MmgMeshS()
+        mmg_mesh.set_mesh_size(vertices=len(vertices), triangles=len(triangles))
+        mmg_mesh.set_vertices(vertices)
+        mmg_mesh.set_triangles(triangles)
+        mmg_mesh.remesh(hsiz=target_size, hausd=hausd, hgrad=gradation,
+                        ar=ridge_angle_deg, verbose=10 if verbose else -1)
 
-                gmsh.model.mesh.classifySurfaces(
-                    math.radians(feature_angle_deg), True, True,
-                    math.radians(corner_angle_deg)
-                )
-                gmsh.model.mesh.createGeometry()
+        new_mesh = meshio.Mesh(
+            points=np.ascontiguousarray(mmg_mesh.get_vertices(), dtype=np.float64),
+            cells=[("triangle",
+                    np.ascontiguousarray(mmg_mesh.get_triangles(), dtype=np.int64))])
 
-                gmsh.option.setNumber("Mesh.MeshSizeMin", target_size)
-                gmsh.option.setNumber("Mesh.MeshSizeMax", target_size)
-                gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
-                gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
-                gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
-                gmsh.option.setNumber("Mesh.Algorithm", 6)
-                gmsh.option.setNumber("Mesh.Optimize", 1)
-                gmsh.option.setNumber("Mesh.OptimizeNetgen", 1)
-
-                gmsh.model.mesh.generate(2)
-                gmsh.model.mesh.optimize("Laplace2D")
-
-                gmsh.write(out_path)
-            finally:
-                gmsh.finalize()
-
-            new_mesh = meshio.read(out_path)
-
-        # Strip any non-triangle cells gmsh may have emitted (boundary lines).
-        tri_cells = [cb for cb in new_mesh.cells if cb.type == "triangle"]
-        new_mesh = meshio.Mesh(points=new_mesh.points,
-                                cells=[("triangle", tri_cells[0].data)])
+        if output_path is not None:
+            meshio.write(output_path, new_mesh)
 
         new_fault_mesh = FaultMesh()
         new_fault_mesh.mesh = new_mesh
@@ -1152,11 +1217,14 @@ class FaultMesh:
         new_fault_mesh.xmax = np.max(new_fault_mesh.vertices[:, 0])
         new_fault_mesh.ymin = np.min(new_fault_mesh.vertices[:, 1])
         new_fault_mesh.ymax = np.max(new_fault_mesh.vertices[:, 1])
+        # Remeshing changes the triangles, not the history of what cut them.
+        new_fault_mesh.cut_against = list(self.cut_against)
 
         return new_fault_mesh
 
     def cut_mesh_pv(self, pv_surface: pv.PolyData, fault_trace: np.ndarray,
-                    surface_tolerance: float = 1.0, max_distance: float = 3.e3):
+                    surface_tolerance: float = 1.0, max_distance: float = 3.e3,
+                    label: str = "depth surface"):
         """
         Cut this mesh with a PyVista PolyData surface, keeping the half closest
         to the fault trace.
@@ -1174,6 +1242,9 @@ class FaultMesh:
                 Defaults to 1.0.
             max_distance (float): KDTree radius passed to check_intersection_pv.
                 Defaults to 3e3.
+            label (str): Name recorded in the returned mesh's `cut_against` when
+                the cut is made. The surface is not a fault, so it goes into that
+                list under a plain-language label rather than a fault name.
 
         Returns:
             FaultMesh: The cut mesh (or self if no intersection was found or the
@@ -1228,6 +1299,7 @@ class FaultMesh:
         new_fault_mesh.xmax = np.max(new_fault_mesh.vertices[:, 0])
         new_fault_mesh.ymin = np.min(new_fault_mesh.vertices[:, 1])
         new_fault_mesh.ymax = np.max(new_fault_mesh.vertices[:, 1])
+        new_fault_mesh.cut_against = list(self.cut_against) + [label]
 
         return new_fault_mesh
 
