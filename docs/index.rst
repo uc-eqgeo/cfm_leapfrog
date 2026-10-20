@@ -6,7 +6,8 @@
 Welcome to cfm-leapfrog's documentation!
 ========================================
 This module is designed to help create 3D models of complex fault systems, and works by projecting surface traces to depth.
-Leapfrog software should be used for mesh cutting operations. For source code, please visit https://github.com/uc-eqgeo/cfm_leapfrog/.
+Fault surfaces can then be meshed and cut against each other either in Leapfrog Geo or entirely in Python, with no Leapfrog licence needed.
+For source code, please visit https://github.com/uc-eqgeo/cfm_leapfrog/.
 
 .. image:: help/images/fault_model.png
    :width: 400
@@ -26,6 +27,14 @@ Leapfrog software should be used for mesh cutting operations. For source code, p
    :caption: Python Examples:
 
    tutorials/define_connected.ipynb
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Meshing in Python (without Leapfrog):
+
+   tutorials/central_nz_no_leapfrog.ipynb
+   help/no_leapfrog_workflow.md
+   help/mesh_cutting_logic.md
 
 .. toctree::
    :maxdepth: 2
