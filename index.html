@@ -56,6 +56,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials/define_connected.html#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/define_connected.html#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Python (without Leapfrog):</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/central_nz_no_leapfrog.html">Meshing fault surfaces in Python (without Leapfrog Geo)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help/no_leapfrog_workflow.html">Whole-model workflow without Leapfrog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help/mesh_cutting_logic.html">Mesh cutting logic</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="help/camilla.html">Leapfrog 3D mesh generation and fault cutting</a></li>
@@ -98,7 +104,8 @@
   <section id="welcome-to-cfm-leapfrog-s-documentation">
 <h1>Welcome to cfm-leapfrog’s documentation!<a class="headerlink" href="#welcome-to-cfm-leapfrog-s-documentation" title="Link to this heading"></a></h1>
 <p>This module is designed to help create 3D models of complex fault systems, and works by projecting surface traces to depth.
-Leapfrog software should be used for mesh cutting operations. For source code, please visit <a class="reference external" href="https://github.com/uc-eqgeo/cfm_leapfrog/">https://github.com/uc-eqgeo/cfm_leapfrog/</a>.</p>
+Fault surfaces can then be meshed and cut against each other either in Leapfrog Geo or entirely in Python, with no Leapfrog licence needed.
+For source code, please visit <a class="reference external" href="https://github.com/uc-eqgeo/cfm_leapfrog/">https://github.com/uc-eqgeo/cfm_leapfrog/</a>.</p>
 <a class="reference internal image-reference" href="_images/fault_model.png"><img alt="3D fault model of central Aotearoa New Zealand" src="_images/fault_model.png" width="400" />
 </a>
 <div class="toctree-wrapper compound">
@@ -140,6 +147,33 @@ Leapfrog software should be used for mesh cutting operations. For source code, p
 <li class="toctree-l1"><a class="reference internal" href="tutorials/define_connected.html#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/define_connected.html#create-directories-to-hold-shapefiles">Create directories to hold shapefiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/define_connected.html#write-out-shapefiles">Write out shapefiles</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Meshing in Python (without Leapfrog):</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/central_nz_no_leapfrog.html">Meshing fault surfaces in Python (without Leapfrog Geo)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/central_nz_no_leapfrog.html#imports-and-parameters">Imports and parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/central_nz_no_leapfrog.html#re-building-the-curated-fault-network">Re-building the curated fault network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/central_nz_no_leapfrog.html#trace-extensions">Trace extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/central_nz_no_leapfrog.html#generating-uncut-meshes-for-every-fault-surface">Generating uncut meshes for every fault surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/central_nz_no_leapfrog.html#optional-merge-the-uncut-meshes-for-paraview">(Optional) Merge the uncut meshes for ParaView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/central_nz_no_leapfrog.html#cutting-the-meshes-against-each-other-and-trimming-by-a-depth-surface">Cutting the meshes against each other and trimming by a depth surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/central_nz_no_leapfrog.html#optional-merge-the-cut-meshes-for-paraview">(Optional) Merge the cut meshes for ParaView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/central_nz_no_leapfrog.html#next-steps">Next steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="help/no_leapfrog_workflow.html">Whole-model workflow without Leapfrog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="help/no_leapfrog_workflow.html#the-pipeline-whole-nz-pipeline-py">The pipeline: <code class="docutils literal notranslate"><span class="pre">whole_nz_pipeline.py</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="help/no_leapfrog_workflow.html#manual-review-with-pyvista">Manual review with PyVista</a></li>
+<li class="toctree-l2"><a class="reference internal" href="help/no_leapfrog_workflow.html#putting-it-together">Putting it together</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="help/mesh_cutting_logic.html">Mesh cutting logic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="help/mesh_cutting_logic.html#deciding-whether-to-cut">Deciding whether to cut</a></li>
+<li class="toctree-l2"><a class="reference internal" href="help/mesh_cutting_logic.html#choosing-which-side-to-keep-after-cutting">Choosing which side to keep after cutting</a></li>
 </ul>
 </li>
 </ul>

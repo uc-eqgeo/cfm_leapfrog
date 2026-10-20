@@ -1,0 +1,427 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meshing fault surfaces in Python (without Leapfrog Geo) &mdash; cfm-leapfrog 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Whole-model workflow without Leapfrog" href="../help/no_leapfrog_workflow.html" />
+    <link rel="prev" title="Defining connected fault systems" href="define_connected.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            cfm-leapfrog
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction and Setup:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../help/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/preparation.html">Preparing inputs for use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/install.html">Installation instructions and updates to code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/running_examples.html">Running tutorial examples using Jupyter</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="define_connected.html">Defining connected fault systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="define_connected.html#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="define_connected.html#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Python (without Leapfrog):</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Meshing fault surfaces in Python (without Leapfrog Geo)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#imports-and-parameters">Imports and parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#re-building-the-curated-fault-network">Re-building the curated fault network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#trace-extensions">Trace extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#generating-uncut-meshes-for-every-fault-surface">Generating uncut meshes for every fault surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-merge-the-uncut-meshes-for-paraview">(Optional) Merge the uncut meshes for ParaView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cutting-the-meshes-against-each-other-and-trimming-by-a-depth-surface">Cutting the meshes against each other and trimming by a depth surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-merge-the-cut-meshes-for-paraview">(Optional) Merge the cut meshes for ParaView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#next-steps">Next steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../help/no_leapfrog_workflow.html">Whole-model workflow without Leapfrog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/mesh_cutting_logic.html">Mesh cutting logic</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../help/camilla.html">Leapfrog 3D mesh generation and fault cutting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Examples (Japanese):</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="define_connected_japanese.html">接続された断層システムの定義</a></li>
+<li class="toctree-l1"><a class="reference internal" href="define_connected_japanese.html#id6">切断階層の定義</a></li>
+<li class="toctree-l1"><a class="reference internal" href="define_connected_japanese.html#id9">メッシュ作成のためのシェープファイルの作成</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cfm-leapfrog</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Meshing fault surfaces in Python (without Leapfrog Geo)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/central_nz_no_leapfrog.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="meshing-fault-surfaces-in-python-without-leapfrog-geo">
+<h1>Meshing fault surfaces in Python (without Leapfrog Geo)<a class="headerlink" href="#meshing-fault-surfaces-in-python-without-leapfrog-geo" title="Link to this heading"></a></h1>
+<p>This notebook demonstrates how to build cut, depth-trimmed triangular fault meshes entirely in Python, without using Leapfrog Geo for the meshing/cutting step. It picks up where the <a class="reference external" href="https://uc-eqgeo.github.io/cfm_leapfrog/tutorials/define_connected_no_smoothing.html">“defining connected fault systems (without smoothing)”</a> tutorial leaves off and re-uses the same shapefile, fault systems CSV, and cutting hierarchy CSV.</p>
+<p>The workflow is:</p>
+<ol class="arabic simple">
+<li><p>Re-build the curated fault network from the shapefile, fault systems CSV, and cutting hierarchy CSV.</p></li>
+<li><p>(Optional) Suggest, edit, and apply trace extensions so that fault traces extend far enough to be properly cut by neighbouring faults.</p></li>
+<li><p>Generate depth contours and a triangulated surface for every curated fault, and save them as VTK/OBJ/GeoJSON.</p></li>
+<li><p>(Optional) Merge the uncut meshes into a single VTK file for inspection in ParaView.</p></li>
+<li><p>Cut each fault mesh by all higher-priority faults in the cutting hierarchy and trim the result against a depth-of-faulting surface.</p></li>
+<li><p>(Optional) Merge the cut meshes into a single VTK file for inspection in ParaView.</p></li>
+</ol>
+<p><strong>Note:</strong> Step 5 needs a depth-of-faulting raster (here <code class="docutils literal notranslate"><span class="pre">with_hannu_mods.tif</span></code>). Drop your own raster into the working directory and update the filename if you are following along with a different dataset.</p>
+<section id="imports-and-parameters">
+<h2>Imports and parameters<a class="headerlink" href="#imports-and-parameters" title="Link to this heading"></a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fault_mesh.faults.leapfrog</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeapfrogMultiFault</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fault_mesh.faults.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">FaultMesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fault_mesh.io.array_operations</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_raster</span>
+
+<span class="c1"># Output coordinate system EPSG code (set to None to disable reprojection)</span>
+<span class="n">epsg</span> <span class="o">=</span> <span class="mi">2193</span>
+
+<span class="c1"># Distance tolerance (m) used when finding connections between segment ends</span>
+<span class="n">dist_tolerance</span> <span class="o">=</span> <span class="mf">1000.</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="re-building-the-curated-fault-network">
+<h2>Re-building the curated fault network<a class="headerlink" href="#re-building-the-curated-fault-network" title="Link to this heading"></a></h2>
+<p>We read the same shapefile that was used in the connections tutorial, find segment-to-segment connections, and apply the manually-edited fault systems CSV and cutting hierarchy CSV.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_fname</span> <span class="o">=</span> <span class="s2">"tutorial_gis/central_nz_minimal_data.shp"</span>
+
+<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span>
+    <span class="n">fault_fname</span><span class="p">,</span>
+    <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span>
+    <span class="n">smoothing_n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">dip_multiplier</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">exclude_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">fault_data</span><span class="o">.</span><span class="n">segment_distance_tolerance</span> <span class="o">=</span> <span class="n">dist_tolerance</span>
+<span class="n">fault_data</span><span class="o">.</span><span class="n">find_connections</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Apply edited fault-system definitions and the cutting hierarchy</span>
+<span class="n">fault_data</span><span class="o">.</span><span class="n">read_fault_systems</span><span class="p">(</span><span class="s2">"./define_connections_data/central_gt1_5_connected_edited.csv"</span><span class="p">)</span>
+<span class="n">fault_data</span><span class="o">.</span><span class="n">generate_curated_faults</span><span class="p">()</span>
+<span class="n">fault_data</span><span class="o">.</span><span class="n">read_cutting_hierarchy</span><span class="p">(</span><span class="s2">"./define_connections_data/central_gt1_5_hierarchy_edited.csv"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="trace-extensions">
+<h2>Trace extensions<a class="headerlink" href="#trace-extensions" title="Link to this heading"></a></h2>
+<p>Some faults need their surface traces extended at one or both ends so that, when projected to depth, they reach far enough laterally to be cut cleanly by neighbouring faults. This is especially relevant for short faults that terminate against a longer, faster-slipping fault.</p>
+<p>Calling <code class="docutils literal notranslate"><span class="pre">suggest_trace_extensions</span></code> writes a CSV listing every end of every fault that the algorithm thinks might benefit from extending, together with default <code class="docutils literal notranslate"><span class="pre">extend_distance</span></code> and <code class="docutils literal notranslate"><span class="pre">fit_distance</span></code> values. Passing <code class="docutils literal notranslate"><span class="pre">geojson_out_file</span></code> additionally writes a GeoJSON containing the suggested <em>extended</em> trace geometries — drop it into QGIS to sanity-check the suggestions before committing to them. Edit the CSV by hand to keep only the rows you want, adjust the distances, and save it under a new name (here <code class="docutils literal notranslate"><span class="pre">trace_extensions_edited.csv</span></code>).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_trace_extensions</span><span class="p">(</span>
+    <span class="n">out_file</span><span class="o">=</span><span class="s2">"suggested_trace_extensions.csv"</span><span class="p">,</span>
+    <span class="n">geojson_out_file</span><span class="o">=</span><span class="s2">"suggested_trace_extensions.geojson"</span><span class="p">,</span>
+    <span class="n">fit_distance</span><span class="o">=</span><span class="mf">5.e3</span><span class="p">,</span>
+    <span class="n">extend_distance</span><span class="o">=</span><span class="mf">40.e3</span><span class="p">,</span>
+    <span class="n">proximity_threshold</span><span class="o">=</span><span class="mf">1.e3</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Once you are happy with the edited CSV, read it in and apply the extensions to the curated fault traces.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_trace_extensions</span><span class="p">(</span><span class="s2">"trace_extensions_edited.csv"</span><span class="p">)</span>
+<span class="n">fault_data</span><span class="o">.</span><span class="n">apply_trace_extensions</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="generating-uncut-meshes-for-every-fault-surface">
+<h2>Generating uncut meshes for every fault surface<a class="headerlink" href="#generating-uncut-meshes-for-every-fault-surface" title="Link to this heading"></a></h2>
+<p>Next we loop over every curated fault, build its depth contours (here from the surface to 32 km depth in 500 m steps), and triangulate them into a surface mesh. Each mesh is written out as both VTK (for ParaView) and OBJ (which we re-load in the cutting step), and the contours are written as GeoJSON for inspection in GIS software.</p>
+<p>If a particular fault fails the standard meshing routine (for example because of awkward geometry), we fall back to <code class="docutils literal notranslate"><span class="pre">mesh_simple_contours</span></code>, which is more forgiving but produces a less faithful surface, and write the failing contours out for debugging.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">dir_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"test_vtks"</span><span class="p">,</span> <span class="s2">"test_contours"</span><span class="p">,</span> <span class="s2">"test_objs"</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dir_name</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dir_name</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Loop over every curated (multi-segment) fault and build its mesh</span>
+<span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">curated_faults</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Project the surface trace down-dip and slice into horizontal contours from</span>
+        <span class="c1"># 0 m to 32 km depth at 500 m intervals; smoothing=False because the input</span>
+        <span class="c1"># traces already have closely-spaced vertices</span>
+        <span class="n">fault</span><span class="o">.</span><span class="n">generate_depth_contours</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">32000.</span><span class="p">,</span> <span class="mf">500.</span><span class="p">),</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># Triangulate the contours into a single fault surface; resolution sets the</span>
+        <span class="c1"># target along-strike triangle edge length (m)</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">fault</span><span class="o">.</span><span class="n">mesh_fault_surface</span><span class="p">(</span><span class="n">check_mesh</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mf">500.</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># If the standard mesher fails (usually due to awkward contour geometry),</span>
+        <span class="c1"># fall back to the simpler contour-stitching mesher and dump the failing</span>
+        <span class="c1"># contours to a GeoJSON so we can inspect them in GIS</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to mesh </span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">fault</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"failed_contours_</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.geojson"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"GeoJSON"</span><span class="p">)</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">fault</span><span class="o">.</span><span class="n">mesh_simple_contours</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">32000.</span><span class="p">,</span> <span class="mf">500.</span><span class="p">))</span>
+
+    <span class="c1"># Build per-fault output paths</span>
+    <span class="n">vtk_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"test_vtks"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_depth_contours.vtk"</span><span class="p">)</span>          <span class="c1"># for ParaView</span>
+    <span class="n">obj_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"test_objs"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_depth_contours.obj"</span><span class="p">)</span>          <span class="c1"># re-loaded in the cutting step</span>
+    <span class="n">geojson_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"test_contours"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_depth_contours.geojson"</span><span class="p">)</span>  <span class="c1"># for GIS inspection</span>
+
+    <span class="c1"># Write contours and mesh to disk</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">geojson_file</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"GeoJSON"</span><span class="p">)</span>
+    <span class="n">mesh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">vtk_file</span><span class="p">)</span>
+    <span class="n">mesh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">obj_file</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="optional-merge-the-uncut-meshes-for-paraview">
+<h2>(Optional) Merge the uncut meshes for ParaView<a class="headerlink" href="#optional-merge-the-uncut-meshes-for-paraview" title="Link to this heading"></a></h2>
+<p>If you want to look at every uncut fault in a single ParaView scene, the easiest thing to do is merge them into one VTK file.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">meshio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyvista</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">glob</span><span class="w"> </span><span class="kn">import</span> <span class="n">glob</span>
+
+<span class="n">uncut_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">pv</span><span class="o">.</span><span class="n">from_meshio</span><span class="p">(</span><span class="n">meshio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="s2">"test_vtks/*.vtk"</span><span class="p">)]</span>
+<span class="k">if</span> <span class="n">uncut_meshes</span><span class="p">:</span>
+    <span class="n">pv</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">uncut_meshes</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"merged_mesh_uncut.vtk"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="cutting-the-meshes-against-each-other-and-trimming-by-a-depth-surface">
+<h2>Cutting the meshes against each other and trimming by a depth surface<a class="headerlink" href="#cutting-the-meshes-against-each-other-and-trimming-by-a-depth-surface" title="Link to this heading"></a></h2>
+<p>Now that every fault has an uncut mesh, we can cut each one against all higher-priority faults in the cutting hierarchy. The cutting step also trims the result against a depth-of-faulting surface so that the meshes don’t extend below the seismogenic zone.</p>
+<p><strong>Inputs:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">with_hannu_mods.tif</span></code>: a raster of depth of faulting (Z values are negative-down, in metres). Replace this with your own raster as needed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">additional_cuts.csv</span></code>: optional header-less CSV of <code class="docutils literal notranslate"><span class="pre">fault_to_cut,cutting_fault</span></code> pairs that should always be cut. Use it when the slip-rate-based hierarchy puts two faults in the wrong order, or (more often) for edge cases the cutting logic doesn’t cover. A cutting fault listed here is tried even if it ranks below the fault it cuts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">excluded_cuts.csv</span></code>: optional CSV in the same format, listing pairs that must never be cut. Use it when the cutting logic makes a cut that shouldn’t happen, typically one that leaves a jagged outline. This tutorial doesn’t need one; the code below reads it only if the file exists.</p></li>
+</ul>
+<p><strong>Tuning knobs:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">min_distance</span></code> (m): minimum trace-to-trace separation below which we skip a cut. This avoids spurious cuts driven by KDTree artefacts or tiny faults that happen to sit right next to a much larger one.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bottom_depth</span></code> (m, negative-down): lower depth bound used when generating the cutting fragment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fancy_cutting=True</span></code>: enables the more careful cutting routine that takes the already-cut state of faults higher in the hierarchy into account.</p></li>
+</ul>
+<p>The <a class="reference internal" href="../help/mesh_cutting_logic.html"><span class="std std-doc">Mesh cutting logic</span></a> page explains how the code decides whether to cut and which side of a cut to keep.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Read depth-of-faulting raster as a PyVista surface</span>
+<span class="n">depth_pyvista</span> <span class="o">=</span> <span class="n">read_raster</span><span class="p">(</span><span class="s2">"with_hannu_mods.tif"</span><span class="p">,</span> <span class="n">use_z</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">out_crs</span><span class="o">=</span><span class="sa">f</span><span class="s2">"EPSG:</span><span class="si">{</span><span class="n">epsg</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="c1"># Optional manual cut overrides (fault_to_cut,cutting_fault pairs)</span>
+<span class="n">fault_data</span><span class="o">.</span><span class="n">read_additional_cuts</span><span class="p">(</span><span class="s2">"additional_cuts.csv"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">"excluded_cuts.csv"</span><span class="p">):</span>
+    <span class="n">fault_data</span><span class="o">.</span><span class="n">read_excluded_cuts</span><span class="p">(</span><span class="s2">"excluded_cuts.csv"</span><span class="p">)</span>
+
+<span class="c1"># Re-attach the uncut meshes we just wrote to disk</span>
+<span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">curated_faults</span><span class="p">:</span>
+    <span class="n">obj_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"test_objs"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_depth_contours.obj"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">obj_file</span><span class="p">):</span>
+        <span class="n">fault</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">FaultMesh</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">obj_file</span><span class="p">)</span>
+
+<span class="n">cutting_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">fault</span> <span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">curated_faults</span> <span class="k">if</span> <span class="n">fault</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+
+<span class="n">output_dir</span> <span class="o">=</span> <span class="s2">"test_final_meshes"</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Threshold is currently unused, kept for forward-compatibility</span>
+<span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.7</span>
+<span class="c1"># Skip cuts where the two faults are closer than this (m)</span>
+<span class="n">min_distance</span> <span class="o">=</span> <span class="mf">2.e3</span>
+
+<span class="k">for</span> <span class="n">fault_name</span> <span class="ow">in</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">cutting_hierarchy</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Processing </span><span class="si">{</span><span class="n">fault_name</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
+    <span class="n">fault</span> <span class="o">=</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">name_dict</span><span class="p">[</span><span class="n">fault_name</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">fault</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">continue</span>
+    <span class="c1"># Faults higher than this one in the hierarchy are candidate cutters</span>
+    <span class="n">faults_to_cut</span> <span class="o">=</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">cutting_hierarchy</span><span class="p">[:</span><span class="n">fault_data</span><span class="o">.</span><span class="n">cutting_hierarchy</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">fault_name</span><span class="p">)]</span>
+    <span class="c1"># Cutters forced by additional_cuts are tried even if they rank lower</span>
+    <span class="n">forced_cutters</span> <span class="o">=</span> <span class="p">[</span><span class="n">cutter</span> <span class="k">for</span> <span class="p">(</span><span class="n">cut_fault</span><span class="p">,</span> <span class="n">cutter</span><span class="p">)</span> <span class="ow">in</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">additional_cuts</span>
+                      <span class="k">if</span> <span class="n">cut_fault</span> <span class="o">==</span> <span class="n">fault_name</span> <span class="ow">and</span> <span class="n">cutter</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">faults_to_cut</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">cut_name</span> <span class="ow">in</span> <span class="n">faults_to_cut</span> <span class="o">+</span> <span class="n">forced_cutters</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cut_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cutting_dict</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">cutting_mesh</span> <span class="o">=</span> <span class="n">cutting_dict</span><span class="p">[</span><span class="n">cut_name</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span>
+
+        <span class="c1"># Manual overrides first: True forces a cut, False skips it, None falls</span>
+        <span class="c1"># through to the geometric test</span>
+        <span class="n">decide_to_cut</span> <span class="o">=</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">should_cut</span><span class="p">(</span><span class="n">fault_name</span><span class="p">,</span> <span class="n">cut_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">decide_to_cut</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">higher_faults_to_cut</span> <span class="o">=</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">cutting_hierarchy</span><span class="p">[:</span><span class="n">fault_data</span><span class="o">.</span><span class="n">cutting_hierarchy</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">cut_name</span><span class="p">)]</span>
+            <span class="n">higher_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">cutting_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">higher_faults_to_cut</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">cutting_dict</span><span class="p">]</span>
+            <span class="n">decide_to_cut</span> <span class="o">=</span> <span class="n">fault</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">decide_whether_to_cut</span><span class="p">(</span>
+                <span class="n">cutting_mesh</span><span class="p">,</span>
+                <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+                <span class="n">min_distance</span><span class="o">=</span><span class="n">min_distance</span><span class="p">,</span>
+                <span class="n">higher_meshes</span><span class="o">=</span><span class="n">higher_meshes</span><span class="p">,</span>
+                <span class="n">bottom_depth</span><span class="o">=-</span><span class="mf">31500.</span><span class="p">,</span>
+                <span class="n">fancy_cutting</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">decide_to_cut</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cutting </span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> by </span><span class="si">{</span><span class="n">cut_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">cutting_fragment</span> <span class="o">=</span> <span class="n">cutting_mesh</span><span class="o">.</span><span class="n">generate_cutting_mesh</span><span class="p">(</span><span class="n">fault</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">max_distance</span><span class="o">=</span><span class="mf">5.e3</span><span class="p">)</span>
+            <span class="n">new_mesh</span> <span class="o">=</span> <span class="n">fault</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">cut_mesh</span><span class="p">(</span>
+                <span class="n">cutting_mesh</span><span class="p">,</span>
+                <span class="n">fault_trace</span><span class="o">=</span><span class="n">fault</span><span class="o">.</span><span class="n">original_nztm_trace_array</span><span class="p">,</span>
+                <span class="n">cutting_fragment</span><span class="o">=</span><span class="n">cutting_fragment</span><span class="p">,</span>
+                <span class="n">fancy_cutting</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">fault_data</span><span class="o">.</span><span class="n">name_dict</span><span class="p">[</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">new_mesh</span>
+            <span class="n">cutting_dict</span><span class="p">[</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">new_mesh</span>
+
+    <span class="c1"># Trim the cut mesh against the depth-of-faulting surface and save</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">depth_trimmed</span> <span class="o">=</span> <span class="n">fault_data</span><span class="o">.</span><span class="n">name_dict</span><span class="p">[</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">cut_mesh_pv</span><span class="p">(</span>
+            <span class="n">depth_pyvista</span><span class="p">,</span>
+            <span class="n">fault_trace</span><span class="o">=</span><span class="n">fault</span><span class="o">.</span><span class="n">original_nztm_trace_array</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">fault_data</span><span class="o">.</span><span class="n">name_dict</span><span class="p">[</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">depth_trimmed</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error trimming depth for </span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">continue</span>
+
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_cut.obj"</span><span class="p">)</span>
+    <span class="n">fault_data</span><span class="o">.</span><span class="n">name_dict</span><span class="p">[</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Done: </span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="optional-merge-the-cut-meshes-for-paraview">
+<h2>(Optional) Merge the cut meshes for ParaView<a class="headerlink" href="#optional-merge-the-cut-meshes-for-paraview" title="Link to this heading"></a></h2>
+<p>Same idea as above, but for the final cut and depth-trimmed meshes. The result is a single VTK file you can drag into ParaView.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cut_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">pv</span><span class="o">.</span><span class="n">from_meshio</span><span class="p">(</span><span class="n">meshio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="s2">"test_final_meshes/*.obj"</span><span class="p">)]</span>
+<span class="k">if</span> <span class="n">cut_meshes</span><span class="p">:</span>
+    <span class="n">pv</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">cut_meshes</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"merged_mesh_cut.vtk"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
+<p>For a full fault model, these steps are run as a script, and the cut meshes are then checked, reviewed in 3-D with PyVista, and remeshed. See <a class="reference internal" href="../help/no_leapfrog_workflow.html"><span class="std std-doc">Whole-model workflow without Leapfrog</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="define_connected.html" class="btn btn-neutral float-left" title="Defining connected fault systems" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../help/no_leapfrog_workflow.html" class="btn btn-neutral float-right" title="Whole-model workflow without Leapfrog" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Andy Howell and Camilla Penney.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

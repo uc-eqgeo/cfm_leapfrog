@@ -23,7 +23,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Leapfrog 3D mesh generation and fault cutting" href="../help/camilla.html" />
+    <link rel="next" title="Meshing fault surfaces in Python (without Leapfrog Geo)" href="central_nz_no_leapfrog.html" />
     <link rel="prev" title="Running tutorial examples using Jupyter" href="../help/running_examples.html" /> 
 </head>
 
@@ -72,6 +72,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#write-out-shapefiles">Write out shapefiles</a></li>
 </ul>
 </li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Python (without Leapfrog):</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="central_nz_no_leapfrog.html">Meshing fault surfaces in Python (without Leapfrog Geo)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/no_leapfrog_workflow.html">Whole-model workflow without Leapfrog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/mesh_cutting_logic.html">Mesh cutting logic</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
 <ul>
@@ -156,7 +162,7 @@
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Read in fault data from shapefile</span>
-<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/central_nz_minimal_data.shp&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">trimming_gradient</span><span class="o">=</span><span class="n">trimming_gradient</span><span class="p">,</span>
+<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_shp</span><span class="p">(</span><span class="s2">"tutorial_gis/central_nz_minimal_data.shp"</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">trimming_gradient</span><span class="o">=</span><span class="n">trimming_gradient</span><span class="p">,</span>
                                         <span class="n">dip_multiplier</span><span class="o">=</span><span class="n">dip_multiplier</span><span class="p">,</span> <span class="n">strike_multiplier</span><span class="o">=</span><span class="n">strike_multiplier</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -191,7 +197,7 @@ Found 71 connections between segment ends
 <p>It is now necessary to write out these connections for manual editing and review. The file will be written out into the same directory as this Jupyter notebook. It will have a prefix supplied by you and the suffix “_suggested.csv”.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_fault_systems</span><span class="p">(</span><span class="s2">&quot;central_gt1_5_connected&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_fault_systems</span><span class="p">(</span><span class="s2">"central_gt1_5_connected"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -207,28 +213,28 @@ Found 71 connections between segment ends
 <p>Once you have made the necessary edits, read your new CSV to overwite the automatically-generated connected fault systems:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_fault_systems</span><span class="p">(</span><span class="s2">&quot;./define_connections_data/central_gt1_5_connected_edited.csv&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_fault_systems</span><span class="p">(</span><span class="s2">"./define_connections_data/central_gt1_5_connected_edited.csv"</span><span class="p">)</span>
 <span class="n">fault_data</span><span class="o">.</span><span class="n">generate_curated_faults</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating connected fault system: Alfredton combined with segments: [&#39;Alfredton North&#39;, &#39;Alfredton South&#39;, &#39;Dreyers Rock&#39;]
-Creating connected fault system: Alpine combined with segments: [&#39;Alpine Jacksons to Kaniere&#39;, &#39;Alpine Kaniere to Springs Junction&#39;, &#39;Alpine Springs Junction to Tophouse&#39;, &#39;Wairau&#39;, &#39;Wairau 2&#39;, &#39;Wairau 3&#39;]
-Creating connected fault system: Hope combined with segments: [&#39;Hope Conway&#39;, &#39;Hope Hanmer SE&#39;, &#39;Hope Hanmer SW&#39;, &#39;Hope Hope River&#39;, &#39;Hope Hurunui&#39;, &#39;Hope Kakapo-2-Hamner&#39;, &#39;Hope Seaward&#39;, &#39;Kelly&#39;]
-Creating connected fault system: Jordan - Kek - Needles combined with segments: [&#39;Jordan&#39;, &#39;Kekerengu 1&#39;, &#39;Needles&#39;]
-Creating connected fault system: Awatere - Vernon combined with segments: [&#39;Awatere Northeast 1&#39;, &#39;Vernon 1&#39;, &#39;Vernon 2&#39;, &#39;Vernon 3&#39;, &#39;Vernon 4&#39;]
-Creating connected fault system: Cloudy combined with segments: [&#39;Cloudy 1&#39;, &#39;Cloudy 2&#39;, &#39;Cloudy 3&#39;]
-Creating connected fault system: Campbell Bank - Chancet combined with segments: [&#39;Campbell Bank&#39;, &#39;Chancet&#39;]
-Creating connected fault system: Wairarapa combined with segments: [&#39;Wairarapa 1&#39;, &#39;Wairarapa 2&#39;, &#39;Wairarapa 3&#39;, &#39;Wairarapa Needles&#39;]
-Creating connected fault system: Clarence combined with segments: [&#39;Clarence Central&#39;, &#39;Clarence Northeast&#39;, &#39;Clarence Southwest&#39;]
-Creating connected fault system: Te Rapa combined with segments: [&#39;Hope Te Rapa&#39;, &#39;Te Rapa 1&#39;, &#39;Te Rapa 2&#39;]
-Creating connected fault system: Kekerengu Bank - Pahaua combined with segments: [&#39;Kekerengu Bank&#39;, &#39;Pahaua&#39;]
-Creating connected fault system: Waewaepa combined with segments: [&#39;Makuri - Waewaepa&#39;, &#39;Waewaepa&#39;]
-Creating connected fault system: Wellington combined with segments: [&#39;Mohaka South&#39;, &#39;Wellington Pahiatua&#39;, &#39;Wellington Tararua 2&#39;, &#39;Wellington Tararua 3&#39;, &#39;Wellington Tararua 1&#39;]
-Creating connected fault system: Ohariu combined with segments: [&#39;Ohariu&#39;, &#39;Ohariu South 1&#39;, &#39;Ohariu South 2&#39;]
-Creating connected fault system: Uruti combined with segments: [&#39;Uruti Basin&#39;, &#39;Uruti Ridge 2&#39;]
-Creating connected fault system: Wellington Hutt Valley combined with segments: [&#39;Wellington Hutt Valley 1&#39;, &#39;Wellington Hutt Valley 2&#39;, &#39;Wellington Hutt Valley 3&#39;, &#39;Wellington Hutt Valley 4&#39;, &#39;Wellington Hutt Valley 5&#39;]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating connected fault system: Alfredton combined with segments: ['Alfredton North', 'Alfredton South', 'Dreyers Rock']
+Creating connected fault system: Alpine combined with segments: ['Alpine Jacksons to Kaniere', 'Alpine Kaniere to Springs Junction', 'Alpine Springs Junction to Tophouse', 'Wairau', 'Wairau 2', 'Wairau 3']
+Creating connected fault system: Hope combined with segments: ['Hope Conway', 'Hope Hanmer SE', 'Hope Hanmer SW', 'Hope Hope River', 'Hope Hurunui', 'Hope Kakapo-2-Hamner', 'Hope Seaward', 'Kelly']
+Creating connected fault system: Jordan - Kek - Needles combined with segments: ['Jordan', 'Kekerengu 1', 'Needles']
+Creating connected fault system: Awatere - Vernon combined with segments: ['Awatere Northeast 1', 'Vernon 1', 'Vernon 2', 'Vernon 3', 'Vernon 4']
+Creating connected fault system: Cloudy combined with segments: ['Cloudy 1', 'Cloudy 2', 'Cloudy 3']
+Creating connected fault system: Campbell Bank - Chancet combined with segments: ['Campbell Bank', 'Chancet']
+Creating connected fault system: Wairarapa combined with segments: ['Wairarapa 1', 'Wairarapa 2', 'Wairarapa 3', 'Wairarapa Needles']
+Creating connected fault system: Clarence combined with segments: ['Clarence Central', 'Clarence Northeast', 'Clarence Southwest']
+Creating connected fault system: Te Rapa combined with segments: ['Hope Te Rapa', 'Te Rapa 1', 'Te Rapa 2']
+Creating connected fault system: Kekerengu Bank - Pahaua combined with segments: ['Kekerengu Bank', 'Pahaua']
+Creating connected fault system: Waewaepa combined with segments: ['Makuri - Waewaepa', 'Waewaepa']
+Creating connected fault system: Wellington combined with segments: ['Mohaka South', 'Wellington Pahiatua', 'Wellington Tararua 2', 'Wellington Tararua 3', 'Wellington Tararua 1']
+Creating connected fault system: Ohariu combined with segments: ['Ohariu', 'Ohariu South 1', 'Ohariu South 2']
+Creating connected fault system: Uruti combined with segments: ['Uruti Basin', 'Uruti Ridge 2']
+Creating connected fault system: Wellington Hutt Valley combined with segments: ['Wellington Hutt Valley 1', 'Wellington Hutt Valley 2', 'Wellington Hutt Valley 3', 'Wellington Hutt Valley 4', 'Wellington Hutt Valley 5']
 </pre></div>
 </div>
 </div>
@@ -243,7 +249,7 @@ Creating connected fault system: Wellington Hutt Valley combined with segments: 
 <p>A first pass at a hierarchy can be generated based purely on fault slip rate. Assuming that the fault data you have already read in have slip rates associated with them, this first pass is easy to make:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_cutting_hierarchy</span><span class="p">(</span><span class="s2">&quot;central_gt1_5_hierarchy&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_cutting_hierarchy</span><span class="p">(</span><span class="s2">"central_gt1_5_hierarchy"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -258,7 +264,7 @@ An example of a situation where editing is desirable is illustrated below. The m
 <p>We read in this new hierarchy as follows:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_cutting_hierarchy</span><span class="p">(</span><span class="s2">&quot;./define_connections_data/central_gt1_5_hierarchy_edited.csv&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_cutting_hierarchy</span><span class="p">(</span><span class="s2">"./define_connections_data/central_gt1_5_hierarchy_edited.csv"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -274,7 +280,7 @@ Although it is possible to construct these triangular surfaces in multiple softw
 <p>For organisational reasons, it helps to have the different shapefiles in different directories</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">dir_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;depth_contours&quot;</span><span class="p">,</span> <span class="s2">&quot;traces&quot;</span><span class="p">,</span> <span class="s2">&quot;footprints&quot;</span><span class="p">,</span> <span class="s2">&quot;footprints_lines&quot;</span><span class="p">]:</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">dir_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"depth_contours"</span><span class="p">,</span> <span class="s2">"traces"</span><span class="p">,</span> <span class="s2">"footprints"</span><span class="p">,</span> <span class="s2">"footprints_lines"</span><span class="p">]:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dir_name</span><span class="p">):</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dir_name</span><span class="p">)</span>
 </pre></div>
@@ -290,16 +296,16 @@ Although it is possible to construct these triangular surfaces in multiple softw
     <span class="c1"># Generate depth contours</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">generate_depth_contours</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mf">32000.</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">),</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="c1"># Write contours to files</span>
-    <span class="n">fault</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;depth_contours/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_contours.shp&quot;</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"depth_contours/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_contours.shp"</span><span class="p">)</span>
     <span class="c1"># Write traces</span>
-    <span class="n">fault</span><span class="o">.</span><span class="n">nztm_trace_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;traces/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_trace.shp&quot;</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">nztm_trace_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"traces/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_trace.shp"</span><span class="p">)</span>
 
 <span class="c1"># Write fault footprints</span>
 <span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">fault_data</span><span class="o">.</span><span class="n">curated_faults</span><span class="p">):</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">adjust_footprint</span><span class="p">()</span>
-    <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;footprints/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp&quot;</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"footprints/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp"</span><span class="p">)</span>
     <span class="c1"># Write fault footprints as lines (necessary for newer Leapfrog Geo betas)</span>
-    <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">boundary</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;footprints_lines/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp&quot;</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">boundary</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"footprints_lines/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -319,7 +325,7 @@ Although it is possible to construct these triangular surfaces in multiple softw
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../help/running_examples.html" class="btn btn-neutral float-left" title="Running tutorial examples using Jupyter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../help/camilla.html" class="btn btn-neutral float-right" title="Leapfrog 3D mesh generation and fault cutting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="central_nz_no_leapfrog.html" class="btn btn-neutral float-right" title="Meshing fault surfaces in Python (without Leapfrog Geo)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

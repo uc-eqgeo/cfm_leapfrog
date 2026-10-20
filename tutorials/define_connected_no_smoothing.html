@@ -55,6 +55,12 @@
 <li class="toctree-l1"><a class="reference internal" href="define_connected.html#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="define_connected.html#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Python (without Leapfrog):</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="central_nz_no_leapfrog.html">Meshing fault surfaces in Python (without Leapfrog Geo)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/no_leapfrog_workflow.html">Whole-model workflow without Leapfrog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../help/mesh_cutting_logic.html">Mesh cutting logic</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../help/camilla.html">Leapfrog 3D mesh generation and fault cutting</a></li>
@@ -112,14 +118,14 @@
 <span class="c1"># If not desired, set to None</span>
 <span class="n">epsg</span> <span class="o">=</span> <span class="mi">2193</span>
 <span class="c1"># Read in fault data from shapefile</span>
-<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/cfm_gt_1_5.gpkg&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">smoothing_n</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">"tutorial_gis/cfm_gt_1_5.gpkg"</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">smoothing_n</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <span class="c1"># Alternative for full CFM:</span>
-<span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp(&quot;../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp&quot;, remove_colons=True,</span>
+<span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp("../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp", remove_colons=True,</span>
 <span class="c1">#                                                  exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0)</span>
 
 <span class="c1"># Alternative for different dip:</span>
-<span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp(&quot;../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp&quot;, remove_colons=True,</span>
+<span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp("../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp", remove_colons=True,</span>
 <span class="c1">#                                                  exclude_aus=False, exclude_zero=False, exclude_region_min_sr=0.0, dip)</span>
 </pre></div>
 </div>
@@ -132,14 +138,14 @@
 <span class="g g-Whitespace">      </span><span class="mi">8</span> <span class="c1"># If not desired, set to None</span>
 <span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="n">epsg</span> <span class="o">=</span> <span class="mi">2193</span>
 <span class="g g-Whitespace">     </span><span class="mi">10</span> <span class="c1"># Read in fault data from shapefile</span>
-<span class="ne">---&gt; </span><span class="mi">11</span> <span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">&quot;tutorial_gis/cfm_gt_1_5.gpkg&quot;</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">smoothing_n</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="ne">---&gt; </span><span class="mi">11</span> <span class="n">fault_data</span> <span class="o">=</span> <span class="n">LeapfrogMultiFault</span><span class="o">.</span><span class="n">from_nz_cfm_shp</span><span class="p">(</span><span class="s2">"tutorial_gis/cfm_gt_1_5.gpkg"</span><span class="p">,</span> <span class="n">remove_colons</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsg</span><span class="o">=</span><span class="n">epsg</span><span class="p">,</span> <span class="n">smoothing_n</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="g g-Whitespace">     </span><span class="mi">12</span> 
 <span class="g g-Whitespace">     </span><span class="mi">13</span> <span class="c1"># Alternative for full CFM:</span>
-<span class="g g-Whitespace">     </span><span class="mi">14</span> <span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp(&quot;../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp&quot;, remove_colons=True,</span>
+<span class="g g-Whitespace">     </span><span class="mi">14</span> <span class="c1"># fault_data = LeapfrogMultiFault.from_nz_cfm_shp("../gis/NZ_CFM_v1_0_shapefile/NZ_CFM_v1_0.shp", remove_colons=True,</span>
 
 <span class="nn">File ~/miniconda3/envs/leapfrog-fault-models/lib/python3.12/site-packages/fault_mesh/faults/leapfrog.py:299,</span> in <span class="ni">LeapfrogMultiFault.from_nz_cfm_shp</span><span class="nt">(cls, filename, exclude_region_polygons, depth_type, exclude_region_min_sr, include_names, exclude_aus, exclude_zero, sort_sr, remove_colons, smoothing_n, dip_choice, epsg, trimming_gradient, dip_multiplier, strike_multiplier, check_optional_fields)</span>
 <span class="g g-Whitespace">    </span><span class="mi">291</span> <span class="nd">@classmethod</span>
-<span class="g g-Whitespace">    </span><span class="mi">292</span> <span class="k">def</span><span class="w"> </span><span class="nf">from_nz_cfm_shp</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exclude_region_polygons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">depth_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;D90&quot;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">292</span> <span class="k">def</span><span class="w"> </span><span class="nf">from_nz_cfm_shp</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exclude_region_polygons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">depth_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"D90"</span><span class="p">,</span>
 <span class="g g-Whitespace">    </span><span class="mi">293</span>                     <span class="n">exclude_region_min_sr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.8</span><span class="p">,</span> <span class="n">include_names</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">exclude_aus</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
    <span class="p">(</span><span class="o">...</span><span class="p">)</span>    <span class="mi">296</span>                     <span class="n">trimming_gradient</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">dip_multiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">strike_multiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
 <span class="g g-Whitespace">    </span><span class="mi">297</span>                     <span class="n">check_optional_fields</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
@@ -159,9 +165,9 @@
 <span class="g g-Whitespace">    </span><span class="mi">298</span> <span class="k">def</span><span class="w"> </span><span class="nf">gdf_from_nz_cfm_shp</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exclude_region_polygons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Polygon</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">depth_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="g g-Whitespace">    </span><span class="mi">299</span>                         <span class="n">exclude_region_min_sr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.8</span><span class="p">,</span>
 <span class="g g-Whitespace">    </span><span class="mi">300</span>                         <span class="n">include_names</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">exclude_aus</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">exclude_zero</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-<span class="g g-Whitespace">    </span><span class="mi">301</span><span class="w">     </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="g g-Whitespace">    </span><span class="mi">301</span><span class="w">     </span><span class="sd">"""</span>
 <span class="g g-Whitespace">    </span><span class="mi">302</span><span class="sd">     Read CFM shapefile</span>
-<span class="g g-Whitespace">    </span><span class="mi">303</span><span class="sd">     &quot;&quot;&quot;</span>
+<span class="g g-Whitespace">    </span><span class="mi">303</span><span class="sd">     """</span>
 <span class="ne">--&gt; </span><span class="mi">304</span>     <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 <span class="g g-Whitespace">    </span><span class="mi">305</span>     <span class="n">fault_geodataframe</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 <span class="g g-Whitespace">    </span><span class="mi">307</span>     <span class="c1"># If appropriate, clip out data that fall within exclude_regions</span>
@@ -199,7 +205,7 @@ Found 142 connections between segment ends
 <p>It is now necessary to write out these connections for manual editing and review. The file will be written out into the same directory as this Jupyter notebook. It will have a prefix supplied by you and the suffix “_suggested.csv”.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_fault_systems</span><span class="p">(</span><span class="s2">&quot;central_gt1_5_connected&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_fault_systems</span><span class="p">(</span><span class="s2">"central_gt1_5_connected"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -215,7 +221,7 @@ Found 142 connections between segment ends
 <p>Once you have made the necessary edits, read your new CSV to overwite the automatically-generated connected fault systems:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_fault_systems</span><span class="p">(</span><span class="s2">&quot;./define_connections_data/central_gt1_5_connected_edited.csv&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_fault_systems</span><span class="p">(</span><span class="s2">"./define_connections_data/central_gt1_5_connected_edited.csv"</span><span class="p">)</span>
 <span class="n">fault_data</span><span class="o">.</span><span class="n">generate_curated_faults</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -231,7 +237,7 @@ Found 142 connections between segment ends
 <p>A first pass at a hierarchy can be generated based purely on fault slip rate. Assuming that the fault data you have already read in have slip rates associated with them, this first pass is easy to make:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_cutting_hierarchy</span><span class="p">(</span><span class="s2">&quot;central_gt1_5_hierarchy&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">suggest_cutting_hierarchy</span><span class="p">(</span><span class="s2">"central_gt1_5_hierarchy"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -246,7 +252,7 @@ An example of a situation where editing is desirable is illustrated below. The m
 <p>We read in this new hierarchy as follows:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_cutting_hierarchy</span><span class="p">(</span><span class="s2">&quot;./define_connections_data/central_gt1_5_hierarchy_edited.csv&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fault_data</span><span class="o">.</span><span class="n">read_cutting_hierarchy</span><span class="p">(</span><span class="s2">"./define_connections_data/central_gt1_5_hierarchy_edited.csv"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -262,7 +268,7 @@ Although it is possible to construct these triangular surfaces in multiple softw
 <p>For organisational reasons, it helps to have the different shapefiles in different directories</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">dir_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;depth_contours&quot;</span><span class="p">,</span> <span class="s2">&quot;traces&quot;</span><span class="p">,</span> <span class="s2">&quot;footprints&quot;</span><span class="p">,</span> <span class="s2">&quot;footprints_lines&quot;</span><span class="p">]:</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">dir_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"depth_contours"</span><span class="p">,</span> <span class="s2">"traces"</span><span class="p">,</span> <span class="s2">"footprints"</span><span class="p">,</span> <span class="s2">"footprints_lines"</span><span class="p">]:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dir_name</span><span class="p">):</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dir_name</span><span class="p">)</span>
 </pre></div>
@@ -278,16 +284,16 @@ Although it is possible to construct these triangular surfaces in multiple softw
     <span class="c1"># Generate depth contours</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">generate_depth_contours</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mf">32000.</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">),</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="c1"># Write contours to files</span>
-    <span class="n">fault</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;depth_contours/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_contours.shp&quot;</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">contours</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"depth_contours/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_contours.shp"</span><span class="p">)</span>
     <span class="c1"># Write traces</span>
-    <span class="n">fault</span><span class="o">.</span><span class="n">nztm_trace_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;traces/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_trace.shp&quot;</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">nztm_trace_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"traces/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_trace.shp"</span><span class="p">)</span>
 
 <span class="c1"># Write fault footprints</span>
 <span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">fault_data</span><span class="o">.</span><span class="n">curated_faults</span><span class="p">):</span>
     <span class="n">fault</span><span class="o">.</span><span class="n">adjust_footprint</span><span class="p">()</span>
-    <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;footprints/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp&quot;</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"footprints/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp"</span><span class="p">)</span>
     <span class="c1"># Newer versions of Leapfrog Geo require fault footprints to be written out as lines</span>
-    <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">boundary</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;footprints_lines/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp&quot;</span><span class="p">)</span>
+    <span class="n">fault</span><span class="o">.</span><span class="n">footprint_geoseries</span><span class="o">.</span><span class="n">boundary</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"footprints_lines/</span><span class="si">{</span><span class="n">fault</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_footprint.shp"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

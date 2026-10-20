@@ -1,0 +1,223 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mesh cutting logic &mdash; cfm-leapfrog 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Leapfrog 3D mesh generation and fault cutting" href="camilla.html" />
+    <link rel="prev" title="Whole-model workflow without Leapfrog" href="no_leapfrog_workflow.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            cfm-leapfrog
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction and Setup:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preparation.html">Preparing inputs for use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation instructions and updates to code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running_examples.html">Running tutorial examples using Jupyter</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected.html">Defining connected fault systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected.html#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected.html#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Python (without Leapfrog):</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/central_nz_no_leapfrog.html">Meshing fault surfaces in Python (without Leapfrog Geo)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="no_leapfrog_workflow.html">Whole-model workflow without Leapfrog</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Mesh cutting logic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#deciding-whether-to-cut">Deciding whether to cut</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#step-1-check-for-geometric-intersection">Step 1: check for geometric intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-2-override-by-higher-priority-faults">Step 2: override by higher-priority faults</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-3-edge-intersection-test-always-active">Step 3: edge-intersection test (always active)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-4-fancy-cutting-heuristics-optional">Step 4: fancy cutting heuristics (optional)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#choosing-which-side-to-keep-after-cutting">Choosing which side to keep after cutting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#degenerate-cases">Degenerate cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#general-case-proximity-to-the-fault-trace">General case: proximity to the fault trace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#safety-check">Safety check</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="camilla.html">Leapfrog 3D mesh generation and fault cutting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Examples (Japanese):</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected_japanese.html">接続された断層システムの定義</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected_japanese.html#id6">切断階層の定義</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected_japanese.html#id9">メッシュ作成のためのシェープファイルの作成</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cfm-leapfrog</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Mesh cutting logic</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/help/mesh_cutting_logic.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="mesh-cutting-logic">
+<h1>Mesh cutting logic<a class="headerlink" href="#mesh-cutting-logic" title="Link to this heading"></a></h1>
+<p>When two fault meshes intersect or nearly intersect, one mesh is cut by the other so that their geometries are consistent — the lower-priority fault terminates at the surface of the higher-priority fault. This page describes how the code decides whether a cut is needed and, once it is, which half of the cut mesh to keep.</p>
+<section id="deciding-whether-to-cut">
+<h2>Deciding whether to cut<a class="headerlink" href="#deciding-whether-to-cut" title="Link to this heading"></a></h2>
+<p>The entry point is <code class="docutils literal notranslate"><span class="pre">FaultMesh.decide_whether_to_cut(self,</span> <span class="pre">other_mesh,</span> <span class="pre">...)</span></code>.</p>
+<section id="step-1-check-for-geometric-intersection">
+<h3>Step 1: check for geometric intersection<a class="headerlink" href="#step-1-check-for-geometric-intersection" title="Link to this heading"></a></h3>
+<p>The method first calls <code class="docutils literal notranslate"><span class="pre">get_intersecting_triangles(other_mesh)</span></code> to find triangles in <code class="docutils literal notranslate"><span class="pre">self</span></code> that intersect or come within a threshold distance of <code class="docutils literal notranslate"><span class="pre">other_mesh</span></code>. If no such triangles exist the meshes do not interact and the method returns <code class="docutils literal notranslate"><span class="pre">False</span></code> immediately — no cut is performed.</p>
+</section>
+<section id="step-2-override-by-higher-priority-faults">
+<h3>Step 2: override by higher-priority faults<a class="headerlink" href="#step-2-override-by-higher-priority-faults" title="Link to this heading"></a></h3>
+<p>If a list of <code class="docutils literal notranslate"><span class="pre">higher_meshes</span></code> is supplied, the code checks whether a higher-priority fault has already separated <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other_mesh</span></code> onto opposite sides of itself. For each higher-priority mesh:</p>
+<ol class="arabic simple">
+<li><p>Both <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other_mesh</span></code> must intersect the higher-priority mesh (otherwise the check is skipped for that pair).</p></li>
+<li><p>The signed implicit distances from every vertex of <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other_mesh</span></code> to the higher-priority mesh surface are computed.</p></li>
+<li><p>If the two faults lie predominantly on <em>opposite</em> sides of the higher-priority mesh (one is mainly positive, the other mainly negative) <strong>and</strong> neither fault has significant penetration beyond the higher-priority surface (i.e. neither has many vertices more than <code class="docutils literal notranslate"><span class="pre">higher_mesh_tolerance</span></code> on the wrong side), then the higher-priority fault is already acting as a separator. In this situation, cutting <code class="docutils literal notranslate"><span class="pre">self</span></code> against <code class="docutils literal notranslate"><span class="pre">other_mesh</span></code> is unnecessary and the method returns <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+</ol>
+</section>
+<section id="step-3-edge-intersection-test-always-active">
+<h3>Step 3: edge-intersection test (always active)<a class="headerlink" href="#step-3-edge-intersection-test-always-active" title="Link to this heading"></a></h3>
+<p>The intersecting triangles are compared against the four edge groups of <code class="docutils literal notranslate"><span class="pre">self</span></code> (top, bottom, left, right — identified by depth and by the largest spatial gap in the side vertices). If the intersection zone touches <strong>two or more distinct edges</strong> the intersection genuinely crosses the mesh, and the method returns <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>This test catches the common case where one fault clearly cuts through another from one edge to another (e.g. top to bottom, or left to right).</p>
+</section>
+<section id="step-4-fancy-cutting-heuristics-optional">
+<h3>Step 4: fancy cutting heuristics (optional)<a class="headerlink" href="#step-4-fancy-cutting-heuristics-optional" title="Link to this heading"></a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">fancy_cutting=True</span></code> and the simple edge test did not fire, additional heuristics are applied.</p>
+<ol class="arabic">
+<li><p><strong>Find the two most widely separated intersection-triangle centres.</strong> These are the centres of the intersecting triangles that are furthest apart from each other (<code class="docutils literal notranslate"><span class="pre">max_distance</span></code>). For large intersection zones the convex-hull method is used for efficiency; for small zones brute-force pairwise distances are used.</p></li>
+<li><p><strong>Identify the closest mesh edge for each centre.</strong> Each of the two extreme centres is matched to its nearest mesh edge (top, bottom, left, or right) by minimum Euclidean distance to the edge vertices.</p></li>
+<li><p><strong>Decision tree:</strong></p>
+<ul class="simple">
+<li><p><strong>Centres are closest to different edges</strong> — the intersection zone spans two different edges, which strongly suggests a genuine through-cutting geometry. The ratio <code class="docutils literal notranslate"><span class="pre">max_distance</span> <span class="pre">/</span> <span class="pre">edge_dist</span></code> is compared to <code class="docutils literal notranslate"><span class="pre">threshold</span></code> (default 0.9), where <code class="docutils literal notranslate"><span class="pre">edge_dist</span></code> is the distance between the closest edge points to each centre. If the ratio exceeds the threshold, cut; otherwise do not.</p></li>
+<li><p><strong>Centres are closest to the same edge, and that edge is short</strong> (<code class="docutils literal notranslate"><span class="pre">edge_length</span> <span class="pre">&lt;</span> <span class="pre">min_distance</span></code>) — the intersection is near a short edge. The ratio <code class="docutils literal notranslate"><span class="pre">max_distance</span> <span class="pre">/</span> <span class="pre">edge_length</span></code> is compared to <code class="docutils literal notranslate"><span class="pre">threshold</span></code>. If it exceeds the threshold, cut.</p></li>
+<li><p><strong>Centres are closest to the same edge, and that edge is long:</strong></p>
+<ul>
+<li><p>If both centres are very close to that edge (within 3 km), the intersection zone hugs a single long edge. Cut if <code class="docutils literal notranslate"><span class="pre">edge_dist</span> <span class="pre">&gt;</span> <span class="pre">min_distance</span></code> or <code class="docutils literal notranslate"><span class="pre">edge_dist</span> <span class="pre">/</span> <span class="pre">edge_length</span> <span class="pre">&gt;</span> <span class="pre">0.5</span></code>; otherwise do not cut.</p></li>
+<li><p>If only one centre is very close to the edge, use the <em>second</em>-closest edge for that centre instead and re-compute <code class="docutils literal notranslate"><span class="pre">edge_dist</span></code>. Apply the threshold test on <code class="docutils literal notranslate"><span class="pre">max_distance</span> <span class="pre">/</span> <span class="pre">edge_dist_second</span></code>.</p></li>
+<li><p>If neither centre is close to any edge, do not cut.</p></li>
+</ul>
+</li>
+</ul>
+<p>If <code class="docutils literal notranslate"><span class="pre">fancy_cutting=False</span></code> (the default), the method returns <code class="docutils literal notranslate"><span class="pre">False</span></code> after the edge test.</p>
+</li>
+</ol>
+</section>
+</section>
+<hr class="docutils" />
+<section id="choosing-which-side-to-keep-after-cutting">
+<h2>Choosing which side to keep after cutting<a class="headerlink" href="#choosing-which-side-to-keep-after-cutting" title="Link to this heading"></a></h2>
+<p>Once a cut is decided, <code class="docutils literal notranslate"><span class="pre">FaultMesh.cut_mesh</span></code> (or <code class="docutils literal notranslate"><span class="pre">cut_mesh_pv</span></code>) clips <code class="docutils literal notranslate"><span class="pre">self</span></code> against <code class="docutils literal notranslate"><span class="pre">other_mesh</span></code> in both directions using PyVista’s <code class="docutils literal notranslate"><span class="pre">clip_surface</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">clipped1</span></code> — the portion of <code class="docutils literal notranslate"><span class="pre">self</span></code> that lies on the <em>outside</em> of <code class="docutils literal notranslate"><span class="pre">other_mesh</span></code> (<code class="docutils literal notranslate"><span class="pre">invert=False</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clipped2</span></code> — the portion of <code class="docutils literal notranslate"><span class="pre">self</span></code> that lies on the <em>inside</em> of <code class="docutils literal notranslate"><span class="pre">other_mesh</span></code> (<code class="docutils literal notranslate"><span class="pre">invert=True</span></code>)</p></li>
+</ul>
+<section id="degenerate-cases">
+<h3>Degenerate cases<a class="headerlink" href="#degenerate-cases" title="Link to this heading"></a></h3>
+<p>If either clipped half has no surface points (points with z ≥ −<code class="docutils literal notranslate"><span class="pre">surface_tolerance</span></code>, i.e. near the Earth’s surface), it is discarded immediately and the other half is kept. This handles cases where the clip removes essentially all of one side.</p>
+</section>
+<section id="general-case-proximity-to-the-fault-trace">
+<h3>General case: proximity to the fault trace<a class="headerlink" href="#general-case-proximity-to-the-fault-trace" title="Link to this heading"></a></h3>
+<p>In the normal case both halves have surface points. A KD-tree is built from the supplied <code class="docutils literal notranslate"><span class="pre">fault_trace</span></code> — the 3-D polyline of the fault’s surface expression.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">cut_mesh</span></code></strong> counts, for each half, how many surface points lie within <code class="docutils literal notranslate"><span class="pre">surface_max_dist_tolerance</span></code> of the trace. The half with <em>more</em> nearby points is kept. This reflects the expectation that the correct side of the cut mesh should have its surface expression close to the mapped fault trace.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">cut_mesh_pv</span></code></strong> uses a slightly different criterion: it keeps the half whose surface points have the <em>lower mean distance</em> to the fault trace, which is more robust when the two halves have different numbers of surface points.</p>
+</section>
+<section id="safety-check">
+<h3>Safety check<a class="headerlink" href="#safety-check" title="Link to this heading"></a></h3>
+<p>If the retained half has fewer than 3 points or 1 cell (i.e. the clip produced an essentially empty mesh), the original uncut mesh is returned unchanged with a warning.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="no_leapfrog_workflow.html" class="btn btn-neutral float-left" title="Whole-model workflow without Leapfrog" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="camilla.html" class="btn btn-neutral float-right" title="Leapfrog 3D mesh generation and fault cutting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Andy Howell and Camilla Penney.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

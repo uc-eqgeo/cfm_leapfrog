@@ -1,0 +1,370 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whole-model workflow without Leapfrog &mdash; cfm-leapfrog 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Mesh cutting logic" href="mesh_cutting_logic.html" />
+    <link rel="prev" title="Meshing fault surfaces in Python (without Leapfrog Geo)" href="../tutorials/central_nz_no_leapfrog.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            cfm-leapfrog
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Introduction and Setup:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preparation.html">Preparing inputs for use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation instructions and updates to code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running_examples.html">Running tutorial examples using Jupyter</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected.html">Defining connected fault systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected.html#defining-a-cutting-hierarchy">Defining a cutting hierarchy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected.html#create-shapefiles-for-mesh-creation">Create shapefiles for mesh creation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Python (without Leapfrog):</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/central_nz_no_leapfrog.html">Meshing fault surfaces in Python (without Leapfrog Geo)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Whole-model workflow without Leapfrog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-pipeline-whole-nz-pipeline-py">The pipeline: <code class="docutils literal notranslate"><span class="pre">whole_nz_pipeline.py</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stage-2b-automatic-checks">Stage 2b: automatic checks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#manual-review-with-pyvista">Manual review with PyVista</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#surface-trace-overshoots-review-trace-extensions-py">Surface-trace overshoots: <code class="docutils literal notranslate"><span class="pre">review_trace_extensions.py</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#jagged-cuts-review-jagged-cuts-py">Jagged cuts: <code class="docutils literal notranslate"><span class="pre">review_jagged_cuts.py</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shared-options">Shared options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#putting-it-together">Putting it together</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mesh_cutting_logic.html">Mesh cutting logic</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Meshing in Leapfrog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="camilla.html">Leapfrog 3D mesh generation and fault cutting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Examples (Japanese):</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected_japanese.html">接続された断層システムの定義</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected_japanese.html#id6">切断階層の定義</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/define_connected_japanese.html#id9">メッシュ作成のためのシェープファイルの作成</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cfm-leapfrog</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Whole-model workflow without Leapfrog</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/help/no_leapfrog_workflow.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="whole-model-workflow-without-leapfrog">
+<h1>Whole-model workflow without Leapfrog<a class="headerlink" href="#whole-model-workflow-without-leapfrog" title="Link to this heading"></a></h1>
+<p>The <a class="reference internal" href="../tutorials/central_nz_no_leapfrog.html"><span class="std std-doc">central New Zealand tutorial</span></a> shows the individual Python steps that replace Leapfrog Geo: building a surface for each fault, cutting the surfaces against each other, and trimming them at the base of the seismogenic zone. For a full fault model, those steps are run as a script, and the results are checked and fixed by hand before the final remesh. This page describes that script and the two interactive review tools that go with it.</p>
+<p>The scripts live in <a class="reference external" href="https://github.com/uc-eqgeo/cfm_leapfrog/tree/main/scratch/whole_nz_no_leapfrog"><code class="docutils literal notranslate"><span class="pre">scratch/whole_nz_no_leapfrog/</span></code></a> and are set up for the whole-of-New-Zealand Community Fault Model. To use them for another dataset, copy the folder and change the input file names at the top of <code class="docutils literal notranslate"><span class="pre">whole_nz_pipeline.py</span></code>.</p>
+<p>All commands below are run from that folder, inside the <code class="docutils literal notranslate"><span class="pre">leapfrog-fault-models</span></code> conda environment (see <a class="reference internal" href="install.html"><span class="std std-doc">Installation</span></a>).</p>
+<section id="the-pipeline-whole-nz-pipeline-py">
+<h2>The pipeline: <code class="docutils literal notranslate"><span class="pre">whole_nz_pipeline.py</span></code><a class="headerlink" href="#the-pipeline-whole-nz-pipeline-py" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">whole_nz_pipeline</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>The pipeline builds the fault network once and then runs through the stages below. Each stage reads its inputs back from disk, so a later stage can be re-run without repeating an earlier one. For example, you can re-cut without rebuilding the raw surfaces. The parameters for each stage are constants near the top of the script.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Stage</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Writes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Fault network</p></td>
+<td><p>Reads the traces, finds connections between segments, then applies the edited fault systems, cutting hierarchy and trace extensions</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">suggested_trace_extensions.csv</span></code> / <code class="docutils literal notranslate"><span class="pre">.geojson</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>1. Build surfaces</p></td>
+<td><p>Contours each curated fault to depth and triangulates it</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_objs/</span></code>, <code class="docutils literal notranslate"><span class="pre">test_vtks/</span></code>, <code class="docutils literal notranslate"><span class="pre">test_contours/</span></code>, <code class="docutils literal notranslate"><span class="pre">merged_mesh_uncut.vtk</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>2. Cut surfaces</p></td>
+<td><p>Cuts each fault against the higher-priority faults in the hierarchy, then trims it with the depth-of-faulting raster</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_final_meshes/*_cut.obj</span></code>, <code class="docutils literal notranslate"><span class="pre">cuts_applied.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">merged_mesh_cut.vtk</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>2b. Check cuts</p></td>
+<td><p>Flags cut meshes that need a closer look (see below)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">surface_trace_check.csv</span></code> / <code class="docutils literal notranslate"><span class="pre">.geojson</span></code>, <code class="docutils literal notranslate"><span class="pre">jagged_cut_check.csv</span></code> / <code class="docutils literal notranslate"><span class="pre">.geojson</span></code>, <code class="docutils literal notranslate"><span class="pre">jagged_cut_blame.csv</span></code> / <code class="docutils literal notranslate"><span class="pre">.geojson</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>3. Remesh</p></td>
+<td><p>Remeshes every cut surface into uniform, near-equilateral triangles with MMG</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_remeshed_vtks/</span></code>, <code class="docutils literal notranslate"><span class="pre">merged_mesh_remeshed.vtk</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>The pipeline reads these inputs:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>File</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Required?</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NZ_CFM_v1_0_rs1km_modified_GDM.gpkg</span></code></p></td>
+<td><p>Fault traces and attributes (see <a class="reference internal" href="preparation.html"><span class="std std-doc">Preparing inputs</span></a>)</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">..._connected_edited.csv</span></code></p></td>
+<td><p>Which segments make up each fault (from the <a class="reference internal" href="../tutorials/define_connected.html"><span class="std std-doc">connections tutorial</span></a>)</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">..._hierarchy_edited.csv</span></code></p></td>
+<td><p>Which fault cuts which</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">with_hannu_mods.tif</span></code></p></td>
+<td><p>Depth-of-faulting surface (z in metres, negative down)</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">edited_trace_extensions.csv</span></code></p></td>
+<td><p>Hand-edited trace extensions</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">removed_trace_extensions.csv</span></code></p></td>
+<td><p>Extensions ruled out during review (subtracted from the file above)</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">additional_cuts.csv</span></code></p></td>
+<td><p>Extra <code class="docutils literal notranslate"><span class="pre">cut,cutter</span></code> pairs to force</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">excluded_cuts.csv</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cut,cutter</span></code> pairs that must never be cut</p></td>
+<td><p>no</p></td>
+</tr>
+</tbody>
+</table>
+<p>The last three files are where the decisions from the review tools are stored. The pipeline never overwrites them, so a rerun keeps every decision made so far.</p>
+<section id="stage-2b-automatic-checks">
+<h3>Stage 2b: automatic checks<a class="headerlink" href="#stage-2b-automatic-checks" title="Link to this heading"></a></h3>
+<p>The cutting logic (described in <a class="reference internal" href="mesh_cutting_logic.html"><span class="std std-doc">Mesh cutting logic</span></a>) handles most fault intersections, but not all of them. Stage 2b looks for two kinds of failure:</p>
+<ul class="simple">
+<li><p><strong>Surface-trace overshoots.</strong> Trace extensions exist to give a fault enough area <em>below</em> the surface to reach its neighbours and be cut cleanly. They are not meant to survive at the surface. This check compares each cut mesh’s outline at z = 0 with the original, un-extended trace. Any end that runs more than <code class="docutils literal notranslate"><span class="pre">TRACE_CHECK_FLAG_DISTANCE</span></code> (2 km by default) beyond the original trace is flagged. Either a cut that should have happened did not, or the extension was not needed.</p></li>
+<li><p><strong>Jagged cuts.</strong> A cut that has gone wrong leaves a serrated or stair-stepped subsurface outline. This check walks each fault’s subsurface outline and counts sharp kinks and direction reversals. Each rough stretch of outline is then blamed on the cut that most likely produced it, using <code class="docutils literal notranslate"><span class="pre">cuts_applied.csv</span></code> from Stage 2 if it is available. A flagged fault therefore comes with the name of the cut to revisit, not just a score.</p></li>
+</ul>
+<p>The GeoJSON outputs contain only the offending geometry, so they can be laid over the traces in QGIS. To decide what to do about each flag, the 3-D review tools below are usually quicker.</p>
+</section>
+</section>
+<section id="manual-review-with-pyvista">
+<h2>Manual review with PyVista<a class="headerlink" href="#manual-review-with-pyvista" title="Link to this heading"></a></h2>
+<p>Two scripts step through the Stage 2b flags one at a time. Each opens an interactive <a class="reference external" href="https://docs.pyvista.org/">PyVista</a> window showing the flagged fault next to the faults around it. Each surface is drawn semi-transparent with its triangle edges in its own colour. Rotate and zoom to inspect the geometry, then <strong>close the window</strong>. The terminal then asks what to do.</p>
+<p>Decisions are written to disk as soon as they are made, and every reviewed item is recorded in a log. You can stop at any point (<code class="docutils literal notranslate"><span class="pre">q</span></code> or Ctrl-C) and pick up where you left off by running the script again. Both scripts share their viewer and file handling, which live in <code class="docutils literal notranslate"><span class="pre">review_common.py</span></code>.</p>
+<section id="surface-trace-overshoots-review-trace-extensions-py">
+<h3>Surface-trace overshoots: <code class="docutils literal notranslate"><span class="pre">review_trace_extensions.py</span></code><a class="headerlink" href="#surface-trace-overshoots-review-trace-extensions-py" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">review_trace_extensions</span><span class="o">.</span><span class="n">py</span>                    <span class="c1"># everything not yet reviewed</span>
+<span class="n">python</span> <span class="n">review_trace_extensions</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">only</span> <span class="n">Awakeri</span>     <span class="c1"># one fault</span>
+<span class="n">python</span> <span class="n">review_trace_extensions</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="nb">all</span>              <span class="c1"># start again from the top</span>
+</pre></div>
+</div>
+<p>For each flagged fault end, the view shows:</p>
+<ul class="simple">
+<li><p>the fault (red)</p></li>
+<li><p>its original trace (dark grey)</p></li>
+<li><p>the overshooting piece of surface trace (yellow)</p></li>
+<li><p>up to six candidate faults it may have been meant to terminate against</p></li>
+</ul>
+<p>The candidates come from two sources. The first is the connection graph, which lists the higher-priority faults this one runs into. The second is any fault whose trace passes within 5 km of the overshoot. This catches cases the graph missed, which are often why the cut never happened.</p>
+<p><img alt="Trace-extension review: the Teviot Fault's southern end overshoots its original trace" src="../_images/review_trace_extensions.png" /></p>
+<p>The terminal lists the candidates with their distances. It also marks the expected terminations and any cut that has already been forced. The choices are:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Action</p></th>
+<th class="head"><p>Recorded in</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">1</span></code>–<code class="docutils literal notranslate"><span class="pre">6</span></code> (or e.g. <code class="docutils literal notranslate"><span class="pre">1,3</span></code>)</p></td>
+<td><p>Force a cut of this fault by that candidate</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">additional_cuts.csv</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">x</span></code></p></td>
+<td><p>Drop the trace extension at this end</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">removed_trace_extensions.csv</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Enter</p></td>
+<td><p>Leave it alone</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">trace_review_log.csv</span></code> only</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">r</span></code></p></td>
+<td><p>Show the view again</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">q</span></code></p></td>
+<td><p>Stop</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="jagged-cuts-review-jagged-cuts-py">
+<h3>Jagged cuts: <code class="docutils literal notranslate"><span class="pre">review_jagged_cuts.py</span></code><a class="headerlink" href="#jagged-cuts-review-jagged-cuts-py" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">review_jagged_cuts</span><span class="o">.</span><span class="n">py</span>                  <span class="c1"># everything not yet reviewed, worst first</span>
+<span class="n">python</span> <span class="n">review_jagged_cuts</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">only</span> <span class="n">Waitangi</span>  <span class="c1"># one fault</span>
+<span class="n">python</span> <span class="n">review_jagged_cuts</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="nb">all</span>            <span class="c1"># start again from the top</span>
+</pre></div>
+</div>
+<p>For each jagged fault, the view shows the fault (red), every fault blamed for part of its rough outline, and the rough stretches of outline (yellow). Pass <code class="docutils literal notranslate"><span class="pre">--uncut-cutters</span></code> to draw the cutting faults’ raw surfaces instead of their cut ones. This helps when a cutter has itself been trimmed back.</p>
+<p><img alt="Jagged-cut review: a stair-stepped cut on the McKerchar Fault, blamed on the Tin Hut Fault" src="../_images/review_jagged_cuts.png" /></p>
+<p>The terminal prints the roughness scores, followed by one line per suspected cutter. Each line shows the number of rough segments, their median distance from the cutter, and whether <code class="docutils literal notranslate"><span class="pre">cuts_applied.csv</span></code> confirms that the cut happened. Rough segments that cannot be blamed on any fault, or that lie along the depth-of-faulting surface, are listed for information but cannot be excluded. The choices are:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Action</p></th>
+<th class="head"><p>Recorded in</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">1</span></code>–<code class="docutils literal notranslate"><span class="pre">n</span></code> (or e.g. <code class="docutils literal notranslate"><span class="pre">1,3</span></code>)</p></td>
+<td><p>Stop that fault from cutting this one</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">excluded_cuts.csv</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Enter</p></td>
+<td><p>Leave it alone</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">jagged_review_log.csv</span></code> only</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r</span></code></p></td>
+<td><p>Show the view again</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">q</span></code></p></td>
+<td><p>Stop</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="shared-options">
+<h3>Shared options<a class="headerlink" href="#shared-options" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--start-from</span> <span class="pre">FAULT</span></code></p></td>
+<td><p>Skip ahead to this fault</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--z-scale</span> <span class="pre">N</span></code></p></td>
+<td><p>Exaggerate the vertical axis of the 3-D view</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--screenshots</span> <span class="pre">DIR</span></code></p></td>
+<td><p>Save every view as a PNG in <code class="docutils literal notranslate"><span class="pre">DIR</span></code> without asking for decisions (useful for a quick visual pass or for reports)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--include-unflagged</span></code></p></td>
+<td><p>(<code class="docutils literal notranslate"><span class="pre">review_trace_extensions.py</span></code> only) Also review overshoots below the flagging threshold</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="putting-it-together">
+<h2>Putting it together<a class="headerlink" href="#putting-it-together" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">whole_nz_pipeline.py</span></code>.</p></li>
+<li><p>Review the flags with <code class="docutils literal notranslate"><span class="pre">review_trace_extensions.py</span></code> and <code class="docutils literal notranslate"><span class="pre">review_jagged_cuts.py</span></code>.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">whole_nz_pipeline.py</span></code> again. It picks up <code class="docutils literal notranslate"><span class="pre">additional_cuts.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">excluded_cuts.csv</span></code> and <code class="docutils literal notranslate"><span class="pre">removed_trace_extensions.csv</span></code> and rebuilds the meshes.</p></li>
+<li><p>Repeat steps 2–3 until Stage 2b has nothing left to flag. The review logs mean each pass only shows new or unreviewed items.</p></li>
+<li><p>Inspect <code class="docutils literal notranslate"><span class="pre">merged_mesh_remeshed.vtk</span></code> in ParaView.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../tutorials/central_nz_no_leapfrog.html" class="btn btn-neutral float-left" title="Meshing fault surfaces in Python (without Leapfrog Geo)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mesh_cutting_logic.html" class="btn btn-neutral float-right" title="Mesh cutting logic" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Andy Howell and Camilla Penney.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
