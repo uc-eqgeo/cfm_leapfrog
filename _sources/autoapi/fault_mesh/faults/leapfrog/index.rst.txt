@@ -18,8 +18,28 @@ Classes
    fault_mesh.faults.leapfrog.LeapfrogFault
 
 
+Functions
+---------
+
+.. autoapisummary::
+
+   fault_mesh.faults.leapfrog.end_fit_points
+
+
 Module Contents
 ---------------
+
+.. py:function:: end_fit_points(coords, end_arr, fit_distance, spacing = 100.0)
+
+   Points every `spacing` m along the last `fit_distance` of a trace,
+   measured along the trace from the end at `end_arr`.
+
+   Used to fit the local strike at a trace end. Fitting to the trace's own
+   vertices instead fails on sparse traces: if only the end vertex lies
+   within fit_distance, a line fit through one point has no defined slope,
+   and np.polyfit quietly returns one set by the point's absolute
+   coordinates, so the extension points in an arbitrary direction.
+
 
 .. py:class:: LeapfrogMultiFault(fault_geodataframe, sort_sr = False, segment_distance_tolerance = 100.0, smoothing_n = None, remove_colons = True, dip_choice = 'pref', trimming_gradient = 1.0, epsg = None, dip_multiplier = 1.0, strike_multiplier = 0.5, check_optional_fields = True)
 

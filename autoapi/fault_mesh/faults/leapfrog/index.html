@@ -132,8 +132,43 @@
 </tbody>
 </table>
 </section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fault_mesh.faults.leapfrog.end_fit_points" title="fault_mesh.faults.leapfrog.end_fit_points"><code class="xref py py-obj docutils literal notranslate"><span class="pre">end_fit_points</span></code></a>(coords, end_arr, fit_distance[, spacing])</p></td>
+<td><p>Points every <cite>spacing</cite> m along the last <cite>fit_distance</cite> of a trace,</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.end_fit_points">
+<span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">end_fit_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_distance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.end_fit_points" title="Link to this definition"></a></dt>
+<dd><p>Points every <cite>spacing</cite> m along the last <cite>fit_distance</cite> of a trace,
+measured along the trace from the end at <cite>end_arr</cite>.</p>
+<p>Used to fit the local strike at a trace end. Fitting to the trace’s own
+vertices instead fails on sparse traces: if only the end vertex lies
+within fit_distance, a line fit through one point has no defined slope,
+and np.polyfit quietly returns one set by the point’s absolute
+coordinates, so the extension points in an arbitrary direction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coords</strong> (<em>numpy.ndarray</em>)</p></li>
+<li><p><strong>end_arr</strong> (<em>numpy.ndarray</em>)</p></li>
+<li><p><strong>fit_distance</strong> (<em>float</em>)</p></li>
+<li><p><strong>spacing</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="fault_mesh.faults.leapfrog.LeapfrogMultiFault">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fault_mesh.faults.leapfrog.</span></span><span class="sig-name descname"><span class="pre">LeapfrogMultiFault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_geodataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_distance_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_colons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_choice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pref'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trimming_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dip_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strike_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_optional_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fault_mesh.faults.leapfrog.LeapfrogMultiFault" title="Link to this definition"></a></dt>
