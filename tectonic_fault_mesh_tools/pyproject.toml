@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fault_mesh"
-version = "0.6"
+version = "0.7"
 description = "Tools for building fault meshes in leapfrog"
 authors = [
     { name = "Andy Howell", email = "andrew.howell@canterbury.ac.nz" }

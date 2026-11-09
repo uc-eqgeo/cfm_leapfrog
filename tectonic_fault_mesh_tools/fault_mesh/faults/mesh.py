@@ -277,6 +277,157 @@ def reclaim_distant_islands(kept: pv.PolyData, discarded: pv.PolyData,
     return out.clean().extract_surface(algorithm="dataset_surface")
 
 
+class _UnionFind:
+    """Minimal union-find over vertex indices, used to merge vertices that are
+    being collapsed together. The root keeps its position, so a collapse moves
+    one vertex onto another rather than to a midpoint."""
+
+    def __init__(self, n: int):
+        self.parent = np.arange(n)
+
+    def find(self, i: int) -> int:
+        while self.parent[i] != i:
+            self.parent[i] = self.parent[self.parent[i]]
+            i = self.parent[i]
+        return i
+
+    def union(self, i: int, j: int):
+        root_i, root_j = self.find(i), self.find(j)
+        if root_i != root_j:
+            self.parent[root_j] = root_i
+
+
+def triangle_areas(points: np.ndarray, triangles: np.ndarray) -> np.ndarray:
+    """Area of every triangle, from the cross product of two of its edges."""
+    a, b, c = points[triangles[:, 0]], points[triangles[:, 1]], points[triangles[:, 2]]
+    return 0.5 * np.linalg.norm(np.cross(b - a, c - a), axis=1)
+
+
+def mesh_connectivity(triangles: np.ndarray):
+    """Vertex neighbours, edge->faces, and the set of boundary vertices."""
+    neighbours = {}
+    edge_faces = {}
+    for face, (a, b, c) in enumerate(triangles):
+        for u, v in ((a, b), (b, c), (c, a)):
+            u, v = int(u), int(v)
+            neighbours.setdefault(u, set()).add(v)
+            neighbours.setdefault(v, set()).add(u)
+            edge_faces.setdefault((min(u, v), max(u, v)), []).append(face)
+    boundary = set()
+    for (u, v), faces in edge_faces.items():
+        if len(faces) == 1:
+            boundary.add(u)
+            boundary.add(v)
+    return neighbours, edge_faces, boundary
+
+
+def collapse_is_safe(u: int, v: int, triangles: np.ndarray, neighbours: dict,
+                     edge_faces: dict, boundary: set) -> bool:
+    """Whether the edge (u, v) can be collapsed without breaking the surface.
+
+    This is the standard link condition: the vertices shared by the two
+    endpoints' one-rings must be exactly the vertices opposite the edge (two
+    of them for an interior edge, one for a boundary edge). If anything else
+    is shared, merging the endpoints folds the surface over itself and leaves
+    an edge with more than two triangles on it. Joining two boundary vertices
+    across the interior is excluded as well, since that pinches the sheet into
+    two pieces that touch at a point.
+    """
+    faces = edge_faces.get((min(u, v), max(u, v)))
+    if faces is None:
+        return False
+    if len(faces) > 2:
+        return False
+    if u in boundary and v in boundary and len(faces) != 1:
+        return False
+    opposite = set()
+    for face in faces:
+        opposite.update(int(x) for x in triangles[face] if x not in (u, v))
+    return (neighbours[u] & neighbours[v]) == opposite
+
+
+def collapse_triangles_below_area(points: np.ndarray, triangles: np.ndarray,
+                                  area_threshold: float, max_passes: int = 20):
+    """Collapse every triangle whose area is below `area_threshold` by merging
+    the two ends of one of its edges, repeating until none are left.
+
+    This is the operation ``igl::collapse_small_triangles`` performs: flag the
+    small triangles, collapse the shortest edge of each (which is what removes
+    both needles and caps), drop the faces that end up with a repeated vertex,
+    and repeat, since collapsing one triangle can flatten its neighbour.
+
+    Two guards are added on top of that. Each candidate collapse is checked
+    against the link condition first, and the triangle's edges are tried
+    shortest-first so an unsafe shortest edge falls back to the next one --
+    without this, collapsing can leave non-manifold edges behind. And a
+    boundary vertex is always kept in preference to an interior one, so the
+    outline of the surface stays where it is.
+
+    Args:
+        points (np.ndarray): #V by 3 vertex positions.
+        triangles (np.ndarray): #F by 3 vertex indices.
+        area_threshold (float): Collapse triangles below this area.
+        max_passes (int): Cap on the iterations, in case a mesh will not settle.
+
+    Returns:
+        tuple: (points, triangles) after collapsing, reindexed.
+    """
+    for _ in range(max_passes):
+        small = np.where(triangle_areas(points, triangles) < area_threshold)[0]
+        if not small.size:
+            break
+
+        neighbours, edge_faces, boundary = mesh_connectivity(triangles)
+        union = _UnionFind(len(points))
+        # One collapse per vertex per pass: two collapses sharing a vertex would
+        # each be judged against a neighbourhood the other has already changed.
+        touched = set()
+        n_accepted = 0
+
+        for face in small:
+            triangle = triangles[face]
+            edges = sorted(
+                ((np.linalg.norm(points[triangle[a]] - points[triangle[b]]),
+                  int(triangle[a]), int(triangle[b]))
+                 for a, b in ((0, 1), (1, 2), (2, 0))))
+            for _, u, v in edges:
+                if u in touched or v in touched:
+                    continue
+                if not collapse_is_safe(u, v, triangles, neighbours, edge_faces, boundary):
+                    continue
+                # The root of the union keeps its position, so put the boundary
+                # vertex first and the outline does not move.
+                if v in boundary and u not in boundary:
+                    u, v = v, u
+                union.union(u, v)
+                touched.update((u, v))
+                n_accepted += 1
+                break
+
+        if not n_accepted:
+            # Everything left is unsafe to collapse; further passes cannot help.
+            break
+        points, triangles = apply_vertex_collapses(points, triangles, union)
+
+    return points, triangles
+
+def apply_vertex_collapses(points: np.ndarray, triangles: np.ndarray, union: _UnionFind):
+    """Merge the vertices grouped by `union`, then drop the triangles that
+    collapse to a line or a point, drop duplicates, and reindex so no
+    unreferenced vertices are left behind."""
+    roots = np.array([union.find(i) for i in range(len(points))])
+    triangles = roots[triangles]
+    # A triangle with a repeated vertex index has no area left.
+    triangles = triangles[(triangles[:, 0] != triangles[:, 1]) &
+                          (triangles[:, 1] != triangles[:, 2]) &
+                          (triangles[:, 0] != triangles[:, 2])]
+    # Collapsing can leave two triangles on the same three vertices.
+    _, first = np.unique(np.sort(triangles, axis=1), axis=0, return_index=True)
+    triangles = triangles[np.sort(first)]
+    used, triangles = np.unique(triangles, return_inverse=True)
+    return points[used], triangles.reshape(-1, 3)
+
+
 class FaultMesh:
     """
     A class representing a fault mesh.
@@ -723,6 +874,9 @@ class FaultMesh:
         ):
             return False
 
+        # A raster-derived surface is made of quads, not triangles
+        if not pv_surface.is_all_triangles:
+            pv_surface = pv_surface.triangulate()
         other_points = pv_surface.points
         other_points[np.isnan(other_points)] = no_data_value
         other_tris = pv_surface.faces.reshape(-1, 4)[:, 1:]
@@ -1080,9 +1234,11 @@ class FaultMesh:
         else:
             pv_other = pv.from_meshio(other_mesh.mesh).extract_surface(algorithm="dataset_surface")
 
-        clipped1 = pv_self.clip_surface(pv_other, invert=False)
+        # VTK >= 9.7 keeps clipped triangles as quads rather than splitting
+        # them, so triangulate before anything assumes 3-point faces.
+        clipped1 = pv_self.clip_surface(pv_other, invert=False).triangulate()
         clipped1_surface_points = clipped1.points[clipped1.points[:, 2] >= -surface_tolerance]
-        clipped2 = pv_self.clip_surface(pv_other, invert=True)
+        clipped2 = pv_self.clip_surface(pv_other, invert=True).triangulate()
         clipped2_surface_points = clipped2.points[clipped2.points[:, 2] >= -surface_tolerance]
 
         if clipped1_surface_points.shape[0] == 0:
@@ -1222,6 +1378,187 @@ class FaultMesh:
 
         return new_fault_mesh
 
+    def clean_degenerate(self, weld_tolerance: float = 1.0e-3,
+                         area_tolerance: float = 1.0,
+                         max_passes: int = 20,
+                         verbose: bool = False):
+        """
+        Collapse degenerate (near-zero-area) triangles out of this surface.
+
+        Cutting can leave triangles with no area: either *needles*, whose
+        vertices are coincident to within rounding (edges of 1e-11 m are
+        common), or *caps*, whose three vertices are distinct but exactly
+        collinear. Both are invisible in a plot and harmless to the total
+        area, but they are singular — anything that inverts a triangle or
+        normalises by its area will produce infinities.
+
+        They also matter before :meth:`remesh`: MMG treats the outline of an
+        open surface as a constraint and reproduces it faithfully, so a
+        degenerate boundary edge in the input becomes a fan of slivers in the
+        output no matter what options MMG is given. Cleaning first is what
+        actually removes them.
+
+        Every removal here is an edge collapse, never a deletion, so the
+        surface is never opened up: the area lost is only the (vanishing) area
+        of the degenerate triangles themselves.
+
+        Args:
+            weld_tolerance (float): Vertices closer than this are merged, in
+                mesh units (metres for NZTM). Removes needles. Keep it far
+                below the real edge lengths; the default of 1 mm is ~6 orders
+                of magnitude below a 1 km target edge.
+            area_tolerance (float): A triangle below this area is treated as
+                degenerate, same units squared. The default of 1 m2 is ~5
+                orders of magnitude below a 1 km target triangle.
+            max_passes (int): Cap on the collapse iterations. Collapsing one
+                triangle can flatten a neighbour, so this repeats until no
+                degenerate triangles remain (usually 2-3 passes).
+            verbose (bool): Print what was removed.
+
+        Returns:
+            FaultMesh: A new FaultMesh with the degenerate triangles collapsed.
+        """
+        assert self.mesh is not None, "Mesh is not defined."
+
+        points = np.ascontiguousarray(self.mesh.points, dtype=np.float64)
+        triangles = np.ascontiguousarray(self.mesh.cells_dict["triangle"], dtype=np.int64)
+        n_start = len(triangles)
+
+        # Pass 1: weld coincident vertices, which removes the needles -- once
+        # the duplicate points become one index, the triangle has a repeated
+        # vertex and drops out.
+        union = _UnionFind(len(points))
+        for i, j in KDTree(points).query_pairs(weld_tolerance):
+            union.union(i, j)
+        points, triangles = apply_vertex_collapses(points, triangles, union)
+        n_needles = n_start - len(triangles)
+
+        # Pass 2: collapse the shortest edge of whatever is still degenerate.
+        # This is what catches the caps: no weld tolerance can merge three
+        # collinear vertices, because no two of them are close together.
+        n_before_caps = len(triangles)
+        points, triangles = collapse_triangles_below_area(
+            points, triangles, area_tolerance, max_passes=max_passes)
+        n_caps = n_before_caps - len(triangles)
+
+        if verbose:
+            remaining = int(np.sum(triangle_areas(points, triangles) < area_tolerance))
+            print(f"  cleaned {n_needles} needle(s), {n_caps} cap(s): "
+                  f"{n_start} -> {len(triangles)} triangles"
+                  + (f", {remaining} still degenerate" if remaining else ""))
+
+        return self._rebuilt_from_arrays(points, triangles)
+
+    def _rebuilt_from_arrays(self, points: np.ndarray, triangles: np.ndarray):
+        """Build a new FaultMesh from bare vertex/triangle arrays, carrying over
+        this mesh's name and cutting history. Retriangulating changes the
+        triangles, not the record of what cut them."""
+        new_mesh = meshio.Mesh(points=points, cells=[("triangle", triangles)])
+
+        new_fault_mesh = FaultMesh()
+        new_fault_mesh.mesh = new_mesh
+        pv_mesh = pv.from_meshio(new_mesh).extract_surface(algorithm="dataset_surface")
+        new_fault_mesh.pv_triangles = pv_mesh.faces.reshape(-1, 4)[:, 1:]
+        new_fault_mesh.vertices = new_mesh.points
+        new_fault_mesh.pv_vertices = pv_mesh.points
+        new_fault_mesh.triangles = new_mesh.cells_dict["triangle"]
+        new_fault_mesh.tri_dict = {i: tri for i, tri in enumerate(new_fault_mesh.triangles)}
+        new_fault_mesh.vertex_dict = {i: vertex for i, vertex in enumerate(new_fault_mesh.vertices)}
+        new_fault_mesh.pv_tri_dict = {i: tri for i, tri in enumerate(new_fault_mesh.pv_triangles)}
+        new_fault_mesh.pv_vertex_dict = {i: vertex for i, vertex in enumerate(new_fault_mesh.pv_vertices)}
+        new_fault_mesh.name = self.name
+        new_fault_mesh.xmin = np.min(new_fault_mesh.vertices[:, 0])
+        new_fault_mesh.xmax = np.max(new_fault_mesh.vertices[:, 0])
+        new_fault_mesh.ymin = np.min(new_fault_mesh.vertices[:, 1])
+        new_fault_mesh.ymax = np.max(new_fault_mesh.vertices[:, 1])
+        new_fault_mesh.cut_against = list(self.cut_against)
+
+        return new_fault_mesh
+
+    def collapse_small_triangles(self, min_area: float = 1.0e3,
+                                 eps_values=None,
+                                 max_passes: int = 20,
+                                 verbose: bool = False):
+        """
+        Collapse small triangles away until the smallest one exceeds `min_area`.
+
+        This reproduces ``igl::collapse_small_triangles``, which the libigl
+        Python bindings stopped exposing at 2.6 (the C++ function is not
+        deprecated -- the nanobind rewrite simply never bound it). The
+        threshold there is *relative* -- ``eps * bounding_box_diagonal ** 2`` --
+        so reaching a wanted minimum area means escalating eps until the mesh
+        clears it. By default this collapses at `min_area` directly instead,
+        which reaches the same guarantee without the ladder's overshoot (its
+        decade steps can land ten times past the target). Pass `eps_values` to
+        get the relative search back.
+
+        Unlike :meth:`clean_degenerate`, which only removes triangles with
+        essentially no area, this deliberately moves geometry: a collapsed
+        triangle's vertices merge, so edges up to roughly ``sqrt(min_area)``
+        can shift. Use it when a guaranteed minimum triangle area matters more
+        than leaving the surface untouched.
+
+        Args:
+            min_area (float): Target smallest triangle area, in mesh units
+                squared (m2 for NZTM). The search stops once the mesh clears
+                this. For reference, an equilateral triangle with 1 km edges
+                has an area of ~433,000 m2.
+            eps_values (iterable): Relative thresholds to try, in increasing
+                order. Defaults to 1e-7 ... 1e-2, as in igl's own usage.
+            max_passes (int): Cap on collapse iterations per eps.
+            verbose (bool): Print the eps that succeeded and what it cost.
+
+        Returns:
+            FaultMesh: A new FaultMesh, or one equivalent to this mesh if it
+            already satisfies `min_area`.
+        """
+        assert self.mesh is not None, "Mesh is not defined."
+
+        points = np.ascontiguousarray(self.mesh.points, dtype=np.float64)
+        triangles = np.ascontiguousarray(self.mesh.cells_dict["triangle"], dtype=np.int64)
+
+        starting_min = triangle_areas(points, triangles).min()
+        if starting_min > min_area:
+            if verbose:
+                print(f"  no collapse needed (smallest triangle {starting_min:.1f} m2)")
+            return self._rebuilt_from_arrays(points, triangles)
+
+        if eps_values is None:
+            # The threshold we actually want is already absolute, so collapse
+            # straight at it: the loop runs to a fixed point, so the result is
+            # guaranteed to clear min_area, and nothing larger is disturbed.
+            # igl only searches over eps because its API takes the threshold as
+            # a fraction of the bounding box; going through that ladder here
+            # would overshoot by up to a factor of ten.
+            thresholds = [(None, min_area)]
+        else:
+            diagonal = np.linalg.norm(points.max(axis=0) - points.min(axis=0))
+            thresholds = [(eps, eps * diagonal ** 2) for eps in eps_values]
+
+        best = None
+        for eps, threshold in thresholds:
+            new_points, new_triangles = collapse_triangles_below_area(
+                points, triangles, threshold, max_passes=max_passes)
+            if not len(new_triangles):
+                # This threshold ate the whole mesh; keep the last usable result.
+                break
+            best = (eps, new_points, new_triangles)
+            if triangle_areas(new_points, new_triangles).min() > min_area:
+                break
+
+        if best is None:
+            return self._rebuilt_from_arrays(points, triangles)
+
+        eps, new_points, new_triangles = best
+        if verbose:
+            achieved = triangle_areas(new_points, new_triangles).min()
+            at = "" if eps is None else f" at eps={eps:.0e}"
+            print(f"  collapsed {len(triangles) - len(new_triangles)} triangle(s){at}: "
+                  f"smallest {starting_min:.1f} -> {achieved:.1f} m2"
+                  + ("" if achieved > min_area else f" (short of {min_area:.0f})"))
+
+        return self._rebuilt_from_arrays(new_points, new_triangles)
+
     def cut_mesh_pv(self, pv_surface: pv.PolyData, fault_trace: np.ndarray,
                     surface_tolerance: float = 1.0, max_distance: float = 3.e3,
                     label: str = "depth surface"):
@@ -1260,9 +1597,10 @@ class FaultMesh:
 
         pv_self = pv.from_meshio(self.mesh).extract_surface(algorithm="dataset_surface")
 
-        clipped1 = pv_self.clip_surface(pv_surface, invert=False)
+        # VTK >= 9.7 keeps clipped triangles as quads; see cut_mesh.
+        clipped1 = pv_self.clip_surface(pv_surface, invert=False).triangulate()
         clipped1_surface_points = clipped1.points[clipped1.points[:, 2] >= -surface_tolerance]
-        clipped2 = pv_self.clip_surface(pv_surface, invert=True)
+        clipped2 = pv_self.clip_surface(pv_surface, invert=True).triangulate()
         clipped2_surface_points = clipped2.points[clipped2.points[:, 2] >= -surface_tolerance]
 
         if clipped1_surface_points.shape[0] == 0:
