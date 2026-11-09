@@ -33,6 +33,25 @@ from fault_mesh.utilities.opensha import fault_trace_xml, fault_polygon_xml
 from fault_mesh.faults.mesh import FaultMesh
 
 
+def end_fit_points(coords: np.ndarray, end_arr: np.ndarray, fit_distance: float,
+                   spacing: float = 100.) -> np.ndarray:
+    """Points every `spacing` m along the last `fit_distance` of a trace,
+    measured along the trace from the end at `end_arr`.
+
+    Used to fit the local strike at a trace end. Fitting to the trace's own
+    vertices instead fails on sparse traces: if only the end vertex lies
+    within fit_distance, a line fit through one point has no defined slope,
+    and np.polyfit quietly returns one set by the point's absolute
+    coordinates, so the extension points in an arbitrary direction.
+    """
+    line = LineString(np.asarray(coords)[:, :2])
+    length = min(fit_distance, line.length)
+    dists = np.linspace(0., length, max(int(np.ceil(length / spacing)) + 1, 2))
+    if not np.allclose(np.asarray(end_arr)[:2], line.coords[0]):
+        dists = line.length - dists
+    return np.array([line.interpolate(d).coords[0] for d in dists])
+
+
 class LeapfrogMultiFault(GenericMultiFault):
     def __init__(self, fault_geodataframe: gpd.GeoDataFrame, sort_sr: bool = False,
                  segment_distance_tolerance: float = 100., smoothing_n: int = None,
@@ -403,8 +422,7 @@ class LeapfrogMultiFault(GenericMultiFault):
         dim = coords.shape[1]
         end_arr = np.array(nearest_end.coords)[0][:dim]
         other_end_arr = np.array(other_end.coords)[0][:dim]
-        line_dists = np.linalg.norm(coords[:, :2] - end_arr[:2], axis=1)
-        coords_to_fit = coords[line_dists <= fit_distance]
+        coords_to_fit = end_fit_points(coords, end_arr, fit_distance)
         local_strike = calculate_strike_direction(coords_to_fit[:, 0], coords_to_fit[:, 1])
         strike_vec = np.array([np.sin(np.radians(local_strike)),
                                np.cos(np.radians(local_strike)), 0.])[:dim]
@@ -2187,8 +2205,7 @@ class LeapfrogFault(GenericFault):
                      fit_distance: float = 5.e3, extend_distance: float = 20.3, resolution: float = 1.e3):
         end_arr = np.array(end_i.coords)[0]
         other_end_arr = np.array(other_end.coords)[0]
-        line_dists = np.linalg.norm(self.nztm_trace_coords - end_arr, axis=1)
-        coords_to_fit = self.nztm_trace_coords[line_dists <= fit_distance]
+        coords_to_fit = end_fit_points(self.nztm_trace_coords, end_arr, fit_distance)
         local_strike_direction = calculate_strike_direction(coords_to_fit[:, 0], coords_to_fit[:, 1])
         local_strike_vector = np.array([np.sin(np.radians(local_strike_direction)), np.cos(np.radians(local_strike_direction)), 0.])
         extend_dists = np.arange(0, extend_distance + resolution, resolution)
